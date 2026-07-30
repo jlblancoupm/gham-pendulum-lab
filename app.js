@@ -524,69 +524,161 @@
 
   function drawHeroCanvas(time = 0) {
     const canvas = $('heroCanvas');
+    if (!canvas || !heroState.data || !heroState.linearData || !heroState.targetData) return;
     const { ctx, width, height } = prepareCanvas(canvas);
     clearCanvas(ctx, width, height, { glow: 'rgba(73,185,255,.09)' });
-    const q = heroState.q;
-    const sample = sampleAtTime(heroState.data, time % heroState.duration);
-    const angle = sample.theta;
-    const pivotX = width * .56;
-    const pivotY = height * .18;
-    const rod = Math.min(height * .48, width * .28);
 
+    const q = heroState.q;
+    const current = sampleAtTime(heroState.data, time % heroState.duration);
+    const linear = sampleAtTime(heroState.linearData, time % heroState.duration);
+    const target = sampleAtTime(heroState.targetData, time % heroState.duration);
+    const compact = width < 580;
+    const pivotX = width * (compact ? .66 : .68);
+    const pivotY = height * .19;
+    const rod = Math.min(height * .45, width * (compact ? .28 : .25));
+
+    // Motion field: the two endpoint models remain visible while the gold model
+    // moves continuously between them. This makes q visually meaningful at once.
     ctx.save();
-    ctx.strokeStyle = 'rgba(73,185,255,.12)';
+    ctx.strokeStyle = 'rgba(73,185,255,.10)';
     for (let i = 1; i <= 5; i += 1) {
-      ctx.beginPath(); ctx.arc(pivotX, pivotY, rod * (.38 + i * .22), 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(pivotX, pivotY, rod * (.38 + i * .22), Math.PI * .12, Math.PI * .88);
+      ctx.stroke();
     }
     ctx.restore();
 
-    const bx = pivotX + rod * Math.sin(angle);
-    const by = pivotY + rod * Math.cos(angle);
-    const rodGradient = ctx.createLinearGradient(pivotX, pivotY, bx, by);
-    rodGradient.addColorStop(0, COLORS.blue); rodGradient.addColorStop(1, COLORS.gold);
-    ctx.strokeStyle = rodGradient; ctx.lineWidth = 4; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(pivotX, pivotY); ctx.lineTo(bx, by); ctx.stroke();
+    const drawPendulum = (angle, color, alpha, lineWidth, radius, label, labelOffset = 0) => {
+      const bx = pivotX + rod * Math.sin(angle);
+      const by = pivotY + rod * Math.cos(angle);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(pivotX, pivotY); ctx.lineTo(bx, by); ctx.stroke();
+      const glow = ctx.createRadialGradient(bx, by, 1, bx, by, radius * 2.2);
+      glow.addColorStop(0, color);
+      glow.addColorStop(.34, color);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(bx, by, radius * 2.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(bx, by, radius, 0, Math.PI * 2); ctx.fill();
+      if (!compact && label) {
+        ctx.globalAlpha = Math.max(alpha, .62);
+        ctx.fillStyle = color;
+        ctx.font = '750 10px ui-sans-serif, system-ui';
+        ctx.fillText(label, bx + 12, by + labelOffset);
+      }
+      ctx.restore();
+      return { x: bx, y: by };
+    };
+
+    drawPendulum(linear.theta, COLORS.purple, .34, 2, 7, 'q = 0  linear', -7);
+    drawPendulum(target.theta, COLORS.blue, .42, 2.2, 8, 'q = 1  target', 13);
+    drawPendulum(current.theta, COLORS.gold, 1, 4.2, 14, `q = ${q.toFixed(2)}`, -16);
     ctx.fillStyle = COLORS.text; ctx.beginPath(); ctx.arc(pivotX, pivotY, 6, 0, Math.PI * 2); ctx.fill();
-    const bobGlow = ctx.createRadialGradient(bx, by, 1, bx, by, 34);
-    bobGlow.addColorStop(0, COLORS.gold2); bobGlow.addColorStop(.3, COLORS.gold); bobGlow.addColorStop(1, 'rgba(244,202,92,0)');
-    ctx.fillStyle = bobGlow; ctx.beginPath(); ctx.arc(bx, by, 34, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = COLORS.gold; ctx.beginPath(); ctx.arc(bx, by, 14, 0, Math.PI * 2); ctx.fill();
 
-    const panelX = width * .06;
-    const panelY = height * .1;
-    const panelW = Math.min(190, width * .32);
-    const panelH = 118;
-    roundedRect(ctx, panelX, panelY, panelW, panelH, 14);
-    ctx.fillStyle = 'rgba(3,14,25,.55)'; ctx.fill();
-    ctx.strokeStyle = COLORS.gridStrong; ctx.stroke();
-    ctx.fillStyle = COLORS.muted2; ctx.font = '800 9px ui-sans-serif, system-ui'; ctx.fillText('RESTORING LAW', panelX + 13, panelY + 18);
-    const fx = panelX + 14, fy = panelY + 31, fw = panelW - 28, fh = panelH - 45;
-    ctx.strokeStyle = COLORS.grid; ctx.beginPath(); ctx.moveTo(fx, fy + fh / 2); ctx.lineTo(fx + fw, fy + fh / 2); ctx.stroke();
-    ctx.strokeStyle = COLORS.gold; ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i <= 100; i += 1) {
-      const th = -1.4 + 2.8 * i / 100;
-      const value = infiniteSurrogateSin(th, q);
-      const x = fx + fw * i / 100;
-      const y = fy + fh / 2 - value / 1.5 * fh / 2;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    // Restoring-law microscope: linear and target remain as references; only the
+    // gold curve changes with q.
+    const panelX = width * .045;
+    const panelY = height * .07;
+    const panelW = compact ? width * .43 : Math.min(236, width * .36);
+    const panelH = compact ? 130 : 150;
+    roundedRect(ctx, panelX, panelY, panelW, panelH, 15);
+    ctx.fillStyle = 'rgba(3,14,25,.66)'; ctx.fill();
+    ctx.strokeStyle = COLORS.gridStrong; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = COLORS.muted2;
+    ctx.font = '800 9px ui-sans-serif, system-ui';
+    ctx.fillText('RESTORING LAW', panelX + 13, panelY + 19);
+
+    const fx = panelX + 15, fy = panelY + 35, fw = panelW - 30, fh = panelH - 56;
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(fx, fy + fh / 2); ctx.lineTo(fx + fw, fy + fh / 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(fx + fw / 2, fy); ctx.lineTo(fx + fw / 2, fy + fh); ctx.stroke();
+
+    const drawLaw = (fn, color, lineWidth, dash = [], alpha = 1) => {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.setLineDash(dash);
+      ctx.beginPath();
+      for (let i = 0; i <= 140; i += 1) {
+        const th = -1.5 + 3 * i / 140;
+        const value = fn(th);
+        const x = fx + fw * i / 140;
+        const y = fy + fh / 2 - value / 1.55 * fh / 2;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    };
+    drawLaw((theta) => theta, COLORS.purple, 1.2, [5, 5], .65);
+    drawLaw(Math.sin, COLORS.blue, 1.5, [2, 4], .75);
+    drawLaw((theta) => infiniteSurrogateSin(theta, q), COLORS.gold, 2.7);
+
+    ctx.font = '700 8px ui-sans-serif, system-ui';
+    ctx.fillStyle = COLORS.purple; ctx.fillText('linear', fx, panelY + panelH - 10);
+    ctx.fillStyle = COLORS.gold; ctx.fillText('current', fx + fw * .38, panelY + panelH - 10);
+    ctx.fillStyle = COLORS.blue; ctx.fillText('target', fx + fw * .76, panelY + panelH - 10);
+
+    // Quantify the visual deformation. The bars deliberately use separate notions:
+    // force-law nonlinearity and amplitude-dependent period shift.
+    const metrics = heroState.metrics;
+    if (metrics) {
+      const metricX = panelX;
+      const metricY = panelY + panelH + 14;
+      const metricW = panelW;
+      const drawMetric = (y, label, value, color, suffix) => {
+        ctx.fillStyle = COLORS.muted2;
+        ctx.font = '700 8px ui-sans-serif, system-ui';
+        ctx.fillText(label.toUpperCase(), metricX, y);
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '750 10px ui-monospace, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(suffix, metricX + metricW, y);
+        ctx.textAlign = 'left';
+        roundedRect(ctx, metricX, y + 7, metricW, 5, 3);
+        ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fill();
+        roundedRect(ctx, metricX, y + 7, Math.max(3, metricW * clamp(value, 0, 1)), 5, 3);
+        ctx.fillStyle = color; ctx.fill();
+      };
+      drawMetric(metricY, 'nonlinearity restored', metrics.recoveredNonlinearity, COLORS.gold, `${Math.round(metrics.recoveredNonlinearity * 100)}%`);
+      drawMetric(metricY + 31, 'period shift restored', metrics.recoveredPeriod, COLORS.blue, `${Math.round(metrics.recoveredPeriod * 100)}%`);
     }
-    ctx.stroke();
 
-    const railY = height * .87;
-    const railX = width * .12;
-    const railW = width * .76;
-    ctx.strokeStyle = COLORS.gridStrong; ctx.lineWidth = 2;
+    // Continuation rail.
+    const railY = height * .88;
+    const railX = width * .10;
+    const railW = width * .80;
+    ctx.strokeStyle = COLORS.gridStrong;
+    ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(railX, railY); ctx.lineTo(railX + railW, railY); ctx.stroke();
+    const railGradient = ctx.createLinearGradient(railX, railY, railX + railW, railY);
+    railGradient.addColorStop(0, COLORS.purple);
+    railGradient.addColorStop(.5, COLORS.gold);
+    railGradient.addColorStop(1, COLORS.blue);
+    ctx.strokeStyle = railGradient;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(railX, railY); ctx.lineTo(railX + q * railW, railY); ctx.stroke();
+
     const nodes = [0, .25, .5, .75, 1];
     for (const value of nodes) {
       const x = railX + value * railW;
-      ctx.fillStyle = value <= q + .001 ? (value === 1 ? COLORS.green : COLORS.gold) : COLORS.muted2;
+      ctx.fillStyle = value <= q + .001 ? (value === 1 ? COLORS.blue : COLORS.gold) : COLORS.muted2;
       ctx.beginPath(); ctx.arc(x, railY, value === 0 || value === 1 ? 5 : 3.5, 0, Math.PI * 2); ctx.fill();
     }
     const cursorX = railX + q * railW;
-    ctx.fillStyle = COLORS.blue; ctx.beginPath(); ctx.arc(cursorX, railY, 7, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(73,185,255,.35)'; ctx.beginPath(); ctx.arc(cursorX, railY, 13, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = COLORS.gold; ctx.beginPath(); ctx.arc(cursorX, railY, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(244,202,92,.38)'; ctx.beginPath(); ctx.arc(cursorX, railY, 14, 0, Math.PI * 2); ctx.stroke();
+
+    ctx.fillStyle = COLORS.muted2;
+    ctx.font = '700 8px ui-sans-serif, system-ui';
+    ctx.fillText('SURROGATE', railX, railY + 18);
+    ctx.textAlign = 'right';
+    ctx.fillText('TARGET', railX + railW, railY + 18);
+    ctx.textAlign = 'left';
   }
 
   function drawPathCanvas(activeStep) {
@@ -652,24 +744,60 @@
     return `\\[\\ddot\\theta+\\omega_0^2\\left(${pieces.join('')}\\right)=0\\]`;
   }
 
-  const heroState = { q: 0, data: null, duration: 6, startTime: performance.now() };
+  const heroState = {
+    q: 0,
+    data: null,
+    linearData: null,
+    targetData: null,
+    duration: 8,
+    angle: 65 * RAD,
+    startTime: performance.now(),
+    metrics: null
+  };
   const familyState = { exact: null, surrogate: null, small: null, duration: 8, paused: false, currentTime: 0, startTime: performance.now(), view: 'motion' };
   const ghamState = { exact: null, gham: null, selected: null, duration: 8, order: 4, paused: false, currentTime: 0, startTime: performance.now(), view: 'trajectory', scan: null, bestHbar: null };
   const frechetState = { order: 1 };
   let pathStep = 0;
 
-  function updateHero() {
+  function updateHero({ resetTime = false } = {}) {
+    const now = performance.now();
+    const previousTime = heroState.data && !resetTime
+      ? ((now - heroState.startTime) / 1000) % heroState.duration
+      : 0;
     const q = Number($('heroQ').value);
     heroState.q = q;
-    heroState.data = simulatePendulum(48 * RAD, heroState.duration, (theta) => -W2 * infiniteSurrogateSin(theta, q));
-    heroState.startTime = performance.now();
+
+    // Preserve the physical time while q changes. Restarting at t = 0 on every
+    // slider event makes all models overlap and hides the deformation during drag.
+    heroState.linearData ??= simulateSmallAngle(heroState.angle, heroState.duration);
+    heroState.targetData ??= simulatePendulum(heroState.angle, heroState.duration, (theta) => -W2 * Math.sin(theta));
+    heroState.data = simulatePendulum(heroState.angle, heroState.duration, (theta) => -W2 * infiniteSurrogateSin(theta, q));
+    heroState.startTime = now - previousTime * 1000;
+
+    const periodLinear = periodFromDownCrossings(heroState.linearData.t, heroState.linearData.theta);
+    const periodCurrent = periodFromDownCrossings(heroState.data.t, heroState.data.theta);
+    const periodTarget = periodFromDownCrossings(heroState.targetData.t, heroState.targetData.theta);
+    const amplitude = heroState.angle;
+    const denominator = Math.max(1e-9, amplitude - Math.sin(amplitude));
+    const recoveredNonlinearity = clamp((amplitude - infiniteSurrogateSin(amplitude, q)) / denominator, 0, 1);
+    const recoveredPeriod = clamp((periodCurrent - periodLinear) / Math.max(1e-9, periodTarget - periodLinear), 0, 1);
+    heroState.metrics = { periodLinear, periodCurrent, periodTarget, recoveredNonlinearity, recoveredPeriod };
+
     $('heroQOut').value = `q = ${q.toFixed(2)}`;
-    $('heroModelLabel').textContent = q < .01 ? 'Small-angle oscillator' : q > .99 ? 'Target nonlinear pendulum' : `Intermediate problem · effective amplitude ${(Math.sqrt(q) * 48).toFixed(1)}°`;
+    $('heroModelLabel').textContent = q < .01
+      ? 'Small-angle oscillator'
+      : q > .99
+        ? 'Target nonlinear pendulum'
+        : `Intermediate problem · effective amplitude ${(Math.sqrt(q) * heroState.angle * DEG).toFixed(1)}°`;
     const equation = $('heroEquation');
-    if (q < .001) equation.textContent = '\\[\\ddot\\theta+\\omega_0^2\\theta=0\\]';
-    else if (q > .999) equation.textContent = '\\[\\ddot\\theta+\\omega_0^2\\sin\\theta=0\\]';
-    else equation.textContent = `\\[\\ddot\\theta+\\omega_0^2\\,\\frac{\\sin(\\sqrt{${q.toFixed(2)}}\\,\\theta)}{\\sqrt{${q.toFixed(2)}}}=0\\]`;
+    if (q < .001) equation.textContent = '\[\ddot\theta+\omega_0^2\theta=0\]';
+    else if (q > .999) equation.textContent = '\[\ddot\theta+\omega_0^2\sin\theta=0\]';
+    else equation.textContent = `\[\ddot\theta+\omega_0^2\,\frac{\sin(\sqrt{${q.toFixed(2)}}\,\theta)}{\sqrt{${q.toFixed(2)}}}=0\]`;
     typeset(equation);
+
+    const stage = $('heroCanvas').closest('.hero-stage');
+    stage?.style.setProperty('--hero-q', q.toFixed(3));
+    drawHeroCanvas(previousTime);
   }
 
   function updateFamily() {

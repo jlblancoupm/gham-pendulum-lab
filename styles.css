@@ -673,3 +673,30 @@ footer a { color: var(--gold); text-align: right; }
   .residual-tree { min-height: 300px; grid-template-columns: 1fr; }
   .residual-tree > i { transform: rotate(90deg); }
 }
+
+/* Hero continuation feedback: q now changes both the numerical state and the visual atmosphere. */
+.hero-stage {
+  --hero-q: 0;
+}
+.hero-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: calc(.08 + var(--hero-q) * .20);
+  background:
+    radial-gradient(circle at 74% 30%, rgba(73,185,255,.28), transparent 34%),
+    radial-gradient(circle at 26% 72%, rgba(179,124,255,.17), transparent 38%);
+  transition: opacity .16s linear;
+}
+.hero-stage canvas,
+.hero-stage .stage-header,
+.hero-stage .hero-equation,
+.hero-stage .hero-q-control,
+.hero-stage .stage-footer {
+  z-index: 2;
+}
+.hero-q-control input[type="range"] {
+  cursor: ew-resize;
+}
