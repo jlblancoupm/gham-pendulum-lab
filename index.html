@@ -9,19 +9,21 @@
   <meta property="og:description" content="Explore the path from a small-angle surrogate to the nonlinear pendulum through GHAM and Fréchet derivatives.">
   <title>Start Simple — GHAM Pendulum Lab</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
   <script>
     window.MathJax = {
+      loader: { load: ['[tex]/ams'] },
       tex: {
         inlineMath: [['\\(', '\\)']],
         displayMath: [['\\[', '\\]']],
-        packages: {'[+]': ['ams']}
+        packages: {'[+]': ['ams']},
+        processEscapes: true
       },
       options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script defer src="app.js?v=3"></script>
+  <script defer src="app.js?v=4"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -72,7 +74,7 @@
         </div>
         <canvas id="heroCanvas" aria-label="Interactive path from a small-angle pendulum to the nonlinear pendulum"></canvas>
         <div class="hero-equation" id="heroEquation">
-          \[\ddot\theta+\omega_0^2\theta=0\]
+          \[\begin{aligned}\ddot\theta+\omega_0^2\theta&=0,\\\theta(0)&=\theta_{\mathrm i},\quad\dot\theta(0)=0.\end{aligned}\]
         </div>
         <div class="hero-q-control">
           <span>simple surrogate</span>
@@ -129,7 +131,7 @@
         <div class="operator-arrow" aria-hidden="true"><span></span><b>observable residual</b><span></span></div>
         <div>
           <span class="operator-label">Target initial-value problem</span>
-          <strong>\(\mathcal N[\theta]=0,\quad \theta(0)=A,\ \dot\theta(0)=0\)</strong>
+          <strong>\(\mathcal N[\theta]=0,\quad \theta(0)=\theta_{\mathrm i},\ \dot\theta(0)=0\)</strong>
         </div>
       </div>
     </section>
@@ -149,9 +151,11 @@
       <div class="formula-ribbon reveal">
         <div>
           \[
-          s_d(\theta;q)=\sum_{r=0}^{(d-1)/2}(-1)^r q^r\frac{\theta^{2r+1}}{(2r+1)!},
-          \qquad
-          \ddot\theta+\omega_0^2s_d(\theta;q)=0.
+          \begin{aligned}
+          s_d(\theta;q)&=\sum_{r=0}^{(d-1)/2}(-1)^r q^r\frac{\theta^{2r+1}}{(2r+1)!},\\
+          \ddot\theta+\omega_0^2s_d(\theta;q)&=0,
+          \qquad \theta(0)=\theta_{\mathrm i},\quad \dot\theta(0)=0.
+          \end{aligned}
           \]
         </div>
         <div class="formula-endpoints">
@@ -178,7 +182,7 @@
           </div>
 
           <div class="control-group">
-            <div class="control-label"><label for="familyAngle">Initial amplitude</label><output id="familyAngleOut">30°</output></div>
+            <div class="control-label"><label for="familyAngle">Release angle <span class="math-symbol">θᵢ</span></label><output id="familyAngleOut">θᵢ = 30°</output></div>
             <input id="familyAngle" type="range" min="5" max="85" step="1" value="30">
           </div>
 
@@ -201,7 +205,8 @@
 
           <div class="live-model-card" aria-live="polite">
             <span>ACTIVE SURROGATE</span>
-            <div id="familyEquation">\[\ddot\theta+\omega_0^2\left(\theta-0.5\,\theta^3/3!\right)=0\]</div>
+            <div id="familyEquation" class="dynamic-math" aria-label="Active surrogate equation">\[\begin{aligned}\ddot\theta+\omega_0^2\left(\theta-0.5\,\theta^3/3!\right)&=0,\\\theta(0)&=\theta_{\mathrm i},\quad\dot\theta(0)=0.\end{aligned}\]</div>
+            <div class="model-notation"><span>release angle</span><strong>θᵢ ≡ θ(0)</strong></div>
             <div class="term-chips" id="familyTermChips"></div>
           </div>
         </aside>
@@ -244,7 +249,7 @@
         <span class="note-mark">∞</span>
         <div>
           <strong>The infinite-order family has a clean interpretation.</strong>
-          <p>For \(q&gt;0\), \(s_\infty(\theta;q)=\sin(\sqrt q\,\theta)/\sqrt q\), with continuous limit \(s_\infty(\theta;0)=\theta\). The effective nonlinear amplitude grows as \(\sqrt q A\).</p>
+          <p>For \(q&gt;0\), \(s_\infty(\theta;q)=\sin(\sqrt q\,\theta)/\sqrt q\), with continuous limit \(s_\infty(\theta;0)=\theta\). With \(\phi=\sqrt q\,\theta\), the transformed pendulum starts at \(\phi(0)=\sqrt q\,\theta_{\mathrm i}\): the effective nonlinear release angle grows continuously from zero to \(\theta_{\mathrm i}\).</p>
         </div>
       </div>
     </section>
@@ -257,7 +262,7 @@
         </div>
         <p>
           The correct setting is affine. Let \(X_0\) contain zero-initial-condition perturbations and
-          \(X_A=\theta_0+X_0\) contain trajectories satisfying the prescribed initial conditions.
+          \(X_{\theta_{\mathrm i}}=\theta_0+X_0\) contain trajectories released from \(\theta_{\mathrm i}\).
         </p>
       </div>
 
@@ -277,14 +282,18 @@
             <div class="math-card main-math">
               \[
               X_0=\{v\in C^2([0,T]):v(0)=0,\ \dot v(0)=0\},
-              \qquad X_A=\theta_0+X_0,
               \]
               \[
-              \mathcal N:X_A\to C([0,T]),
+              X_{\theta_{\mathrm i}}
+              =\{\theta\in C^2([0,T]):\theta(0)=\theta_{\mathrm i},\ \dot\theta(0)=0\}
+              =\theta_0+X_0,
+              \]
+              \[
+              \mathcal N:X_{\theta_{\mathrm i}}\to C([0,T]),
               \qquad \mathcal N[\theta]=\ddot\theta+\omega_0^2\sin\theta.
               \]
             </div>
-            <div class="derivation-insight"><span>Why this matters</span><p>Every correction \(\theta_m\in X_0\) has homogeneous initial conditions, so every partial sum preserves \(\theta(0)=A\) and \(\dot\theta(0)=0\).</p></div>
+            <div class="derivation-insight"><span>Why this matters</span><p>Every correction \(\theta_m\in X_0\) has homogeneous initial conditions, so every partial sum preserves \(\theta(0)=\theta_{\mathrm i}\) and \(\dot\theta(0)=0\).</p></div>
           </article>
 
           <article class="derivation-panel" data-derivation-panel="deformation">
@@ -292,9 +301,12 @@
             <h3>One equation contains the surrogate and the target.</h3>
             <div class="math-card main-math">
               \[
+              \begin{aligned}
               (1-q)\,\mathcal L[\Theta(t;q)-\theta_0(t)]
-              =q\,\hbar\,\mathcal N[\Theta(t;q)],
-              \qquad \mathcal L[v]=\ddot v+\omega_0^2v.
+              &=q\,\hbar\,\mathcal N[\Theta(t;q)],\\
+              \mathcal L[v]&=\ddot v+\omega_0^2v,\qquad
+              \theta_0(t)=\theta_{\mathrm i}\cos(\omega_0t).
+              \end{aligned}
               \]
             </div>
             <div class="endpoint-cards">
@@ -438,11 +450,11 @@
           <div class="preset-row" aria-label="GHAM presets">
             <button type="button" data-gham-preset="gentle" class="active">Gentle</button>
             <button type="button" data-gham-preset="long">Long horizon</button>
-            <button type="button" data-gham-preset="large">Large angle</button>
+            <button type="button" data-gham-preset="large">Large release</button>
           </div>
 
           <div class="control-group">
-            <div class="control-label"><label for="ghamAngle">Initial amplitude</label><output id="ghamAngleOut">30°</output></div>
+            <div class="control-label"><label for="ghamAngle">Release angle <span class="math-symbol">θᵢ</span></label><output id="ghamAngleOut">θᵢ = 30°</output></div>
             <input id="ghamAngle" type="range" min="5" max="85" step="1" value="30">
           </div>
 
@@ -514,7 +526,7 @@
       <div class="diagnostic-grid reveal">
         <article><span>01</span><div><strong>Order is not a free lunch.</strong><p>A higher \(M\) helps only while the correction sequence remains controlled over the chosen horizon.</p></div></article>
         <article><span>02</span><div><strong>\(\hbar\) changes the finite approximation.</strong><p>The exact endpoint equation is unchanged, but the path and convergence region of the truncated series are not.</p></div></article>
-        <article><span>03</span><div><strong>Restart when the local expansion is exhausted.</strong><p>For large amplitudes or long horizons, restarting from a better local surrogate can be preferable to adding orders blindly.</p></div></article>
+        <article><span>03</span><div><strong>Restart when the local expansion is exhausted.</strong><p>For large release angles or long horizons, restarting from a better local surrogate can be preferable to adding orders blindly.</p></div></article>
       </div>
     </section>
 

@@ -25,11 +25,54 @@
     return value;
   }
 
-  function typeset(element) {
-    if (window.MathJax?.typesetPromise) {
-      window.MathJax.typesetClear?.([element]);
-      window.MathJax.typesetPromise([element]).catch(() => {});
-    }
+  let mathQueue = Promise.resolve();
+  const mathJaxReady = new Promise((resolve) => {
+    const started = performance.now();
+    const check = () => {
+      if (window.MathJax?.tex2chtmlPromise || window.MathJax?.typesetPromise) {
+        resolve(window.MathJax);
+      } else if (performance.now() - started < 12000) {
+        window.setTimeout(check, 30);
+      } else {
+        resolve(null);
+      }
+    };
+    check();
+  });
+
+  function setMath(element, latex, display = true) {
+    if (!element) return;
+    const source = display ? `\\[${latex}\\]` : `\\(${latex}\\)`;
+    const version = String((Number(element.dataset.mathVersion) || 0) + 1);
+    element.dataset.mathVersion = version;
+    element.dataset.mathSource = latex;
+
+    // Render from TeX directly instead of repeatedly asking MathJax to rescan
+    // the live panel. Keeping the old equation until the new node is ready
+    // prevents raw-LaTeX flicker while the slider is moving.
+    mathQueue = mathQueue.then(async () => {
+      const mathJax = await mathJaxReady;
+      if (!mathJax) {
+        if (element.dataset.mathVersion === version) element.textContent = source;
+        return;
+      }
+      if (mathJax.startup?.promise) await mathJax.startup.promise;
+      if (element.dataset.mathVersion !== version) return;
+
+      if (mathJax.tex2chtmlPromise) {
+        const rendered = await mathJax.tex2chtmlPromise(latex, { display });
+        if (element.dataset.mathVersion !== version) return;
+        mathJax.typesetClear?.([element]);
+        element.replaceChildren(rendered);
+      } else {
+        mathJax.typesetClear?.([element]);
+        element.textContent = source;
+        if (mathJax.typesetPromise) await mathJax.typesetPromise([element]);
+      }
+    }).catch((error) => {
+      if (element.dataset.mathVersion === version) element.textContent = source;
+      console.warn('MathJax rendering failed; keeping the TeX fallback.', error);
+    });
   }
 
   function prepareCanvas(canvas) {
@@ -733,15 +776,17 @@
   }
 
   function buildFamilyEquation(q, degree) {
-    const pieces = ['\\theta'];
+    const pieces = [String.raw`\theta`];
     const p = Math.floor((degree - 1) / 2);
     for (let r = 1; r <= p; r += 1) {
       const sign = r % 2 === 1 ? '-' : '+';
       const coefficient = q ** r;
-      const coefficientText = Math.abs(coefficient - 1) < 1e-9 ? '' : `${coefficient.toFixed(3)}\\,`;
-      pieces.push(`${sign}${coefficientText}\\frac{\\theta^{${2 * r + 1}}}{${2 * r + 1}!}`);
+      if (coefficient < 1e-12) continue;
+      const rounded = Number(coefficient.toFixed(3));
+      const coefficientText = Math.abs(rounded - 1) < 1e-9 ? '' : String.raw`${rounded}\,`;
+      pieces.push(String.raw`${sign}${coefficientText}\frac{\theta^{${2 * r + 1}}}{${2 * r + 1}!}`);
     }
-    return `\\[\\ddot\\theta+\\omega_0^2\\left(${pieces.join('')}\\right)=0\\]`;
+    return String.raw`\begin{aligned}\ddot\theta+\omega_0^2\left(${pieces.join('')}\right)&=0,\\\theta(0)&=\theta_{\mathrm i},\quad\dot\theta(0)=0.\end{aligned}`;
   }
 
   const heroState = {
@@ -784,16 +829,22 @@
     heroState.metrics = { periodLinear, periodCurrent, periodTarget, recoveredNonlinearity, recoveredPeriod };
 
     $('heroQOut').value = `q = ${q.toFixed(2)}`;
+    const releaseLabel = `θᵢ = ${(heroState.angle * DEG).toFixed(0)}°`;
     $('heroModelLabel').textContent = q < .01
-      ? 'Small-angle oscillator'
+      ? `Small-angle oscillator · ${releaseLabel}`
       : q > .99
-        ? 'Target nonlinear pendulum'
-        : `Intermediate problem · effective amplitude ${(Math.sqrt(q) * heroState.angle * DEG).toFixed(1)}°`;
+        ? `Target nonlinear pendulum · ${releaseLabel}`
+        : `Intermediate problem · effective release angle ${(Math.sqrt(q) * heroState.angle * DEG).toFixed(1)}° · ${releaseLabel}`;
     const equation = $('heroEquation');
-    if (q < .001) equation.textContent = '\[\ddot\theta+\omega_0^2\theta=0\]';
-    else if (q > .999) equation.textContent = '\[\ddot\theta+\omega_0^2\sin\theta=0\]';
-    else equation.textContent = `\[\ddot\theta+\omega_0^2\,\frac{\sin(\sqrt{${q.toFixed(2)}}\,\theta)}{\sqrt{${q.toFixed(2)}}}=0\]`;
-    typeset(equation);
+    let heroLatex;
+    if (q < .001) {
+      heroLatex = String.raw`\begin{aligned}\ddot\theta+\omega_0^2\theta&=0,\\\theta(0)&=\theta_{\mathrm i},\quad\dot\theta(0)=0.\end{aligned}`;
+    } else if (q > .999) {
+      heroLatex = String.raw`\begin{aligned}\ddot\theta+\omega_0^2\sin\theta&=0,\\\theta(0)&=\theta_{\mathrm i},\quad\dot\theta(0)=0.\end{aligned}`;
+    } else {
+      heroLatex = String.raw`\begin{aligned}\ddot\theta+\omega_0^2\,\frac{\sin(\sqrt{${q.toFixed(2)}}\,\theta)}{\sqrt{${q.toFixed(2)}}}&=0,\\\theta(0)&=\theta_{\mathrm i},\quad\dot\theta(0)=0.\end{aligned}`;
+    }
+    setMath(equation, heroLatex);
 
     const stage = $('heroCanvas').closest('.hero-stage');
     stage?.style.setProperty('--hero-q', q.toFixed(3));
@@ -810,7 +861,7 @@
     familyState.currentTime = 0;
     familyState.startTime = performance.now();
 
-    $('familyAngleOut').value = `${angleDeg}°`;
+    $('familyAngleOut').value = `θᵢ = ${angleDeg}°`;
     $('familyQOut').value = `q = ${q.toFixed(2)}`;
     $('familyDegreeOut').value = `d = ${degree}`;
     $('familyDurationOut').value = `${duration} s`;
@@ -843,7 +894,7 @@
       const theta = familyState.surrogate.theta[i];
       residual = Math.max(residual, Math.abs(W2 * (Math.sin(theta) - surrogateSin(theta, q, degree))));
     }
-    const activeTerms = (degree + 1) / 2;
+    const activeTerms = q < 1e-12 ? 1 : (degree + 1) / 2;
     $('familyRmse').textContent = error.toFixed(3);
     $('familyPeriod').textContent = formatPercent(periodError);
     $('familyResidual').textContent = formatScientific(residual);
@@ -855,13 +906,19 @@
     setMetricBar('familyTermsBar', activeTerms, 6);
 
     const equation = $('familyEquation');
-    equation.textContent = buildFamilyEquation(q, degree);
-    typeset(equation);
+    setMath(equation, buildFamilyEquation(q, degree));
     const chips = $('familyTermChips');
     chips.innerHTML = '';
     for (let r = 0; r <= (degree - 1) / 2; r += 1) {
       const chip = document.createElement('span');
-      chip.textContent = r === 0 ? 'θ' : `${r % 2 ? '−' : '+'} q^${r} θ^${2*r+1}/${2*r+1}!`;
+      if (r === 0) {
+        chip.textContent = 'θ';
+      } else {
+        const coefficient = q ** r;
+        const sign = r % 2 ? '−' : '+';
+        chip.textContent = `${sign} ${Number(coefficient.toFixed(3))} · θ^${2 * r + 1}/${2 * r + 1}!`;
+        chip.classList.toggle('inactive', coefficient < 1e-12);
+      }
       chips.appendChild(chip);
     }
     drawFamilyMotion();
@@ -893,7 +950,7 @@
       $('scanReadout').value = 'Not scanned';
     }
 
-    $('ghamAngleOut').value = `${angleDeg}°`;
+    $('ghamAngleOut').value = `θᵢ = ${angleDeg}°`;
     $('ghamOrderOut').value = `M = ${order}`;
     $('ghamHbarOut').value = `ħ = ${hbar.toFixed(2).replace('-', '−')}`;
     $('ghamDurationOut').value = `${duration} s`;
@@ -1037,11 +1094,11 @@
   }
 
   const derivativeFormulas = {
-    '1': '\\[D\\mathcal N[\\theta](v)=\\ddot v+\\omega_0^2\\cos(\\theta)\\,v.\\]',
-    '2': '\\[D^2\\mathcal N[\\theta](v_1,v_2)=-\\omega_0^2\\sin(\\theta)\\,v_1v_2.\\]',
-    '3': '\\[D^3\\mathcal N[\\theta](v_1,v_2,v_3)=-\\omega_0^2\\cos(\\theta)\\,v_1v_2v_3.\\]',
-    '4': '\\[D^4\\mathcal N[\\theta](v_1,v_2,v_3,v_4)=\\omega_0^2\\sin(\\theta)\\prod_{j=1}^{4}v_j.\\]',
-    'n': '\\[D^n\\mathcal N[\\theta](v_1,\\ldots,v_n)=\\omega_0^2\\sin\\!\\left(\\theta+\\frac{n\\pi}{2}\\right)\\prod_{j=1}^{n}v_j,\\qquad n\\ge2.\\]'
+    '1': String.raw`D\mathcal N[\theta](v)=\ddot v+\omega_0^2\cos(\theta)\,v.`,
+    '2': String.raw`D^2\mathcal N[\theta](v_1,v_2)=-\omega_0^2\sin(\theta)\,v_1v_2.`,
+    '3': String.raw`D^3\mathcal N[\theta](v_1,v_2,v_3)=-\omega_0^2\cos(\theta)\,v_1v_2v_3.`,
+    '4': String.raw`D^4\mathcal N[\theta](v_1,v_2,v_3,v_4)=\omega_0^2\sin(\theta)\prod_{j=1}^{4}v_j.`,
+    'n': String.raw`D^n\mathcal N[\theta](v_1,\ldots,v_n)=\omega_0^2\sin\!\left(\theta+\frac{n\pi}{2}\right)\prod_{j=1}^{n}v_j,\qquad n\ge2.`
   };
 
   function sineTaylor(base, x, order) {
@@ -1060,8 +1117,7 @@
     $('frechetBaseOut').value = `θ* = ${baseDeg}°`;
     $('frechetDeltaOut').value = `Δ = ${deltaDeg}°`;
     const display = $('derivativeDisplay');
-    display.textContent = derivativeFormulas[frechetState.order];
-    typeset(display);
+    setMath(display, derivativeFormulas[frechetState.order]);
 
     const canvas = $('frechetCanvas');
     const { ctx, width, height } = prepareCanvas(canvas);
@@ -1109,22 +1165,22 @@
 
   const orderData = {
     1: {
-      equation: '\\[\\mathcal L[\\theta_1]=\\hbar R_0,\\qquad R_0=\\mathcal N[\\theta_0]=\\omega_0^2(\\sin\\theta_0-\\theta_0).\\]',
+      equation: String.raw`\mathcal L[\theta_1]=\hbar R_0,\qquad R_0=\mathcal N[\theta_0]=\omega_0^2(\sin\theta_0-\theta_0).`,
       text: 'The first correction is driven by the residual left by the small-angle solution in the nonlinear target equation.',
       inputs: ['N[θ₀]'], center: 'R₀', output: 'L[θ₁]'
     },
     2: {
-      equation: '\\[\\mathcal L[\\theta_2-\\theta_1]=\\hbar R_1,\\qquad R_1=D\\mathcal N[\\theta_0](\\theta_1)=\\ddot\\theta_1+\\omega_0^2\\cos(\\theta_0)\\theta_1.\\]',
+      equation: String.raw`\mathcal L[\theta_2-\theta_1]=\hbar R_1,\qquad R_1=D\mathcal N[\theta_0](\theta_1)=\ddot\theta_1+\omega_0^2\cos(\theta_0)\theta_1.`,
       text: 'The first Fréchet derivative propagates θ₁ through the tangent operator around the starting trajectory.',
       inputs: ['DN[θ₀](θ₁)'], center: 'R₁', output: 'L[θ₂−θ₁]'
     },
     3: {
-      equation: '\\[\\begin{aligned}\\mathcal L[\\theta_3-\\theta_2]&=\\hbar R_2,\\\\R_2&=D\\mathcal N[\\theta_0](\\theta_2)+\\tfrac12D^2\\mathcal N[\\theta_0](\\theta_1,\\theta_1)\\\\&=\\ddot\\theta_2+\\omega_0^2\\cos(\\theta_0)\\theta_2-\\tfrac{\\omega_0^2}{2}\\sin(\\theta_0)\\theta_1^2.\\end{aligned}\\]',
+      equation: String.raw`\begin{aligned}\mathcal L[\theta_3-\theta_2]&=\hbar R_2,\\R_2&=D\mathcal N[\theta_0](\theta_2)+\tfrac12D^2\mathcal N[\theta_0](\theta_1,\theta_1)\\&=\ddot\theta_2+\omega_0^2\cos(\theta_0)\theta_2-\tfrac{\omega_0^2}{2}\sin(\theta_0)\theta_1^2.\end{aligned}`,
       text: 'The curvature of the nonlinear operator enters through the second Fréchet derivative.',
       inputs: ['DN(θ₂)', '½ D²N(θ₁,θ₁)'], center: 'R₂', output: 'L[θ₃−θ₂]'
     },
     4: {
-      equation: '\\[\\begin{aligned}\\mathcal L[\\theta_4-\\theta_3]&=\\hbar R_3,\\\\R_3&=D\\mathcal N[\\theta_0](\\theta_3)+D^2\\mathcal N[\\theta_0](\\theta_1,\\theta_2)+\\tfrac16D^3\\mathcal N[\\theta_0](\\theta_1,\\theta_1,\\theta_1)\\\\&=\\ddot\\theta_3+\\omega_0^2\\cos(\\theta_0)\\theta_3-\\omega_0^2\\sin(\\theta_0)\\theta_1\\theta_2-\\tfrac{\\omega_0^2}{6}\\cos(\\theta_0)\\theta_1^3.\\end{aligned}\\]',
+      equation: String.raw`\begin{aligned}\mathcal L[\theta_4-\theta_3]&=\hbar R_3,\\R_3&=D\mathcal N[\theta_0](\theta_3)+D^2\mathcal N[\theta_0](\theta_1,\theta_2)+\tfrac16D^3\mathcal N[\theta_0](\theta_1,\theta_1,\theta_1)\\&=\ddot\theta_3+\omega_0^2\cos(\theta_0)\theta_3-\omega_0^2\sin(\theta_0)\theta_1\theta_2-\tfrac{\omega_0^2}{6}\cos(\theta_0)\theta_1^3.\end{aligned}`,
       text: 'Mixed products and the third operator derivative generate interactions among the previous corrections.',
       inputs: ['DN(θ₃)', 'D²N(θ₁,θ₂)', '⅙ D³N(θ₁,θ₁,θ₁)'], center: 'R₃', output: 'L[θ₄−θ₃]'
     }
@@ -1133,9 +1189,8 @@
   function updateOrderExplorer(order) {
     const data = orderData[order];
     const equation = $('orderEquation');
-    equation.textContent = data.equation;
+    setMath(equation, data.equation);
     $('orderExplanation').textContent = data.text;
-    typeset(equation);
     $('residualMap').innerHTML = `
       <div class="residual-tree">
         <div class="tree-inputs">${data.inputs.map((item, index) => `<span style="--delay:${index * .08}s">${item}</span>`).join('')}</div>
