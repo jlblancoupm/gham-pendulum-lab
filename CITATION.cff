@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this interactive material, please cite it using the metadata below."
+title: "GHAM Pendulum Lab: Start Simple and Make the Path Explicit"
+type: software
+authors:
+  - family-names: "Blanco-Murillo"
+    given-names: "José Luis"
+    affiliation: "GAPS-UPM, Universidad Politécnica de Madrid"
+year: 2026
+abstract: "An interactive static website explaining Generalized Homotopy Analysis Methods through the nonlinear pendulum, surrogate problem design, Fréchet derivatives, and convergence diagnostics."
+keywords:
+  - GHAM
+  - homotopy analysis method
+  - nonlinear pendulum
+  - surrogate problems
+  - Frechet derivatives
+  - differentiable systems

@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An interactive introduction to Generalized Homotopy Analysis Methods through the nonlinear pendulum, useful surrogate problems, Fréchet derivatives, and convergence diagnostics.">
+  <meta name="theme-color" content="#071421">
+  <meta property="og:title" content="Start Simple — GHAM Pendulum Lab">
+  <meta property="og:description" content="Explore the path from a small-angle surrogate to the nonlinear pendulum through GHAM and Fréchet derivatives.">
+  <title>Start Simple — GHAM Pendulum Lab</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        packages: {'[+]': ['ams']}
+      },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="scroll-progress" aria-hidden="true"><span id="scrollProgress"></span></div>
+
+  <header class="site-header" id="siteHeader">
+    <a class="brand" href="#top" aria-label="GHAM Pendulum Lab home">
+      <span class="brand-mark" aria-hidden="true"><i></i><b>q</b></span>
+      <span class="brand-copy"><strong>GHAM</strong><small>Pendulum Lab</small></span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#idea">Idea</a>
+      <a href="#family">Surrogate lab</a>
+      <a href="#derivation">Derivation</a>
+      <a href="#gham-lab">GHAM lab</a>
+    </nav>
+    <a class="header-source" href="assets/C4DM_presentation_JLBM_20260729.pdf">Source deck</a>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" data-section="top">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-glow glow-one" aria-hidden="true"></div>
+      <div class="hero-glow glow-two" aria-hidden="true"></div>
+
+      <div class="hero-copy reveal">
+        <div class="hero-kicker"><span></span> START SIMPLE</div>
+        <h1>Make the path to the <em>nonlinear problem</em> explicit.</h1>
+        <p class="hero-lead">
+          A visual and computational introduction to Generalized Homotopy Analysis Methods,
+          using the pendulum to connect surrogate design, operator deformation,
+          Fréchet derivatives, and convergence control.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#family"><span>Open the live lab</span><i aria-hidden="true">↘</i></a>
+          <a class="button secondary" href="#derivation">Follow the mathematics</a>
+        </div>
+        <div class="hero-principles">
+          <div><span class="dot gold"></span><strong>Design the family</strong><small>Do not leave the path to the optimizer.</small></div>
+          <div><span class="dot green"></span><strong>Preserve the phenomenon</strong><small>The easiest model may remove what matters.</small></div>
+        </div>
+      </div>
+
+      <div class="hero-stage reveal delay-1">
+        <div class="stage-header">
+          <span>LIVE CONTINUATION</span>
+          <output id="heroQOut">q = 0.00</output>
+        </div>
+        <canvas id="heroCanvas" aria-label="Interactive path from a small-angle pendulum to the nonlinear pendulum"></canvas>
+        <div class="hero-equation" id="heroEquation">
+          \[\ddot\theta+\omega_0^2\theta=0\]
+        </div>
+        <div class="hero-q-control">
+          <span>simple surrogate</span>
+          <input id="heroQ" type="range" min="0" max="1" step="0.01" value="0" aria-label="Hero continuation parameter q">
+          <span>target problem</span>
+        </div>
+        <div class="stage-footer">
+          <span id="heroModelLabel">Small-angle oscillator</span>
+          <span>drag <b>q</b> to deform the problem</span>
+        </div>
+      </div>
+
+      <div class="hero-scroll" aria-hidden="true"><span></span>Explore</div>
+    </section>
+
+    <section class="section idea-section" id="idea" data-section="idea">
+      <div class="section-heading reveal">
+        <p class="eyebrow">THE CENTRAL IDEA</p>
+        <h2>A surrogate is a <em>problem</em>, not merely a rough answer.</h2>
+        <p>
+          The pendulum is small enough to inspect and rich enough to make the point. Its linear approximation
+          is elegant and analytical, but it erases amplitude-dependent timing. GHAM turns the transition from
+          a known surrogate to the target system into an explicit mathematical object.
+        </p>
+      </div>
+
+      <div class="path-architecture reveal delay-1">
+        <div class="path-copy">
+          <div class="path-step active" data-path-step="0">
+            <span>01</span><div><strong>Start from structure you trust</strong><small>An analytical surrogate supplies θ₀ and a useful linear operator.</small></div>
+          </div>
+          <div class="path-step" data-path-step="1">
+            <span>02</span><div><strong>Deform the problem deliberately</strong><small>The embedding parameter q exposes intermediate problems rather than hiding them.</small></div>
+          </div>
+          <div class="path-step" data-path-step="2">
+            <span>03</span><div><strong>Resolve the nonlinear corrections</strong><small>Fréchet derivatives reorganize the nonlinear operator into forced linear equations.</small></div>
+          </div>
+          <div class="path-step" data-path-step="3">
+            <span>04</span><div><strong>Diagnose the path</strong><small>Order M, restart k, and ħ are separate controls, not decoration.</small></div>
+          </div>
+        </div>
+        <div class="path-visual-card">
+          <div class="path-visual-top"><span>PROBLEM–SOLUTION SPACE</span><small>click the steps</small></div>
+          <canvas id="pathCanvas" aria-label="Visual map of the GHAM problem and solution path"></canvas>
+          <div class="path-legend"><span><i class="q"></i> continuation q</span><span><i class="m"></i> order M</span><span><i class="k"></i> restart k</span></div>
+        </div>
+      </div>
+
+      <div class="operator-band reveal">
+        <div>
+          <span class="operator-label">Target operator</span>
+          <strong>\(\mathcal N[\theta]=\ddot\theta+\omega_0^2\sin\theta\)</strong>
+        </div>
+        <div class="operator-arrow" aria-hidden="true"><span></span><b>observable residual</b><span></span></div>
+        <div>
+          <span class="operator-label">Target initial-value problem</span>
+          <strong>\(\mathcal N[\theta]=0,\quad \theta(0)=A,\ \dot\theta(0)=0\)</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section lab-section" id="family" data-section="family">
+      <div class="section-heading split reveal">
+        <div>
+          <p class="eyebrow">INTERACTIVE EXAMPLE I</p>
+          <h2>Build a family of <em>surrogate pendulums</em>.</h2>
+        </div>
+        <p>
+          Weight each nonlinear Maclaurin term by a power of \(q\). At \(q=0\), only the small-angle term survives.
+          At \(q=1\), increasing the highest odd degree \(d=2P+1\) approaches the sine nonlinearity.
+        </p>
+      </div>
+
+      <div class="formula-ribbon reveal">
+        <div>
+          \[
+          s_d(\theta;q)=\sum_{r=0}^{(d-1)/2}(-1)^r q^r\frac{\theta^{2r+1}}{(2r+1)!},
+          \qquad
+          \ddot\theta+\omega_0^2s_d(\theta;q)=0.
+          \]
+        </div>
+        <div class="formula-endpoints">
+          <span><i class="endpoint-start"></i><strong>q = 0</strong> \(s_d(\theta;0)=\theta\)</span>
+          <span><i class="endpoint-end"></i><strong>q = 1, d\to\infty</strong> \(s_d(\theta;1)=\sin\theta\)</span>
+        </div>
+      </div>
+
+      <div class="lab-shell reveal delay-1">
+        <aside class="control-deck" aria-label="Surrogate family controls">
+          <div class="deck-title"><span>CONTROL DECK</span><button id="familyReset" type="button">Reset</button></div>
+
+          <div class="preset-row" aria-label="Surrogate presets">
+            <button type="button" data-family-preset="linear">Linear</button>
+            <button type="button" data-family-preset="cubic" class="active">Useful cubic</button>
+            <button type="button" data-family-preset="target">Near target</button>
+            <button type="button" data-family-preset="stress">Stress test</button>
+          </div>
+
+          <div class="control-group accent-gold">
+            <div class="control-label"><label for="familyQ">Continuation</label><output id="familyQOut">q = 0.50</output></div>
+            <input id="familyQ" type="range" min="0" max="1" step="0.01" value="0.5">
+            <div class="range-ends"><span>linear</span><span>nonlinear</span></div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label"><label for="familyAngle">Initial amplitude</label><output id="familyAngleOut">30°</output></div>
+            <input id="familyAngle" type="range" min="5" max="85" step="1" value="30">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label"><span>Highest odd degree</span><output id="familyDegreeOut">d = 3</output></div>
+            <div class="segmented" id="familyDegreeButtons" role="group" aria-label="Highest odd polynomial degree">
+              <button type="button" data-degree="1">1</button>
+              <button type="button" data-degree="3" class="active">3</button>
+              <button type="button" data-degree="5">5</button>
+              <button type="button" data-degree="7">7</button>
+              <button type="button" data-degree="11">11</button>
+            </div>
+            <input id="familyDegree" type="hidden" value="3">
+          </div>
+
+          <div class="control-group compact-control">
+            <div class="control-label"><label for="familyDuration">Observation horizon</label><output id="familyDurationOut">8 s</output></div>
+            <input id="familyDuration" type="range" min="4" max="16" step="1" value="8">
+          </div>
+
+          <div class="live-model-card" aria-live="polite">
+            <span>ACTIVE SURROGATE</span>
+            <div id="familyEquation">\[\ddot\theta+\omega_0^2\left(\theta-0.5\,\theta^3/3!\right)=0\]</div>
+            <div class="term-chips" id="familyTermChips"></div>
+          </div>
+        </aside>
+
+        <div class="lab-workspace">
+          <div class="workspace-toolbar">
+            <div class="view-tabs" role="tablist" aria-label="Surrogate visualisations">
+              <button type="button" class="active" data-family-view="motion" role="tab">Motion</button>
+              <button type="button" data-family-view="trajectory" role="tab">Trajectory</button>
+              <button type="button" data-family-view="phase" role="tab">Phase</button>
+              <button type="button" data-family-view="force" role="tab">Nonlinearity</button>
+            </div>
+            <div class="play-controls">
+              <button class="round-button" id="familyPause" type="button" aria-label="Pause surrogate animation">Ⅱ</button>
+              <output id="familyTimeOut">0.00 s</output>
+            </div>
+          </div>
+
+          <div class="workspace-canvas-stack">
+            <div class="view-panel active" data-family-panel="motion"><canvas id="familyMotionCanvas" aria-label="Animated nonlinear numerical reference and surrogate pendulums"></canvas></div>
+            <div class="view-panel" data-family-panel="trajectory"><canvas id="familyTrajectoryCanvas" aria-label="Trajectory comparison of numerical reference, surrogate, and small-angle models"></canvas></div>
+            <div class="view-panel" data-family-panel="phase"><canvas id="familyPhaseCanvas" aria-label="Phase portrait comparison of numerical reference and surrogate models"></canvas></div>
+            <div class="view-panel" data-family-panel="force"><canvas id="familyForceCanvas" aria-label="Comparison of sine, surrogate, and linear restoring nonlinearities"></canvas></div>
+          </div>
+
+          <div class="time-scrubber">
+            <span>0</span><input id="familyTime" type="range" min="0" max="8" step="0.01" value="0" aria-label="Surrogate animation time"><span id="familyTimeMax">8 s</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metrics-grid reveal" aria-live="polite">
+        <div class="metric-card"><span>Trajectory RMSE</span><strong id="familyRmse">–</strong><small>degrees vs numerical reference</small><i class="metric-bar"><b id="familyRmseBar"></b></i></div>
+        <div class="metric-card"><span>Period error</span><strong id="familyPeriod">–</strong><small>relative mismatch</small><i class="metric-bar"><b id="familyPeriodBar"></b></i></div>
+        <div class="metric-card"><span>Target residual</span><strong id="familyResidual">–</strong><small>\(\max_t|\mathcal N[\theta]|\)</small><i class="metric-bar"><b id="familyResidualBar"></b></i></div>
+        <div class="metric-card"><span>Active terms</span><strong id="familyTerms">–</strong><small>through degree <b id="familyDegreeMetric">3</b></small><i class="metric-bar"><b id="familyTermsBar"></b></i></div>
+      </div>
+
+      <div class="closed-form-note reveal">
+        <span class="note-mark">∞</span>
+        <div>
+          <strong>The infinite-order family has a clean interpretation.</strong>
+          <p>For \(q&gt;0\), \(s_\infty(\theta;q)=\sin(\sqrt q\,\theta)/\sqrt q\), with continuous limit \(s_\infty(\theta;0)=\theta\). The effective nonlinear amplitude grows as \(\sqrt q A\).</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section derivation-section" id="derivation" data-section="derivation">
+      <div class="section-heading split reveal">
+        <div>
+          <p class="eyebrow">CLEAN DERIVATION</p>
+          <h2>From deformation to <em>computable corrections</em>.</h2>
+        </div>
+        <p>
+          The correct setting is affine. Let \(X_0\) contain zero-initial-condition perturbations and
+          \(X_A=\theta_0+X_0\) contain trajectories satisfying the prescribed initial conditions.
+        </p>
+      </div>
+
+      <div class="derivation-layout reveal delay-1">
+        <aside class="derivation-nav" role="tablist" aria-label="Derivation stages">
+          <button type="button" class="active" data-derivation-tab="spaces"><span>01</span><div><strong>Function spaces</strong><small>Place the operator correctly</small></div></button>
+          <button type="button" data-derivation-tab="deformation"><span>02</span><div><strong>Zero-order deformation</strong><small>Connect q = 0 and q = 1</small></div></button>
+          <button type="button" data-derivation-tab="series"><span>03</span><div><strong>Series in q</strong><small>Define the correction functions</small></div></button>
+          <button type="button" data-derivation-tab="residual"><span>04</span><div><strong>Residual coefficients</strong><small>Apply Fréchet–Taylor expansion</small></div></button>
+          <button type="button" data-derivation-tab="recursion"><span>05</span><div><strong>Linear recursion</strong><small>Solve one correction at a time</small></div></button>
+        </aside>
+
+        <div class="derivation-stage">
+          <article class="derivation-panel active" data-derivation-panel="spaces">
+            <p class="eyebrow">01 · FUNCTION-SPACE SETTING</p>
+            <h3>Fixed initial conditions define an affine space.</h3>
+            <div class="math-card main-math">
+              \[
+              X_0=\{v\in C^2([0,T]):v(0)=0,\ \dot v(0)=0\},
+              \qquad X_A=\theta_0+X_0,
+              \]
+              \[
+              \mathcal N:X_A\to C([0,T]),
+              \qquad \mathcal N[\theta]=\ddot\theta+\omega_0^2\sin\theta.
+              \]
+            </div>
+            <div class="derivation-insight"><span>Why this matters</span><p>Every correction \(\theta_m\in X_0\) has homogeneous initial conditions, so every partial sum preserves \(\theta(0)=A\) and \(\dot\theta(0)=0\).</p></div>
+          </article>
+
+          <article class="derivation-panel" data-derivation-panel="deformation">
+            <p class="eyebrow">02 · ZERO-ORDER DEFORMATION</p>
+            <h3>One equation contains the surrogate and the target.</h3>
+            <div class="math-card main-math">
+              \[
+              (1-q)\,\mathcal L[\Theta(t;q)-\theta_0(t)]
+              =q\,\hbar\,\mathcal N[\Theta(t;q)],
+              \qquad \mathcal L[v]=\ddot v+\omega_0^2v.
+              \]
+            </div>
+            <div class="endpoint-cards">
+              <div><span>q = 0</span><strong>\(\mathcal L[\Theta-\theta_0]=0\)</strong><small>Homogeneous initial conditions imply \(\Theta(t;0)=\theta_0(t)\).</small></div>
+              <div><span>q = 1</span><strong>\(\hbar\mathcal N[\Theta]=0\)</strong><small>For \(\hbar\ne0\), the endpoint is the target equation.</small></div>
+            </div>
+            <div class="derivation-warning">Recovering the target solution from the series additionally requires convergence at \(q=1\).</div>
+          </article>
+
+          <article class="derivation-panel" data-derivation-panel="series">
+            <p class="eyebrow">03 · MACLAURIN SERIES IN THE EMBEDDING PARAMETER</p>
+            <h3>Approximation order is independent of continuation.</h3>
+            <div class="math-card main-math">
+              \[
+              \Theta(t;q)=\theta_0(t)+\sum_{m=1}^{\infty}\theta_m(t)q^m,
+              \qquad
+              \theta_m(t)=\left.\frac{1}{m!}\frac{\partial^m\Theta(t;q)}{\partial q^m}\right|_{q=0}.
+              \]
+              \[
+              \theta^{(M)}(t)=\sum_{m=0}^{M}\theta_m(t)\qquad\text{at }q=1.
+              \]
+            </div>
+            <div class="series-rail" aria-hidden="true"><span>\(\theta_0\)</span><i></i><span>\(+\theta_1\)</span><i></i><span>\(+\theta_2\)</span><i></i><span>\(\cdots\)</span><i></i><span>\(\theta^{(M)}\)</span></div>
+          </article>
+
+          <article class="derivation-panel" data-derivation-panel="residual">
+            <p class="eyebrow">04 · FRÉCHET–TAYLOR EXPANSION</p>
+            <h3>Expand the operator around the surrogate trajectory.</h3>
+            <div class="math-card main-math">
+              \[
+              \mathcal N[\theta_0+\Delta]
+              =\mathcal N[\theta_0]+D\mathcal N[\theta_0](\Delta)
+              +\frac{1}{2!}D^2\mathcal N[\theta_0](\Delta,\Delta)+\cdots,
+              \]
+              \[
+              \Delta=\sum_{m\ge1}\theta_mq^m,
+              \qquad
+              \mathcal N[\Theta(t;q)]=\sum_{n=0}^{\infty}R_n(t)q^n.
+              \]
+            </div>
+            <div class="derivation-insight"><span>The key move</span><p>Collect equal powers of \(q\). Each coefficient \(R_n\) depends only on already computed correction functions when solving the next deformation equation.</p></div>
+          </article>
+
+          <article class="derivation-panel" data-derivation-panel="recursion">
+            <p class="eyebrow">05 · m-TH ORDER DEFORMATION EQUATION</p>
+            <h3>The nonlinear problem becomes a sequence of linear solves.</h3>
+            <div class="math-card main-math">
+              \[
+              \mathcal L[\theta_m-\chi_m\theta_{m-1}]=\hbar R_{m-1},
+              \qquad
+              \chi_1=0,\quad \chi_m=1\ (m\ge2).
+              \]
+              \[
+              R_n=\left.\frac{1}{n!}\frac{\partial^n}{\partial q^n}
+              \mathcal N[\Theta(\cdot;q)]\right|_{q=0}.
+              \]
+            </div>
+            <div class="derivation-insight"><span>Computational payoff</span><p>The new unknown appears through the fixed linear operator \(\mathcal L\); nonlinear products contain only previous corrections.</p></div>
+          </article>
+        </div>
+      </div>
+
+      <div class="frechet-lab reveal">
+        <div class="frechet-copy">
+          <p class="eyebrow">FRÉCHET MICROSCOPE</p>
+          <h3>See the operator derivatives shape the local nonlinear model.</h3>
+          <p>
+            The second-derivative block \(\ddot\theta\) is linear, so it contributes only to \(D\mathcal N\).
+            Higher derivatives come entirely from the pointwise sine nonlinearity.
+          </p>
+          <div class="derivative-buttons" role="group" aria-label="Choose Fréchet derivative order">
+            <button type="button" class="active" data-derivative="1">D¹</button>
+            <button type="button" data-derivative="2">D²</button>
+            <button type="button" data-derivative="3">D³</button>
+            <button type="button" data-derivative="4">D⁴</button>
+            <button type="button" data-derivative="n">Dⁿ</button>
+          </div>
+          <div class="frechet-controls">
+            <div class="control-group">
+              <div class="control-label"><label for="frechetBase">Expansion point</label><output id="frechetBaseOut">θ* = 35°</output></div>
+              <input id="frechetBase" type="range" min="-80" max="80" step="1" value="35">
+            </div>
+            <div class="control-group">
+              <div class="control-label"><label for="frechetDelta">Perturbation</label><output id="frechetDeltaOut">Δ = 20°</output></div>
+              <input id="frechetDelta" type="range" min="-60" max="60" step="1" value="20">
+            </div>
+          </div>
+        </div>
+        <div class="frechet-visual">
+          <div class="formula-display" id="derivativeDisplay" aria-live="polite">
+            \[D\mathcal N[\theta](v)=\ddot v+\omega_0^2\cos(\theta)v.\]
+          </div>
+          <canvas id="frechetCanvas" aria-label="Pointwise Taylor approximation generated by sine derivatives"></canvas>
+          <div class="frechet-readout">
+            <div><span>exact sine</span><strong id="frechetExact">–</strong></div>
+            <div><span>Taylor model</span><strong id="frechetApprox">–</strong></div>
+            <div><span>local error</span><strong id="frechetError">–</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="residual-explorer reveal">
+        <div class="explorer-header">
+          <div><p class="eyebrow">RESIDUAL COEFFICIENT EXPLORER</p><h3>Inspect how each \(R_n\) is assembled.</h3></div>
+          <div class="order-buttons" role="group" aria-label="Choose residual coefficient">
+            <button type="button" class="active" data-order="1">m = 1</button>
+            <button type="button" data-order="2">m = 2</button>
+            <button type="button" data-order="3">m = 3</button>
+            <button type="button" data-order="4">m = 4</button>
+          </div>
+        </div>
+        <div class="residual-body">
+          <div class="residual-map" id="residualMap" aria-hidden="true"></div>
+          <div>
+            <div class="formula-display large" id="orderEquation">
+              \[\mathcal L[\theta_1]=\hbar R_0,\qquad R_0=\omega_0^2(\sin\theta_0-\theta_0).\]
+            </div>
+            <p id="orderExplanation">The first correction is driven by the residual left by the small-angle solution in the nonlinear target equation.</p>
+            <div class="boundary-note">For every \(m\ge1\): \(\theta_m(0)=0\), \(\dot\theta_m(0)=0\).</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section lab-section gham-section" id="gham-lab" data-section="gham-lab">
+      <div class="section-heading split reveal">
+        <div>
+          <p class="eyebrow">INTERACTIVE EXAMPLE II</p>
+          <h2>Compute and diagnose the <em>GHAM series</em>.</h2>
+        </div>
+        <p>
+          The browser solves each forced linear correction problem in sequence. The formal-series engine
+          computes residual coefficients recursively, while the derivation above displays the explicit terms through \(m=4\).
+        </p>
+      </div>
+
+      <div class="lab-shell reveal delay-1">
+        <aside class="control-deck" aria-label="GHAM series controls">
+          <div class="deck-title"><span>GHAM CONTROL DECK</span><button id="ghamReset" type="button">Reset</button></div>
+
+          <div class="preset-row" aria-label="GHAM presets">
+            <button type="button" data-gham-preset="gentle" class="active">Gentle</button>
+            <button type="button" data-gham-preset="long">Long horizon</button>
+            <button type="button" data-gham-preset="large">Large angle</button>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label"><label for="ghamAngle">Initial amplitude</label><output id="ghamAngleOut">30°</output></div>
+            <input id="ghamAngle" type="range" min="5" max="85" step="1" value="30">
+          </div>
+
+          <div class="control-group accent-blue">
+            <div class="control-label"><label for="ghamOrder">Truncation order</label><output id="ghamOrderOut">M = 4</output></div>
+            <input id="ghamOrder" type="range" min="0" max="6" step="1" value="4">
+            <div class="range-ends"><span>surrogate</span><span>more corrections</span></div>
+          </div>
+
+          <div class="control-group accent-purple">
+            <div class="control-label"><label for="ghamHbar">Convergence control</label><output id="ghamHbarOut">ħ = −1.00</output></div>
+            <input id="ghamHbar" type="range" min="-1.8" max="-0.05" step="0.05" value="-1">
+          </div>
+
+          <div class="control-group compact-control">
+            <div class="control-label"><label for="ghamDuration">Observation horizon</label><output id="ghamDurationOut">8 s</output></div>
+            <input id="ghamDuration" type="range" min="4" max="14" step="1" value="8">
+          </div>
+
+          <div class="scan-card">
+            <div><span>ħ SCAN</span><small>Search the selected interval for the lowest trajectory RMSE.</small></div>
+            <button id="scanHbar" class="button tiny" type="button">Scan ħ</button>
+            <button id="applyBestHbar" class="button tiny secondary" type="button" disabled>Apply best</button>
+            <output id="scanReadout">Not scanned</output>
+          </div>
+
+          <div class="convergence-message" id="convergenceMessage" aria-live="polite"></div>
+        </aside>
+
+        <div class="lab-workspace">
+          <div class="workspace-toolbar">
+            <div class="view-tabs" role="tablist" aria-label="GHAM visualisations">
+              <button type="button" class="active" data-gham-view="trajectory" role="tab">Trajectory</button>
+              <button type="button" data-gham-view="corrections" role="tab">Corrections</button>
+              <button type="button" data-gham-view="phase" role="tab">Phase</button>
+              <button type="button" data-gham-view="residual" role="tab">Residual</button>
+              <button type="button" data-gham-view="scan" role="tab">ħ scan</button>
+            </div>
+            <div class="play-controls">
+              <button class="round-button" id="ghamPause" type="button" aria-label="Pause GHAM animation">Ⅱ</button>
+              <output id="ghamTimeOut">0.00 s</output>
+            </div>
+          </div>
+
+          <div class="gham-split-view">
+            <div class="gham-motion-mini"><canvas id="ghamMotionCanvas" aria-label="Animated numerical reference and GHAM pendulums"></canvas></div>
+            <div class="workspace-canvas-stack">
+              <div class="view-panel active" data-gham-panel="trajectory"><canvas id="ghamTrajectoryCanvas" aria-label="Trajectory comparison of numerical reference and GHAM approximation"></canvas></div>
+              <div class="view-panel" data-gham-panel="corrections"><canvas id="ghamCorrectionsCanvas" aria-label="GHAM correction functions by order"></canvas></div>
+              <div class="view-panel" data-gham-panel="phase"><canvas id="ghamPhaseCanvas" aria-label="Phase portrait comparison of numerical reference and GHAM approximation"></canvas></div>
+              <div class="view-panel" data-gham-panel="residual"><canvas id="ghamResidualCanvas" aria-label="Nonlinear target residual of GHAM partial sums"></canvas></div>
+              <div class="view-panel" data-gham-panel="scan"><canvas id="ghamScanCanvas" aria-label="GHAM error as a function of the convergence-control parameter hbar"></canvas></div>
+            </div>
+          </div>
+
+          <div class="time-scrubber">
+            <span>0</span><input id="ghamTime" type="range" min="0" max="8" step="0.01" value="0" aria-label="GHAM animation time"><span id="ghamTimeMax">8 s</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metrics-grid reveal" aria-live="polite">
+        <div class="metric-card"><span>Trajectory RMSE</span><strong id="ghamRmse">–</strong><small>degrees vs numerical reference</small><i class="metric-bar"><b id="ghamRmseBar"></b></i></div>
+        <div class="metric-card"><span>Period error</span><strong id="ghamPeriod">–</strong><small>relative mismatch</small><i class="metric-bar"><b id="ghamPeriodBar"></b></i></div>
+        <div class="metric-card"><span>Target residual</span><strong id="ghamResidual">–</strong><small>\(\max_t|\mathcal N[\theta^{(M)}]|\)</small><i class="metric-bar"><b id="ghamResidualBar"></b></i></div>
+        <div class="metric-card"><span>Last correction ratio</span><strong id="ghamCorrection">–</strong><small>\(\|\theta_M\|_\infty/\|\theta^{(M)}\|_\infty\)</small><i class="metric-bar"><b id="ghamCorrectionBar"></b></i></div>
+      </div>
+
+      <div class="diagnostic-grid reveal">
+        <article><span>01</span><div><strong>Order is not a free lunch.</strong><p>A higher \(M\) helps only while the correction sequence remains controlled over the chosen horizon.</p></div></article>
+        <article><span>02</span><div><strong>\(\hbar\) changes the finite approximation.</strong><p>The exact endpoint equation is unchanged, but the path and convergence region of the truncated series are not.</p></div></article>
+        <article><span>03</span><div><strong>Restart when the local expansion is exhausted.</strong><p>For large amplitudes or long horizons, restarting from a better local surrogate can be preferable to adding orders blindly.</p></div></article>
+      </div>
+    </section>
+
+    <section class="section bridge-section" id="bridge" data-section="bridge">
+      <div class="bridge-card reveal">
+        <div>
+          <p class="eyebrow">WHY THIS TOY PROBLEM MATTERS</p>
+          <h2>The same logic scales to <em>sound-producing systems</em>.</h2>
+          <p>
+            The pendulum teaches a general design rule: keep the phenomenon that carries information to the next stage.
+            In audio, that may mean excitation, resonant body, memory, stability, or perceptually meaningful invariances.
+          </p>
+        </div>
+        <div class="bridge-flow" aria-label="Flow from oscillator to validated sound">
+          <span>oscillator</span><i>→</i><span>resonator</span><i>→</i><span>source–body model</span><i>→</i><span>full system</span><i>→</i><span>validated sound</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section takeaways" id="takeaways" data-section="takeaways">
+      <div class="section-heading reveal">
+        <p class="eyebrow">TAKE-HOME MESSAGE</p>
+        <h2>Start simple — and make the path explicit.</h2>
+      </div>
+      <div class="takeaway-grid reveal delay-1">
+        <article><span>Not a black box</span><strong>Design the family of problems.</strong></article>
+        <article><span>Not the easiest model</span><strong>Choose the useful surrogate.</strong></article>
+        <article><span>Not only reconstruction</span><strong>Identify structure that transfers.</strong></article>
+      </div>
+      <div class="source-note reveal">
+        <div><strong>GHAM Pendulum Lab</strong><span>Adapted from <em>Start Simple! Learning Sound-Producing Systems from Surrogate Problems</em>.</span></div>
+        <a class="button secondary" href="assets/C4DM_presentation_JLBM_20260729.pdf">View the presentation</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div><strong>Dr. José Luis Blanco-Murillo</strong><span>GAPS-UPM · interactive research companion</span></div>
+    <div><span>Static HTML · vanilla JavaScript · GitHub Pages ready</span><a href="#top">Back to top ↑</a></div>
+  </footer>
+</body>
+</html>
