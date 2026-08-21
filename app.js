@@ -14,8 +14,10 @@
     purple: '#b37cff', orange: '#ff9f50', red: '#ff7474'
   };
 
+  const GUIDED_AMPLITUDE = 1.5;
+
   const state = {
-    amplitude: 2.0,
+    amplitude: GUIDED_AMPLITUDE,
     q: 0.0,
     M: 0,
     hbar: -1.0,
@@ -161,7 +163,7 @@
     ctx.beginPath(); ctx.moveTo(X(0), top); ctx.lineTo(X(0), top+h); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(left, Y(0)); ctx.lineTo(left+w, Y(0)); ctx.stroke();
 
-    [-2, 2].forEach(x => {
+    [-1.5, 1.5].forEach(x => {
       ctx.fillStyle = COLORS.red;
       ctx.beginPath(); ctx.arc(X(x), Y(Math.sin(x)), 4, 0, Math.PI*2); ctx.fill();
     });
@@ -185,8 +187,8 @@
     const Y = x => top + (2.3-x)/4.6*h;
 
     // UI-only illustrative curves. The exact reference will be replaced by Model.exactPendulum.
-    const linear = t => 2*Math.cos(t);
-    const nonlinearIllustrative = t => 2*Math.cos(.7525*t) * (1 - .035*Math.cos(2*.7525*t));
+    const linear = t => 1.5*Math.cos(t);
+    const nonlinearIllustrative = t => 1.5*Math.cos(.860608*t) * (1 - .020*Math.cos(2*.860608*t));
 
     const plot = (fn,color,dash=[]) => {
       ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.setLineDash(dash); ctx.beginPath();
@@ -207,8 +209,8 @@
     const {ctx,width,height}=prepareCanvas(canvas);
     clearCanvas(ctx,width,height);
     const cx=width*.5, cy=height*.18, L=Math.min(width,height)*.33;
-    const aLin=2*Math.cos(time);
-    const aNon=2*Math.cos(.7525*time)*(1-.035*Math.cos(1.505*time));
+    const aLin=1.5*Math.cos(time);
+    const aNon=1.5*Math.cos(.860608*time)*(1-.020*Math.cos(1.721216*time));
 
     const pend=(a,color,alpha=1,dx=0)=>{
       const x=cx+dx+L*Math.sin(a), y=cy+L*Math.cos(a);
@@ -246,7 +248,7 @@
     } else if (view === 'frequency') {
       const canvas=$('transportFrequencyCanvas'); const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height);
       const left=60,right=28,top=42,bottom=50,w=width-left-right,h=height-top-bottom;drawGrid(ctx,left,top,w,h,8,5);
-      const om = qq => 1 - (1-.7525)*Math.pow(qq,.9); // UI shell only
+      const om = qq => 1 - (1-.860608)*Math.pow(qq,.9); // UI shell only
       const ymin=.72,ymax=1.02; const Xp=x=>left+x*w; const Yp=y=>top+(ymax-y)/(ymax-ymin)*h;
       ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2.4;ctx.beginPath();
       for(let i=0;i<=300;i++){const qq=i/300,px=Xp(qq),py=Yp(om(qq));if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();
@@ -287,7 +289,7 @@
   }
 
   function updateMetricPlaceholders(){
-    const metrics = Model.metrics({ amplitude:2, q:1, M:state.M, hbar:-1 });
+    const metrics = Model.metrics({ amplitude:GUIDED_AMPLITUDE, q:1, M:state.M, hbar:-1 });
     const set=(id,val)=>$(id).textContent=val;
     if(metrics){
       set('metricWave',metrics.waveform);set('metricResidual',metrics.residual);
@@ -305,7 +307,7 @@
     const info = `M = ${M} · ħ = ${fmtMinus(hb,2)}`;
     if(state.controlView==='heatmap'){
       drawPlaceholder($('mhbarMapCanvas'),'Convergence landscape in (M, ħ)',[
-        info,'q = 1 and A = 2 rad remain fixed','baseline ħ = −1 will be marked explicitly'
+        info,'q = 1 and A = 1.5 rad remain fixed','baseline ħ = −1 will be marked explicitly'
       ],COLORS.purple);
     } else if(state.controlView==='curves'){
       drawPlaceholder($('hbarCurvesCanvas'),'Error versus ħ for every M',[

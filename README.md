@@ -27,7 +27,7 @@ It does **not** yet implement the validated frequency-corrected GOTHAM engine. A
 The guided demo is frozen around
 
 \[
-\ddot x+\sin x=0,\qquad x(0)=2\ \mathrm{rad},\qquad \dot x(0)=0,
+\ddot x+\sin x=0,\qquad x(0)=1.5\ \mathrm{rad}\approx86^\circ,\qquad \dot x(0)=0,
 \]
 
 with continuous system transport
@@ -88,3 +88,8 @@ styles.css
 app.js
 README.md
 ```
+
+
+## Guided amplitude choice
+
+The guided experience uses `A = 1.5 rad` (~86°): visually familiar (just below horizontal), while still clearly outside the small-angle regime. The Playground keeps `A = 2 rad` available as a harder case.

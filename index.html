@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -22,7 +22,7 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script defer src="app.js?v=1"></script>
+  <script defer src="app.js?v=5"></script>
 </head>
 
 <body>
@@ -41,7 +41,7 @@
       <a href="#control">Control</a>
       <a href="#playground">Playground</a>
     </nav>
-    <span class="header-chip">A = 2 rad</span>
+    <span class="header-chip">A = 1.5 rad</span>
   </header>
 
   <main id="main">
@@ -57,8 +57,8 @@
         <div class="hero-kicker"><span></span> START SIMPLE</div>
         <h1>Start from what you can solve. <em>Do not stop there.</em></h1>
         <p class="hero-lead">
-          The small-angle pendulum is analytical and familiar. At a release angle of
-          \(2\,\mathrm{rad}\), however, it is no longer an accurate description.
+          The small-angle pendulum is analytical and familiar. Released almost horizontally at
+          \(1.5\,\mathrm{rad}\approx86^\circ\), however, it is already well outside the small-angle regime.
           GOTHAM makes the path from the simple system to the nonlinear target explicit.
         </p>
         <div class="hero-actions">
@@ -86,7 +86,7 @@
           \]
         </div>
         <div class="stage-footer">
-          <span>release angle \(x(0)=2\,\mathrm{rad}\)</span>
+          <span>release angle \(x(0)=1.5\,\mathrm{rad}\approx86^\circ\)</span>
           <span>shell only · new GOTHAM engine pending</span>
         </div>
       </div>
@@ -103,7 +103,7 @@
           <h2>The easy model is useful. <em>It is not the answer.</em></h2>
         </div>
         <p>
-          At \(x=2\,\mathrm{rad}\), replacing \(\sin x\) by \(x\) substantially changes
+          At \(x=1.5\,\mathrm{rad}\), replacing \(\sin x\) by \(x\) substantially changes
           the restoring law and the oscillation period. The approximation is valuable because
           it gives us a solved starting point — not because it is already accurate.
         </p>
@@ -193,7 +193,7 @@
 
           <div class="workspace-footer">
             <span id="transportViewMessage">The restoring law is transported continuously.</span>
-            <span>guided mode · \(A=2\,\mathrm{rad}\)</span>
+            <span>guided mode · \(A=1.5\,\mathrm{rad}\)</span>
           </div>
         </div>
       </div>
@@ -296,7 +296,7 @@
 
           <div class="fixed-grid">
             <div><span>q</span><strong>1</strong></div>
-            <div><span>A</span><strong>2 rad</strong></div>
+            <div><span>A</span><strong>1.5 rad</strong></div>
           </div>
 
           <div class="control-group accent-blue">
@@ -371,8 +371,7 @@
           <h2>Now <em>break the guided story</em>.</h2>
         </div>
         <p>
-          This section deliberately exposes all controls at once. It inherits the lab architecture
-          of the previous site, but every scientific computation will come from the new GOTHAM engine.
+          This section deliberately exposes all controls at once. The guided demo uses \(A=1.5\,\mathrm{rad}\); here you can also try the harder \(A=2\,\mathrm{rad}\) case and beyond.
         </p>
       </div>
 
