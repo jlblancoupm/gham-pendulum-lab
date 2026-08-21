@@ -93,3 +93,15 @@ README.md
 ## Guided amplitude choice
 
 The guided experience uses `A = 1.5 rad` (~86°): visually familiar (just below horizontal), while still clearly outside the small-angle regime. The Playground keeps `A = 2 rad` available as a harder case.
+
+## v6 — Transport engine
+
+The continuous `q` transport is now computed in-browser from the new frequency-corrected GOTHAM series for the guided `A=1.5 rad` case.
+
+Connected views:
+- operator `g_q(x)`;
+- physical-time response `x(t;q)`;
+- transported angular frequency `Omega(q)`;
+- harmonic amplitudes H1 / H3 / H5.
+
+Refinement (`M`) and convergence control (`hbar`) still remain intentionally disconnected until transport is cross-validated against the Python reference.

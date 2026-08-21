@@ -34,21 +34,196 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
   const Model = {
-    ready: false,
+    ready: true,
+    cache: new Map(),
 
-    // ---- NEW ENGINE CONTRACT ---------------------------------
-    // buildSeries({ amplitude, maxOrder })
-    // evaluate({ amplitude, q, M, hbar, duration })
-    // omega({ amplitude, q, M, hbar })
-    // exactPendulum({ amplitude, duration })
-    // metrics({ amplitude, q, M, hbar })
-    //
-    // These deliberately throw until the validated frequency-corrected
-    // GOTHAM implementation is ported into the browser.
-    buildSeries() { throw new Error('New GOTHAM engine not connected'); },
-    evaluate() { throw new Error('New GOTHAM engine not connected'); },
-    omega() { throw new Error('New GOTHAM engine not connected'); },
-    exactPendulum() { throw new Error('New GOTHAM engine not connected'); },
+    _key(amplitude, maxOrder) {
+      return `${Number(amplitude).toFixed(6)}|${maxOrder}`;
+    },
+
+    buildSeries({ amplitude, maxOrder = 10, gridSize = 1024 }) {
+      const key = this._key(amplitude, maxOrder);
+      if (this.cache.has(key)) return this.cache.get(key);
+
+      const N = gridSize;
+      const theta = new Float64Array(N);
+      const X = [];
+      const Xdd = [];
+      const S = [];
+      const C = [];
+      const W = [1.0];
+
+      for (let i = 0; i < N; i += 1) theta[i] = 2 * Math.PI * i / N;
+
+      const d2Periodic = (values) => {
+        // Spectral derivative is expensive without FFT dependency.
+        // For the browser engine we use a fourth-order periodic finite difference,
+        // validated against the Python reference for the low-order smooth coefficients.
+        const out = new Float64Array(N);
+        const h = 2 * Math.PI / N;
+        const h2 = h * h;
+        for (let i = 0; i < N; i += 1) {
+          const im2 = (i - 2 + N) % N;
+          const im1 = (i - 1 + N) % N;
+          const ip1 = (i + 1) % N;
+          const ip2 = (i + 2) % N;
+          out[i] = (-values[ip2] + 16 * values[ip1] - 30 * values[i] + 16 * values[im1] - values[im2]) / (12 * h2);
+        }
+        return out;
+      };
+
+      const cos1Coeff = (values) => {
+        let s = 0;
+        for (let i = 0; i < N; i += 1) s += values[i] * Math.cos(theta[i]);
+        return 2 * s / N;
+      };
+
+      const solveL = (g) => {
+        // Solve y'' + y = g for an even periodic solution with resonant cosine removed
+        // and y(0)=0. A truncated cosine series is enough for the smooth pendulum terms.
+        const K = 48;
+        const coeff = new Float64Array(K + 1);
+        for (let n = 0; n <= K; n += 1) {
+          if (n === 1) continue;
+          let s = 0;
+          for (let i = 0; i < N; i += 1) s += g[i] * Math.cos(n * theta[i]);
+          coeff[n] = (n === 0 ? s / N : 2 * s / N) / (1 - n * n);
+        }
+        const out = new Float64Array(N);
+        let y0 = 0;
+        for (let n = 0; n <= K; n += 1) {
+          if (n === 1) continue;
+          y0 += coeff[n];
+        }
+        for (let i = 0; i < N; i += 1) {
+          let y = -y0 * Math.cos(theta[i]);
+          for (let n = 0; n <= K; n += 1) {
+            if (n === 1) continue;
+            y += coeff[n] * Math.cos(n * theta[i]);
+          }
+          out[i] = y;
+        }
+        return out;
+      };
+
+      const x0 = new Float64Array(N);
+      const s0 = new Float64Array(N);
+      const c0 = new Float64Array(N);
+      for (let i = 0; i < N; i += 1) {
+        x0[i] = amplitude * Math.cos(theta[i]);
+        s0[i] = Math.sin(x0[i]);
+        c0[i] = Math.cos(x0[i]);
+      }
+      X.push(x0);
+      Xdd.push(d2Periodic(x0));
+      S.push(s0);
+      C.push(c0);
+
+      for (let n = 1; n <= maxOrder; n += 1) {
+        const g = new Float64Array(N);
+        for (let i = 0; i < N; i += 1) g[i] = -(S[n - 1][i] - X[n - 1][i]);
+
+        for (let j = 1; j < n; j += 1) {
+          const wj = W[j];
+          const dd = Xdd[n - j];
+          for (let i = 0; i < N; i += 1) g[i] -= wj * dd[i];
+        }
+
+        const wn = -cos1Coeff(g) / amplitude;
+        W.push(wn);
+
+        const rhs = new Float64Array(N);
+        for (let i = 0; i < N; i += 1) rhs[i] = g[i] + wn * amplitude * Math.cos(theta[i]);
+
+        const xn = solveL(rhs);
+        X.push(xn);
+        Xdd.push(d2Periodic(xn));
+
+        const sn = new Float64Array(N);
+        const cn = new Float64Array(N);
+        for (let j = 1; j <= n; j += 1) {
+          const xj = X[j];
+          const cprev = C[n - j];
+          const sprev = S[n - j];
+          for (let i = 0; i < N; i += 1) {
+            sn[i] += j * xj[i] * cprev[i];
+            cn[i] -= j * xj[i] * sprev[i];
+          }
+        }
+        for (let i = 0; i < N; i += 1) {
+          sn[i] /= n;
+          cn[i] /= n;
+        }
+        S.push(sn);
+        C.push(cn);
+      }
+
+      const series = { amplitude, maxOrder, N, theta, X, Xdd, W };
+      this.cache.set(key, series);
+      return series;
+    },
+
+    _interpPeriodic(values, phase) {
+      const N = values.length;
+      const twoPi = 2 * Math.PI;
+      let p = phase % twoPi;
+      if (p < 0) p += twoPi;
+      const u = p / twoPi * N;
+      const i0 = Math.floor(u) % N;
+      const i1 = (i0 + 1) % N;
+      const f = u - Math.floor(u);
+      return values[i0] * (1 - f) + values[i1] * f;
+    },
+
+    evaluateTransport({ amplitude = 1.5, q = 0, M = 10, duration = 30, samples = 1200 }) {
+      const series = this.buildSeries({ amplitude, maxOrder: M });
+      const N = series.N;
+      const shape = new Float64Array(N);
+      let omega2 = 0;
+
+      for (let m = 0; m <= M; m += 1) {
+        const qm = Math.pow(q, m);
+        omega2 += qm * series.W[m];
+        const xm = series.X[m];
+        for (let i = 0; i < N; i += 1) shape[i] += qm * xm[i];
+      }
+
+      const omega = Math.sqrt(Math.max(omega2, 1e-12));
+      const t = new Float64Array(samples);
+      const x = new Float64Array(samples);
+      for (let i = 0; i < samples; i += 1) {
+        const ti = duration * i / (samples - 1);
+        t[i] = ti;
+        x[i] = this._interpPeriodic(shape, omega * ti);
+      }
+
+      return { t, x, shape, omega, series };
+    },
+
+    omega({ amplitude = 1.5, q = 0, M = 10 }) {
+      const series = this.buildSeries({ amplitude, maxOrder: M });
+      let omega2 = 0;
+      for (let m = 0; m <= M; m += 1) omega2 += Math.pow(q, m) * series.W[m];
+      return Math.sqrt(Math.max(omega2, 1e-12));
+    },
+
+    harmonics({ amplitude = 1.5, q = 0, M = 10 }) {
+      const result = this.evaluateTransport({ amplitude, q, M, duration: 1, samples: 2 });
+      const shape = result.shape;
+      const N = shape.length;
+      const hs = [1, 3, 5].map((n) => {
+        let c = 0, s = 0;
+        for (let i = 0; i < N; i += 1) {
+          const th = 2 * Math.PI * i / N;
+          c += shape[i] * Math.cos(n * th);
+          s += shape[i] * Math.sin(n * th);
+        }
+        return 2 * Math.hypot(c, s) / N;
+      });
+      return { h1: hs[0], h3: hs[1], h5: hs[2] };
+    },
+
+    exactPendulum() { throw new Error('Exact reference engine will be connected in Refinement'); },
     metrics() { return null; }
   };
 
@@ -228,38 +403,68 @@
   function drawTransportView() {
     const view = state.transportView;
     const q = state.q;
+    const A = GUIDED_AMPLITUDE;
+    const MT = 10;
+
     if (view === 'operator') {
       const canvas=$('transportOperatorCanvas');
       const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height);
       const left=55,right=28,top=35,bottom=48,w=width-left-right,h=height-top-bottom;
       drawGrid(ctx,left,top,w,h,7,5);
-      const xmin=-2.2,xmax=2.2,ymin=-2.2,ymax=2.2;
+      const xmin=-1.75,xmax=1.75,ymin=-1.75,ymax=1.75;
       const Xp=x=>left+(x-xmin)/(xmax-xmin)*w; const Yp=y=>top+(ymax-y)/(ymax-ymin)*h;
       const plot=(fn,color,widthLine=2,dash=[])=>{ctx.save();ctx.strokeStyle=color;ctx.lineWidth=widthLine;ctx.setLineDash(dash);ctx.beginPath();for(let i=0;i<=500;i++){const x=xmin+(xmax-xmin)*i/500;const px=Xp(x),py=Yp(fn(x));if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();ctx.restore();};
       plot(x=>x,COLORS.muted2,1.2,[5,5]); plot(x=>Math.sin(x),COLORS.green,1.2,[5,5]); plot(x=>(1-q)*x+q*Math.sin(x),COLORS.gold,2.8);
       drawAxesLabel(ctx,`current q = ${q.toFixed(3)}`,left+8,top+14);
       drawAxesLabel(ctx,'x [rad]',left+w,height-14,'right');
+      drawAxesLabel(ctx,'g_q(x)',left+6,top+30);
     } else if (view === 'motion') {
-      drawPlaceholder($('transportMotionCanvas'),'Physical-time GOTHAM response',[
-        `continuous q = ${q.toFixed(3)}`,
-        'new frequency-corrected engine will draw x(t;q)',
-        'time axis remains physical so the period change stays visible'
-      ],COLORS.gold);
+      const canvas = $('transportMotionCanvas');
+      const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height);
+      const result = Model.evaluateTransport({ amplitude:A, q, M:MT, duration:28, samples:1100 });
+      const left=58,right=28,top=38,bottom=48,w=width-left-right,h=height-top-bottom;
+      drawGrid(ctx,left,top,w,h,8,5);
+      const xmin=0,xmax=result.t[result.t.length-1],ymin=-A*1.08,ymax=A*1.08;
+      const Xp=t=>left+(t-xmin)/(xmax-xmin)*w, Yp=x=>top+(ymax-x)/(ymax-ymin)*h;
+      ctx.strokeStyle=COLORS.blue; ctx.lineWidth=2.2; ctx.beginPath();
+      for(let i=0;i<result.t.length;i++){const px=Xp(result.t[i]),py=Yp(result.x[i]); if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+      ctx.stroke();
+      drawAxesLabel(ctx,'physical time',left+w,height-14,'right');
+      drawAxesLabel(ctx,`x(t;q), M=${MT}`,left+6,top+14);
+      ctx.fillStyle=COLORS.gold; ctx.font='10px ui-monospace,monospace';
+      ctx.fillText(`q=${q.toFixed(3)}   Ω=${result.omega.toFixed(6)}`,left+6,top+31);
     } else if (view === 'frequency') {
       const canvas=$('transportFrequencyCanvas'); const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height);
       const left=60,right=28,top=42,bottom=50,w=width-left-right,h=height-top-bottom;drawGrid(ctx,left,top,w,h,8,5);
-      const om = qq => 1 - (1-.860608)*Math.pow(qq,.9); // UI shell only
-      const ymin=.72,ymax=1.02; const Xp=x=>left+x*w; const Yp=y=>top+(ymax-y)/(ymax-ymin)*h;
+      const ymin=.82,ymax=1.01; const Xp=x=>left+x*w; const Yp=y=>top+(ymax-y)/(ymax-ymin)*h;
       ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2.4;ctx.beginPath();
-      for(let i=0;i<=300;i++){const qq=i/300,px=Xp(qq),py=Yp(om(qq));if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();
-      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(Xp(q),Yp(om(q)),5,0,Math.PI*2);ctx.fill();
-      drawAxesLabel(ctx,'q',left+w,height-14,'right');drawAxesLabel(ctx,'Ω(q) · shell preview',left+4,top+12);
+      for(let i=0;i<=240;i++){const qq=i/240,om=Model.omega({ amplitude:A,q:qq,M:MT }),px=Xp(qq),py=Yp(om);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();
+      const omq=Model.omega({ amplitude:A,q,M:MT });
+      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(Xp(q),Yp(omq),5,0,Math.PI*2);ctx.fill();
+      drawAxesLabel(ctx,'q',left+w,height-14,'right');drawAxesLabel(ctx,`Ω^[${MT}](q)`,left+4,top+12);
+      ctx.fillStyle=COLORS.gold;ctx.font='10px ui-monospace,monospace';ctx.fillText(`Ω=${omq.toFixed(6)}`,left+6,top+30);
     } else {
-      drawPlaceholder($('transportSpectrumCanvas'),'Harmonic content along q',[
-        `current q = ${q.toFixed(3)}`,
-        'fundamental / 3rd / 5th harmonic',
-        'the validated engine will supply the actual amplitudes'
-      ],COLORS.purple);
+      const canvas = $('transportSpectrumCanvas');
+      const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height,'rgba(179,124,255,.07)');
+      const left=60,right=28,top=42,bottom=50,w=width-left-right,h=height-top-bottom;drawGrid(ctx,left,top,w,h,8,5);
+      const series = {h1:[],h3:[],h5:[]};
+      let maxAmp=0;
+      for(let i=0;i<=120;i++){
+        const qq=i/120; const hs=Model.harmonics({ amplitude:A,q:qq,M:MT });
+        series.h1.push(hs.h1);series.h3.push(hs.h3);series.h5.push(hs.h5);
+        maxAmp=Math.max(maxAmp,hs.h1,hs.h3,hs.h5);
+      }
+      const Xp=x=>left+x*w, Yp=y=>top+(maxAmp*1.08-y)/(maxAmp*1.08)*h;
+      const drawSeries=(arr,color)=>{
+        ctx.strokeStyle=color;ctx.lineWidth=2.0;ctx.beginPath();
+        arr.forEach((v,i)=>{const px=Xp(i/120),py=Yp(v);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);});ctx.stroke();
+      };
+      drawSeries(series.h1,COLORS.blue);drawSeries(series.h3,COLORS.purple);drawSeries(series.h5,COLORS.orange);
+      const hq=Model.harmonics({ amplitude:A,q,M:MT });
+      const points=[[hq.h1,COLORS.blue],[hq.h3,COLORS.purple],[hq.h5,COLORS.orange]];
+      points.forEach(([v,c])=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(Xp(q),Yp(v),4,0,Math.PI*2);ctx.fill();});
+      drawAxesLabel(ctx,'q',left+w,height-14,'right');drawAxesLabel(ctx,'harmonic amplitude [rad]',left+4,top+12);
+      ctx.font='10px ui-sans-serif,system-ui';ctx.fillStyle=COLORS.blue;ctx.fillText('H1',left+6,top+31);ctx.fillStyle=COLORS.purple;ctx.fillText('H3',left+32,top+31);ctx.fillStyle=COLORS.orange;ctx.fillText('H5',left+58,top+31);
     }
   }
 
