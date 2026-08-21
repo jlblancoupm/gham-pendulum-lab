@@ -1,103 +1,90 @@
-# GHAM Pendulum Lab
+# GOTHAM Pendulum Lab — UI shell
 
-A static, interactive website introducing **Generalized Homotopy Analysis Methods (GHAM)** through the nonlinear pendulum.
+This folder is the **new static-web architecture** for the GOTHAM pendulum demo.
 
-The site develops two complementary views:
+It deliberately reuses the product architecture and visual language of the previous pendulum site — static GitHub Pages deployment, vanilla HTML/CSS/JavaScript, Canvas visualizations, responsive lab layouts, tabs, scroll progress, and local UI state — but **none of the previous GHAM/GOTHAM numerical engine is reused**.
 
-1. **A designed surrogate family**
+## Current status
 
-   \[
-   s_d(\theta;q)=\sum_{r=0}^{(d-1)/2}(-1)^r q^r\frac{\theta^{2r+1}}{(2r+1)!},
-   \qquad
-   \ddot\theta+\omega_0^2s_d(\theta;q)=0,
-   \]
+This version implements:
 
-   with release conditions \(\theta(0)=\theta_{\mathrm i}\) and \(\dot\theta(0)=0\).
+- the complete narrative page structure;
+- guided sections for `q`, `M`, and `ħ`;
+- the dark visual system and responsive layout;
+- Canvas scaffolding with device-pixel-ratio handling;
+- continuous `q` slider UX;
+- integer `M` refinement UX;
+- `ħ` convergence-control UX;
+- tabbed workspaces;
+- the `Scan ħ / Apply best` interaction shell;
+- a fully unlocked Playground shell;
+- GitHub Pages-ready static deployment.
 
-   At `q = 0`, the model is the small-angle oscillator. At `q = 1`, increasing the highest odd degree `d` approaches the nonlinear sine term.
+It does **not** yet implement the validated frequency-corrected GOTHAM engine. All scientifically relevant plots that depend on the new solver are clearly marked as placeholders.
 
-2. **The GHAM deformation series**
+## Scientific target
 
-   \[
-   (1-q)\mathcal L[\Theta-\theta_0]
-   =q\hbar\mathcal N[\Theta],
-   \qquad
-   \Theta=\theta_0+\sum_{m\ge1}\theta_mq^m.
-   \]
+The guided demo is frozen around
 
-   The site derives the correction equations using Fréchet derivatives and computes the truncated series up to order `M = 6` in the browser.
+\[
+\ddot x+\sin x=0,\qquad x(0)=2\ \mathrm{rad},\qquad \dot x(0)=0,
+\]
 
-## Features
+with continuous system transport
 
-- No framework and no build step.
-- Responsive HTML/CSS/JavaScript.
-- Animated nonlinear numerical reference, surrogate, and GHAM pendulums.
-- Canvas trajectory plots and live numerical diagnostics.
-- Interactive controls for `q`, polynomial degree, release angle `θᵢ`, `M`, and `ħ`.
-- Fréchet derivative explorer and explicit residual terms through fourth GHAM order.
-- Source C4DM presentation included under `assets/`.
+\[
+\ddot x+(1-q)x+q\sin x=0,\qquad q\in[0,1].
+\]
+
+The new engine must preserve the conceptual separation:
+
+- `q`: continuous system transport;
+- `M`: integer truncation/refinement order;
+- `ħ`: finite-order convergence control.
+
+The frequency correction / time rescaling developed during validation must be part of the new engine.
+
+## Expected browser engine API
+
+`app.js` currently exposes an intentionally empty `Model` interface:
+
+```js
+Model.buildSeries({ amplitude, maxOrder })
+Model.evaluate({ amplitude, q, M, hbar, duration })
+Model.omega({ amplitude, q, M, hbar })
+Model.exactPendulum({ amplitude, duration })
+Model.metrics({ amplitude, q, M, hbar })
+```
+
+The next implementation step is to port the validated frequency-corrected GOTHAM formulation behind these functions.
 
 ## Run locally
-
-From the repository root:
 
 ```bash
 python -m http.server 8000
 ```
 
-Then open `http://localhost:8000`.
+Then open:
 
-Opening `index.html` directly also works in most browsers, although serving the folder is more representative of GitHub Pages.
+```text
+http://localhost:8000
+```
 
-## Publish with GitHub Pages
+## GitHub Pages
 
-1. Create a GitHub repository and copy these files to its root.
-2. Push the `main` branch.
-3. In the repository settings, open **Pages**.
-4. Choose deployment from a branch, selecting `main` and `/ (root)`.
+No build step is required.
 
-The site is intentionally plain static content, so no action or package installation is required.
+1. Copy the files to the repository root.
+2. Push `main`.
+3. In **Settings → Pages**, deploy from `main` / root.
 
-## Scientific notation used by the site
+MathJax is loaded from a CDN. Everything else is local static content.
 
-- `q`: embedding or continuation parameter.
-- `M`: truncation order of the GHAM series.
-- `k`: restart/iteration index; discussed conceptually but not implemented in this first site.
-- `ħ`: auxiliary convergence-control parameter.
-- `θᵢ`: release angle, defined by `θ(0)=θᵢ`.
-- `θ₀(t)=θᵢ cos(ω₀t)`: analytical solution of the small-angle surrogate.
+## Files
 
-The browser GHAM implementation uses
-
-\[
-\mathcal L[v]=\ddot v+\omega_0^2v,
-\qquad
-\mathcal N[\theta]=\ddot\theta+\omega_0^2\sin\theta,
-\]
-
-for the initial-value problem
-
-\[
-\theta(0)=\theta_{\mathrm i},\qquad \dot\theta(0)=0,
-\]
-
-with zero initial conditions for every correction `θ_m`, `m ≥ 1`.
-
-## Scope and limitations
-
-This is an explanatory research demo, not a general-purpose validated ODE package. In particular:
-
-- Explicit derivations are shown through `M = 4`; the browser assembles the residual coefficients recursively through `M = 6`.
-- Large release angles can leave the convergence region of the selected starting solution and `ħ`.
-- Restarted GHAM, alternative linear operators, and richer surrogate design are natural next steps.
-- MathJax is loaded from a CDN; the simulations themselves have no external dependency.
-
-## Suggested repository description
-
-> Interactive GHAM and nonlinear-pendulum demo: surrogate problem design, Fréchet derivatives, homotopy corrections, and convergence diagnostics.
-
-## Attribution
-
-Adapted from the C4DM presentation **“Start Simple! Learning Sound-Producing Systems from Surrogate Problems”** by Dr. José Luis Blanco-Murillo, GAPS-UPM, July 2026.
-
-Before public release, choose and add the software/content license that best fits the project.
+```text
+index.html
+styles.css
+app.js
+README.md
+```
