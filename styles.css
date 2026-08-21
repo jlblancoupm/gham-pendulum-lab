@@ -248,7 +248,15 @@ footer a { color:var(--gold); text-align:right; }
 }
 @media (max-width:900px) {
   :root { --header:70px; }
-  .site-header { inset:8px 10px auto; grid-template-columns:auto 1fr; }
+  .site-header {
+    inset:8px 10px auto;
+    grid-template-columns:auto 1fr;
+    background:rgba(5,16,28,.84);
+    border-color:var(--line);
+    box-shadow:0 8px 28px rgba(0,0,0,.26);
+    backdrop-filter:blur(14px) saturate(1.15);
+    -webkit-backdrop-filter:blur(14px) saturate(1.15);
+  }
   .site-header nav { display:none; }
   .header-chip { justify-self:end; }
   .hero,.section { padding-left:22px; padding-right:22px; }
@@ -265,7 +273,12 @@ footer a { color:var(--gold); text-align:right; }
   .hero h1 { font-size:clamp(3rem,16vw,4.5rem); }
   .section { padding-top:80px; padding-bottom:80px; }
   .section-heading h2 { font-size:clamp(2.5rem,13vw,4rem); }
-  .site-header { min-height:58px; }
+  .site-header {
+    min-height:58px;
+    grid-template-columns:1fr;
+    padding:7px 10px;
+  }
+  .brand { min-width:0; }
   .brand-copy small { display:none; }
   .header-chip { display:none; }
   .hero-stage { min-height:500px; padding:12px; }
