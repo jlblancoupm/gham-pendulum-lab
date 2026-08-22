@@ -123,3 +123,11 @@ At q=1 and baseline hbar=-1:
 - waveform NRMSE, operator residual, frequency error, and reliable horizon are live;
 - convergence curves versus M are connected.
 The q–M colormap and hbar engine remain for subsequent versions.
+
+## v10 — q–M landscape
+The q–M tab now computes a sampled validation view of the same continuous GOTHAM deformation.
+- vertical axis: continuous transport coordinate q;
+- horizontal axis: integer truncation order M;
+- color: log10 waveform NRMSE against an independently integrated reference for the sampled q checkpoint;
+- current refinement point at q=1 is marked explicitly.
+The q samples are visualization/validation checkpoints, not separate GOTHAM runs.

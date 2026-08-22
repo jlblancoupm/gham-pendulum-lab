@@ -223,6 +223,106 @@
       return { h1: hs[0], h3: hs[1], h5: hs[2] };
     },
 
+
+    exactIntermediate({ amplitude = 1.5, q = 0, periods = 4, samples = 1800 }) {
+      // Numerical reference for the intermediate transported system:
+      // x'' + (1-q)x + q sin(x) = 0.
+      // Used only as validation ground truth for sampled q values.
+      const accel = (x) => -((1-q)*x + q*Math.sin(x));
+
+      // Estimate one period by integrating until the first return to a positive maximum.
+      // We use a small RK4 step and detect v crossing from + to - after t>0.
+      let xx = amplitude, vv = 0, tt = 0;
+      const h0 = 0.0025;
+      let lastV = vv;
+      let period = null;
+
+      for (let k = 0; k < 200000; k += 1) {
+        const h = h0;
+        const k1x = vv, k1v = accel(xx);
+        const k2x = vv + .5*h*k1v, k2v = accel(xx + .5*h*k1x);
+        const k3x = vv + .5*h*k2v, k3v = accel(xx + .5*h*k2x);
+        const k4x = vv + h*k3v, k4v = accel(xx + h*k3x);
+
+        const newX = xx + h*(k1x + 2*k2x + 2*k3x + k4x)/6;
+        const newV = vv + h*(k1v + 2*k2v + 2*k3v + k4v)/6;
+        tt += h;
+
+        if (tt > .2 && lastV > 0 && newV <= 0 && newX > 0) {
+          period = tt;
+          break;
+        }
+        xx = newX; vv = newV; lastV = newV;
+      }
+
+      if (!period) period = 2*Math.PI;
+
+      const duration = periods * period;
+      const dt = duration/(samples-1);
+      const t = new Float64Array(samples);
+      const x = new Float64Array(samples);
+      const v = new Float64Array(samples);
+
+      xx = amplitude; vv = 0; tt = 0;
+      t[0]=0; x[0]=xx; v[0]=vv;
+      for (let i=1;i<samples;i+=1) {
+        const h=dt;
+        const k1x=vv, k1v=accel(xx);
+        const k2x=vv+.5*h*k1v, k2v=accel(xx+.5*h*k1x);
+        const k3x=vv+.5*h*k2v, k3v=accel(xx+.5*h*k2x);
+        const k4x=vv+h*k3v, k4v=accel(xx+h*k3x);
+
+        xx += h*(k1x+2*k2x+2*k3x+k4x)/6;
+        vv += h*(k1v+2*k2v+2*k3v+k4v)/6;
+        tt += h;
+        t[i]=tt; x[i]=xx; v[i]=vv;
+      }
+
+      return { t, x, v, period, omega:2*Math.PI/period, duration };
+    },
+
+    qmMetrics({ amplitude = 1.5, q = 0, M = 0, periods = 4 }) {
+      const exact = this.exactIntermediate({ amplitude, q, periods, samples: 1600 });
+      const approx = this.evaluateTransport({ amplitude, q, M, duration: exact.duration, samples:1600 });
+
+      // Build residual from transported shape directly.
+      const series = approx.series;
+      const d2shape = new Float64Array(series.N);
+      for (let m=0;m<=M;m+=1) {
+        const qm = Math.pow(q,m);
+        const dd = series.Xdd[m];
+        for (let i=0;i<series.N;i+=1) d2shape[i] += qm*dd[i];
+      }
+
+      let se=0,sx=0,sr=0;
+      let horizon=periods;
+      let hit=false;
+      const threshold=.01*amplitude;
+
+      for (let i=0;i<exact.x.length;i+=1) {
+        const e=approx.x[i]-exact.x[i];
+        se += e*e;
+        sx += exact.x[i]*exact.x[i];
+
+        const ddTau=this._interpPeriodic(d2shape, approx.omega*approx.t[i]);
+        const xi=approx.x[i];
+        const R=approx.omega*approx.omega*ddTau + (1-q)*xi + q*Math.sin(xi);
+        sr += R*R;
+
+        if(!hit && Math.abs(e)>threshold){
+          horizon=exact.t[i]/exact.period;
+          hit=true;
+        }
+      }
+
+      return {
+        waveform: Math.sqrt(se/Math.max(sx,1e-30)),
+        residual: Math.sqrt(sr/exact.x.length),
+        frequency: Math.abs(approx.omega-exact.omega)/exact.omega,
+        horizon
+      };
+    },
+
     exactPeriod(amplitude = 1.5) {
       // Complete elliptic integral K(m) via AGM: K(m)=pi/(2 AGM(1,sqrt(1-m))).
       const m = Math.pow(Math.sin(amplitude / 2), 2);
@@ -750,11 +850,106 @@
       ctx.fillStyle=COLORS.purple;ctx.fillText('frequency',l+126,t+30);
       ctx.fillStyle=COLORS.gold;ctx.fillText(`current M=${M}`,l+196,t+30);
     } else {
-      drawPlaceholder($('qmMapCanvas'),'q–M map',[
-        'Refinement at q=1 is now connected.',
-        'The full continuous q–M landscape will be connected next.',
-        'Current guided target uses A=1.5 rad.'
-      ],COLORS.gold);
+      const canvas=$('qmMapCanvas');
+      const {ctx,width,height}=prepareCanvas(canvas);
+      clearCanvas(ctx,width,height,'rgba(244,202,92,.055)');
+
+      const l=74,r=30,t=48,b=58,w=width-l-r,h=height-t-b;
+      const qSteps=24;
+      const maxM=12;
+
+      // Compute sampled view of one continuous deformation.
+      const Z=[];
+      let zmin=Infinity,zmax=-Infinity;
+      for(let iq=0;iq<=qSteps;iq+=1){
+        const qq=iq/qSteps;
+        const row=[];
+        for(let m=0;m<=maxM;m+=1){
+          const mt=Model.qmMetrics({ amplitude:A,q:qq,M:m,periods:3 });
+          const z=Math.log10(Math.max(mt.waveform,1e-12));
+          row.push(z);
+          zmin=Math.min(zmin,z); zmax=Math.max(zmax,z);
+        }
+        Z.push(row);
+      }
+
+      const cmap=(u)=>{
+        // dark blue -> cyan -> gold
+        u=Math.max(0,Math.min(1,u));
+        if(u<.5){
+          const a=u/.5;
+          const r0=9,g0=32,b0=53, r1=42,g1=126,b1=181;
+          return `rgb(${Math.round(r0+(r1-r0)*a)},${Math.round(g0+(g1-g0)*a)},${Math.round(b0+(b1-b0)*a)})`;
+        }
+        const a=(u-.5)/.5;
+        const r0=42,g0=126,b0=181, r1=244,g1=202,b1=92;
+        return `rgb(${Math.round(r0+(r1-r0)*a)},${Math.round(g0+(g1-g0)*a)},${Math.round(b0+(b1-b0)*a)})`;
+      };
+
+      const cellW=w/(maxM+1);
+      const cellH=h/(qSteps+1);
+
+      for(let iq=0;iq<=qSteps;iq+=1){
+        for(let m=0;m<=maxM;m+=1){
+          // low error should be visually "better": invert scale
+          const norm=(Z[iq][m]-zmin)/Math.max(zmax-zmin,1e-12);
+          ctx.fillStyle=cmap(1-norm);
+          ctx.fillRect(l+m*cellW,t+(qSteps-iq)*cellH,cellW+1,cellH+1);
+        }
+      }
+
+      // grid
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,.13)';
+      ctx.lineWidth=1;
+      for(let m=0;m<=maxM+1;m+=1){
+        const x=l+m*cellW;ctx.beginPath();ctx.moveTo(x,t);ctx.lineTo(x,t+h);ctx.stroke();
+      }
+      for(let iq=0;iq<=qSteps+1;iq+=1){
+        const y=t+iq*cellH;ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(l+w,y);ctx.stroke();
+      }
+      ctx.restore();
+
+      // Current point: q=1 and selected M in refinement section.
+      const curM=Math.min(M,maxM);
+      const px=l+(curM+.5)*cellW;
+      const py=t+.5*cellH;
+      ctx.strokeStyle='white';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(px,py,7,0,2*Math.PI);ctx.stroke();
+      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(px,py,3,0,2*Math.PI);ctx.fill();
+
+      // labels
+      ctx.fillStyle=COLORS.muted2;
+      ctx.font='10px ui-monospace,monospace';
+      ctx.textAlign='center';
+      for(let m=0;m<=maxM;m+=2) ctx.fillText(String(m),l+(m+.5)*cellW,t+h+20);
+      ctx.textAlign='right';
+      [0,.25,.5,.75,1].forEach(qq=>{
+        const y=t+(1-qq)*(h-cellH)+cellH/2;
+        ctx.fillText(qq.toFixed(2),l-10,y+3);
+      });
+
+      drawAxesLabel(ctx,'truncation order M',l+w,t+h+42,'right');
+      drawAxesLabel(ctx,'continuous transport q',l-8,t+10,'right');
+
+      ctx.textAlign='left';
+      ctx.fillStyle=COLORS.text;
+      ctx.font='700 12px ui-sans-serif,system-ui';
+      ctx.fillText('Waveform error over the sampled continuous q–M deformation',l,t-20);
+      ctx.fillStyle=COLORS.muted2;
+      ctx.font='10px ui-sans-serif,system-ui';
+      ctx.fillText(`color = log10 NRMSE · q sampled at ${qSteps+1} points · not independent runs`,l,t-5);
+
+      // compact color legend
+      const legendW=150,legendH=8,lx=width-r-legendW,ly=t-28;
+      for(let i=0;i<legendW;i+=1){
+        ctx.fillStyle=cmap(i/(legendW-1));
+        ctx.fillRect(lx+i,ly,1,legendH);
+      }
+      ctx.fillStyle=COLORS.muted2;ctx.font='9px ui-monospace,monospace';
+      ctx.textAlign='left';ctx.fillText('higher error',lx,ly-4);
+      ctx.textAlign='right';ctx.fillText('lower error',lx+legendW,ly-4);
+      ctx.textAlign='left';
     }
     updateMetricPlaceholders();
   }
