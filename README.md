@@ -105,3 +105,7 @@ Connected views:
 - harmonic amplitudes H1 / H3 / H5.
 
 Refinement (`M`) and convergence control (`hbar`) still remain intentionally disconnected until transport is cross-validated against the Python reference.
+
+
+## v7
+Transport now overlays q=0/current/q=1, and Spectrum uses H3/H1 and H5/H1 percentages with synchronized q/frequency/harmonic readout.

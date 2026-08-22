@@ -401,70 +401,72 @@
   }
 
   function drawTransportView() {
-    const view = state.transportView;
-    const q = state.q;
-    const A = GUIDED_AMPLITUDE;
-    const MT = 10;
+    const view=state.transportView, q=state.q, A=GUIDED_AMPLITUDE, MT=10;
+    const current=Model.evaluateTransport({amplitude:A,q,M:MT,duration:28,samples:1100});
+    const initial=Model.evaluateTransport({amplitude:A,q:0,M:MT,duration:28,samples:1100});
+    const target=Model.evaluateTransport({amplitude:A,q:1,M:MT,duration:28,samples:1100});
+    const hs=Model.harmonics({amplitude:A,q,M:MT});
+    const h3pct=100*hs.h3/Math.max(hs.h1,1e-12), h5pct=100*hs.h5/Math.max(hs.h1,1e-12);
 
-    if (view === 'operator') {
-      const canvas=$('transportOperatorCanvas');
-      const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height);
-      const left=55,right=28,top=35,bottom=48,w=width-left-right,h=height-top-bottom;
-      drawGrid(ctx,left,top,w,h,7,5);
+    const info=(ctx,x,y)=>{
+      const lines=[`q = ${q.toFixed(3)}`,`Ω/Ω₀ = ${(current.omega/initial.omega).toFixed(3)}`,
+                   `H3/H1 = ${h3pct.toFixed(2)} %`,`H5/H1 = ${h5pct.toFixed(3)} %`];
+      ctx.save(); ctx.font='10px ui-monospace,monospace';
+      ctx.fillStyle='rgba(5,16,28,.84)'; ctx.strokeStyle='rgba(174,202,229,.20)';
+      ctx.beginPath(); ctx.roundRect(x,y,142,66,8); ctx.fill(); ctx.stroke();
+      lines.forEach((s,i)=>{ctx.fillStyle=i?COLORS.muted2:COLORS.gold;ctx.fillText(s,x+10,y+16+14*i);});
+      ctx.restore();
+    };
+
+    if(view==='operator'){
+      const {ctx,width,height}=prepareCanvas($('transportOperatorCanvas')); clearCanvas(ctx,width,height);
+      const l=55,r=28,t=35,b=48,w=width-l-r,h=height-t-b; drawGrid(ctx,l,t,w,h,7,5);
       const xmin=-1.75,xmax=1.75,ymin=-1.75,ymax=1.75;
-      const Xp=x=>left+(x-xmin)/(xmax-xmin)*w; const Yp=y=>top+(ymax-y)/(ymax-ymin)*h;
-      const plot=(fn,color,widthLine=2,dash=[])=>{ctx.save();ctx.strokeStyle=color;ctx.lineWidth=widthLine;ctx.setLineDash(dash);ctx.beginPath();for(let i=0;i<=500;i++){const x=xmin+(xmax-xmin)*i/500;const px=Xp(x),py=Yp(fn(x));if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();ctx.restore();};
-      plot(x=>x,COLORS.muted2,1.2,[5,5]); plot(x=>Math.sin(x),COLORS.green,1.2,[5,5]); plot(x=>(1-q)*x+q*Math.sin(x),COLORS.gold,2.8);
-      drawAxesLabel(ctx,`current q = ${q.toFixed(3)}`,left+8,top+14);
-      drawAxesLabel(ctx,'x [rad]',left+w,height-14,'right');
-      drawAxesLabel(ctx,'g_q(x)',left+6,top+30);
-    } else if (view === 'motion') {
-      const canvas = $('transportMotionCanvas');
-      const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height);
-      const result = Model.evaluateTransport({ amplitude:A, q, M:MT, duration:28, samples:1100 });
-      const left=58,right=28,top=38,bottom=48,w=width-left-right,h=height-top-bottom;
-      drawGrid(ctx,left,top,w,h,8,5);
-      const xmin=0,xmax=result.t[result.t.length-1],ymin=-A*1.08,ymax=A*1.08;
-      const Xp=t=>left+(t-xmin)/(xmax-xmin)*w, Yp=x=>top+(ymax-x)/(ymax-ymin)*h;
-      ctx.strokeStyle=COLORS.blue; ctx.lineWidth=2.2; ctx.beginPath();
-      for(let i=0;i<result.t.length;i++){const px=Xp(result.t[i]),py=Yp(result.x[i]); if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
-      ctx.stroke();
-      drawAxesLabel(ctx,'physical time',left+w,height-14,'right');
-      drawAxesLabel(ctx,`x(t;q), M=${MT}`,left+6,top+14);
-      ctx.fillStyle=COLORS.gold; ctx.font='10px ui-monospace,monospace';
-      ctx.fillText(`q=${q.toFixed(3)}   Ω=${result.omega.toFixed(6)}`,left+6,top+31);
-    } else if (view === 'frequency') {
-      const canvas=$('transportFrequencyCanvas'); const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height);
-      const left=60,right=28,top=42,bottom=50,w=width-left-right,h=height-top-bottom;drawGrid(ctx,left,top,w,h,8,5);
-      const ymin=.82,ymax=1.01; const Xp=x=>left+x*w; const Yp=y=>top+(ymax-y)/(ymax-ymin)*h;
+      const X=x=>l+(x-xmin)/(xmax-xmin)*w,Y=y=>t+(ymax-y)/(ymax-ymin)*h;
+      const plot=(fn,c,lw,d=[])=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(d);ctx.beginPath();
+        for(let i=0;i<=500;i++){let x=xmin+(xmax-xmin)*i/500; i?ctx.lineTo(X(x),Y(fn(x))):ctx.moveTo(X(x),Y(fn(x)));}ctx.stroke();ctx.restore();};
+      plot(x=>x,COLORS.muted2,1.2,[5,5]); plot(x=>Math.sin(x),COLORS.green,1.2,[3,5]);
+      plot(x=>(1-q)*x+q*Math.sin(x),COLORS.gold,2.8);
+      drawAxesLabel(ctx,'x [rad]',l+w,height-14,'right'); drawAxesLabel(ctx,'g_q(x)',l+6,t+14);
+      ctx.font='10px ui-sans-serif,system-ui';
+      [[COLORS.muted2,'start q=0'],[COLORS.green,'target q=1'],[COLORS.gold,`current q=${q.toFixed(2)}`]]
+        .forEach(([c,s],i)=>{ctx.fillStyle=c;ctx.fillText(s,l+8+i*76,t+31);});
+    } else if(view==='motion'){
+      const {ctx,width,height}=prepareCanvas($('transportMotionCanvas')); clearCanvas(ctx,width,height);
+      const l=58,r=28,t=38,b=48,w=width-l-r,h=height-t-b; drawGrid(ctx,l,t,w,h,8,5);
+      const X=v=>l+v/current.t[current.t.length-1]*w,Y=v=>t+(A*1.08-v)/(2*A*1.08)*h;
+      const plot=(res,c,lw,d,a=1)=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(d);ctx.globalAlpha=a;ctx.beginPath();
+        for(let i=0;i<res.t.length;i++) i?ctx.lineTo(X(res.t[i]),Y(res.x[i])):ctx.moveTo(X(res.t[i]),Y(res.x[i]));ctx.stroke();ctx.restore();};
+      plot(initial,COLORS.muted2,1.2,[6,5],.72); plot(target,COLORS.green,1.4,[3,5],.88); plot(current,COLORS.blue,2.6,[]);
+      drawAxesLabel(ctx,'physical time',l+w,height-14,'right'); drawAxesLabel(ctx,'x(t;q) [rad]',l+6,t+14);
+      ctx.font='10px ui-sans-serif,system-ui';
+      [[COLORS.muted2,'start q=0'],[COLORS.green,'target q=1'],[COLORS.blue,`current q=${q.toFixed(2)}`]]
+        .forEach(([c,s],i)=>{ctx.fillStyle=c;ctx.fillText(s,l+8+i*72,t+31);});
+      info(ctx,Math.max(l+6,width-178),t+8);
+    } else if(view==='frequency'){
+      const {ctx,width,height}=prepareCanvas($('transportFrequencyCanvas')); clearCanvas(ctx,width,height);
+      const l=60,r=28,t=42,b=50,w=width-l-r,h=height-t-b,ymin=.82,ymax=1.01;
+      drawGrid(ctx,l,t,w,h,8,5); const X=v=>l+v*w,Y=v=>t+(ymax-v)/(ymax-ymin)*h;
       ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2.4;ctx.beginPath();
-      for(let i=0;i<=240;i++){const qq=i/240,om=Model.omega({ amplitude:A,q:qq,M:MT }),px=Xp(qq),py=Yp(om);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();
-      const omq=Model.omega({ amplitude:A,q,M:MT });
-      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(Xp(q),Yp(omq),5,0,Math.PI*2);ctx.fill();
-      drawAxesLabel(ctx,'q',left+w,height-14,'right');drawAxesLabel(ctx,`Ω^[${MT}](q)`,left+4,top+12);
-      ctx.fillStyle=COLORS.gold;ctx.font='10px ui-monospace,monospace';ctx.fillText(`Ω=${omq.toFixed(6)}`,left+6,top+30);
+      for(let i=0;i<=240;i++){let qq=i/240,om=Model.omega({amplitude:A,q:qq,M:MT});i?ctx.lineTo(X(qq),Y(om)):ctx.moveTo(X(qq),Y(om));}ctx.stroke();
+      [[initial.omega,COLORS.muted2,[5,5]],[target.omega,COLORS.green,[3,5]]].forEach(([v,c,d])=>{
+        ctx.save();ctx.strokeStyle=c;ctx.setLineDash(d);ctx.beginPath();ctx.moveTo(l,Y(v));ctx.lineTo(l+w,Y(v));ctx.stroke();ctx.restore();});
+      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(X(q),Y(current.omega),5,0,2*Math.PI);ctx.fill();
+      drawAxesLabel(ctx,'q',l+w,height-14,'right');drawAxesLabel(ctx,`Ω^[${MT}](q)`,l+4,t+12);info(ctx,Math.max(l+6,width-178),t+8);
     } else {
-      const canvas = $('transportSpectrumCanvas');
-      const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height,'rgba(179,124,255,.07)');
-      const left=60,right=28,top=42,bottom=50,w=width-left-right,h=height-top-bottom;drawGrid(ctx,left,top,w,h,8,5);
-      const series = {h1:[],h3:[],h5:[]};
-      let maxAmp=0;
-      for(let i=0;i<=120;i++){
-        const qq=i/120; const hs=Model.harmonics({ amplitude:A,q:qq,M:MT });
-        series.h1.push(hs.h1);series.h3.push(hs.h3);series.h5.push(hs.h5);
-        maxAmp=Math.max(maxAmp,hs.h1,hs.h3,hs.h5);
-      }
-      const Xp=x=>left+x*w, Yp=y=>top+(maxAmp*1.08-y)/(maxAmp*1.08)*h;
-      const drawSeries=(arr,color)=>{
-        ctx.strokeStyle=color;ctx.lineWidth=2.0;ctx.beginPath();
-        arr.forEach((v,i)=>{const px=Xp(i/120),py=Yp(v);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);});ctx.stroke();
-      };
-      drawSeries(series.h1,COLORS.blue);drawSeries(series.h3,COLORS.purple);drawSeries(series.h5,COLORS.orange);
-      const hq=Model.harmonics({ amplitude:A,q,M:MT });
-      const points=[[hq.h1,COLORS.blue],[hq.h3,COLORS.purple],[hq.h5,COLORS.orange]];
-      points.forEach(([v,c])=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(Xp(q),Yp(v),4,0,Math.PI*2);ctx.fill();});
-      drawAxesLabel(ctx,'q',left+w,height-14,'right');drawAxesLabel(ctx,'harmonic amplitude [rad]',left+4,top+12);
-      ctx.font='10px ui-sans-serif,system-ui';ctx.fillStyle=COLORS.blue;ctx.fillText('H1',left+6,top+31);ctx.fillStyle=COLORS.purple;ctx.fillText('H3',left+32,top+31);ctx.fillStyle=COLORS.orange;ctx.fillText('H5',left+58,top+31);
+      const {ctx,width,height}=prepareCanvas($('transportSpectrumCanvas')); clearCanvas(ctx,width,height,'rgba(179,124,255,.07)');
+      const l=64,r=28,t=42,b=50,w=width-l-r,h=height-t-b; drawGrid(ctx,l,t,w,h,8,5);
+      let h3=[],h5=[],ym=0;
+      for(let i=0;i<=160;i++){let qq=i/160,hh=Model.harmonics({amplitude:A,q:qq,M:MT});
+        let p3=100*hh.h3/Math.max(hh.h1,1e-12),p5=100*hh.h5/Math.max(hh.h1,1e-12);h3.push(p3);h5.push(p5);ym=Math.max(ym,p3,p5);}
+      ym=Math.max(.1,ym*1.18); const X=v=>l+v*w,Y=v=>t+(ym-v)/ym*h;
+      const plot=(arr,c,d=[])=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=2.3;ctx.setLineDash(d);ctx.beginPath();
+        arr.forEach((v,i)=>i?ctx.lineTo(X(i/160),Y(v)):ctx.moveTo(X(0),Y(v)));ctx.stroke();ctx.restore();};
+      plot(h3,COLORS.purple);plot(h5,COLORS.orange,[5,4]);
+      [[h3pct,COLORS.purple],[h5pct,COLORS.orange]].forEach(([v,c])=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(X(q),Y(v),5,0,2*Math.PI);ctx.fill();});
+      drawAxesLabel(ctx,'q',l+w,height-14,'right');drawAxesLabel(ctx,'relative harmonic content [%]',l+4,t+12);
+      ctx.font='10px ui-sans-serif,system-ui';ctx.fillStyle=COLORS.purple;ctx.fillText('H3 / H1',l+8,t+31);ctx.fillStyle=COLORS.orange;ctx.fillText('H5 / H1',l+70,t+31);
+      info(ctx,Math.max(l+6,width-178),t+8);
     }
   }
 
