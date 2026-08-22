@@ -114,3 +114,12 @@ Transport now overlays q=0/current/q=1, and Spectrum uses H3/H1 and H5/H1 percen
 - Motion explicitly shows the conservative ±A turning-point amplitude and adds a lower temporal-deviation trace relative to q=0.
 - Spectrum now shows the actual odd-harmonic line spectrum in physical angular frequency, with q=0 and q=1 references behind the current spectrum.
 - H3/H1 and H5/H1 remain as compact nonlinear-distortion readouts.
+
+## v9 — target refinement connected
+At q=1 and baseline hbar=-1:
+- exact pendulum reference is integrated in-browser;
+- target GOTHAM approximation is evaluated for integer M;
+- waveform + temporal error are drawn together;
+- waveform NRMSE, operator residual, frequency error, and reliable horizon are live;
+- convergence curves versus M are connected.
+The q–M colormap and hbar engine remain for subsequent versions.

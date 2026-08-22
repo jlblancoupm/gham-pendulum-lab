@@ -223,8 +223,127 @@
       return { h1: hs[0], h3: hs[1], h5: hs[2] };
     },
 
-    exactPendulum() { throw new Error('Exact reference engine will be connected in Refinement'); },
-    metrics() { return null; }
+    exactPeriod(amplitude = 1.5) {
+      // Complete elliptic integral K(m) via AGM: K(m)=pi/(2 AGM(1,sqrt(1-m))).
+      const m = Math.pow(Math.sin(amplitude / 2), 2);
+      let a = 1.0;
+      let b = Math.sqrt(1 - m);
+      for (let i = 0; i < 30; i += 1) {
+        const an = (a + b) / 2;
+        const bn = Math.sqrt(a * b);
+        a = an; b = bn;
+        if (Math.abs(a - b) < 1e-15) break;
+      }
+      const K = Math.PI / (2 * a);
+      return 4 * K;
+    },
+
+    exactPendulum({ amplitude = 1.5, periods = 4, samples = 3200 }) {
+      const T = this.exactPeriod(amplitude);
+      const duration = periods * T;
+      const dt = duration / (samples - 1);
+      const t = new Float64Array(samples);
+      const x = new Float64Array(samples);
+      const v = new Float64Array(samples);
+
+      let xx = amplitude, vv = 0, tt = 0;
+      x[0] = xx; v[0] = vv; t[0] = 0;
+
+      const acc = (q) => -Math.sin(q);
+
+      for (let i = 1; i < samples; i += 1) {
+        const h = dt;
+        const k1x = vv;
+        const k1v = acc(xx);
+
+        const k2x = vv + .5*h*k1v;
+        const k2v = acc(xx + .5*h*k1x);
+
+        const k3x = vv + .5*h*k2v;
+        const k3v = acc(xx + .5*h*k2x);
+
+        const k4x = vv + h*k3v;
+        const k4v = acc(xx + h*k3x);
+
+        xx += h*(k1x + 2*k2x + 2*k3x + k4x)/6;
+        vv += h*(k1v + 2*k2v + 2*k3v + k4v)/6;
+        tt += h;
+        t[i] = tt; x[i] = xx; v[i] = vv;
+      }
+      return { t, x, v, period: T, omega: 2*Math.PI/T, duration };
+    },
+
+    evaluateTarget({ amplitude = 1.5, M = 0, periods = 4, samples = 3200 }) {
+      const T = this.exactPeriod(amplitude);
+      const duration = periods * T;
+      const series = this.buildSeries({ amplitude, maxOrder: M });
+      const shape = new Float64Array(series.N);
+      const d2shape = new Float64Array(series.N);
+      let omega2 = 0;
+
+      for (let m = 0; m <= M; m += 1) {
+        omega2 += series.W[m];
+        const xm = series.X[m];
+        const dd = series.Xdd[m];
+        for (let i = 0; i < series.N; i += 1) {
+          shape[i] += xm[i];
+          d2shape[i] += dd[i];
+        }
+      }
+
+      const omega = Math.sqrt(Math.max(omega2, 1e-14));
+      const t = new Float64Array(samples);
+      const x = new Float64Array(samples);
+      const residual = new Float64Array(samples);
+
+      for (let i = 0; i < samples; i += 1) {
+        const ti = duration * i/(samples-1);
+        const phase = omega * ti;
+        const xi = this._interpPeriodic(shape, phase);
+        const ddTau = this._interpPeriodic(d2shape, phase);
+        t[i] = ti;
+        x[i] = xi;
+        residual[i] = omega*omega*ddTau + Math.sin(xi);
+      }
+
+      return { t, x, residual, omega, period: 2*Math.PI/omega, duration, shape };
+    },
+
+    metrics({ amplitude = 1.5, q = 1, M = 0, hbar = -1, periods = 4 }) {
+      // Refinement metrics currently defined only for q=1 and baseline hbar=-1.
+      if (Math.abs(q-1) > 1e-12 || Math.abs(hbar+1) > 1e-12) return null;
+
+      const exact = this.exactPendulum({ amplitude, periods, samples: 3200 });
+      const approx = this.evaluateTarget({ amplitude, M, periods, samples: 3200 });
+
+      let se = 0, sx = 0, sr = 0;
+      let horizon = periods;
+      const threshold = .01 * amplitude;
+      let found = false;
+
+      for (let i = 0; i < exact.x.length; i += 1) {
+        const e = approx.x[i] - exact.x[i];
+        se += e*e;
+        sx += exact.x[i]*exact.x[i];
+        sr += approx.residual[i]*approx.residual[i];
+        if (!found && Math.abs(e) > threshold) {
+          horizon = exact.t[i] / exact.period;
+          found = true;
+        }
+      }
+
+      const waveform = Math.sqrt(se/Math.max(sx,1e-30));
+      const residual = Math.sqrt(sr/exact.x.length);
+      const frequency = Math.abs(approx.omega - exact.omega)/exact.omega;
+
+      return {
+        waveform, residual, frequency, horizon,
+        waveformText: waveform.toExponential(2),
+        residualText: residual.toExponential(2),
+        frequencyText: frequency.toExponential(2),
+        horizonText: `${horizon.toFixed(2)} T`
+      };
+    }
   };
 
   function fmtMinus(value, digits = 2) {
@@ -540,40 +659,116 @@
   }
 
   function drawRefinementView() {
-    const M=state.M;
+    const M = state.M;
     const panel = state.refinementView;
+    const A = GUIDED_AMPLITUDE;
+    const periods = 4;
+    const exact = Model.exactPendulum({ amplitude:A, periods, samples:3200 });
+    const approx = Model.evaluateTarget({ amplitude:A, M, periods, samples:3200 });
+
     if(panel==='trajectory'){
-      drawPlaceholder($('refinementTrajectoryCanvas'),'Target waveform + temporal error',[
-        'q = 1 is locked',
-        `current truncation order M = ${M}`,
-        'upper panel: exact vs GOTHAM · lower panel: e_M(t)'
-      ],COLORS.blue);
+      const canvas=$('refinementTrajectoryCanvas');
+      const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height);
+      const gap=18, topH=Math.round((height-gap)*.62), botY=topH+gap, botH=height-botY;
+      const l=60,r=28,t=36,b=24,w=width-l-r;
+      const topPlotH=topH-t-b, botPlotH=botH-30;
+      const X=v=>l+v/exact.duration*w;
+      const Y=v=>t+(A*1.08-v)/(2*A*1.08)*topPlotH;
+
+      let maxErr=0;
+      for(let i=0;i<exact.x.length;i++) maxErr=Math.max(maxErr,Math.abs(approx.x[i]-exact.x[i]));
+      maxErr=Math.max(maxErr,1e-6);
+      const Ye=v=>botY+8+(maxErr-v)/(2*maxErr)*botPlotH;
+
+      drawGrid(ctx,l,t,w,topPlotH,8,4);
+      drawGrid(ctx,l,botY+8,w,botPlotH,8,3);
+
+      const plot=(tarr,xarr,c,lw,d=[])=>{
+        ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(d);ctx.beginPath();
+        for(let i=0;i<tarr.length;i++) i?ctx.lineTo(X(tarr[i]),Y(xarr[i])):ctx.moveTo(X(tarr[i]),Y(xarr[i]));
+        ctx.stroke();ctx.restore();
+      };
+      plot(exact.t,exact.x,COLORS.green,2.2,[4,4]);
+      plot(approx.t,approx.x,COLORS.blue,2.5,[]);
+
+      ctx.save();ctx.strokeStyle=COLORS.orange;ctx.lineWidth=1.9;ctx.beginPath();
+      for(let i=0;i<exact.t.length;i++){
+        const e=approx.x[i]-exact.x[i];
+        i?ctx.lineTo(X(exact.t[i]),Ye(e)):ctx.moveTo(X(exact.t[i]),Ye(e));
+      }
+      ctx.stroke();ctx.restore();
+
+      ctx.strokeStyle=COLORS.gridStrong;ctx.beginPath();ctx.moveTo(l,Ye(0));ctx.lineTo(l+w,Ye(0));ctx.stroke();
+
+      drawAxesLabel(ctx,'x(t) [rad]',l+6,t+13);
+      drawAxesLabel(ctx,'e_M(t) [rad]',l+6,botY+18);
+      drawAxesLabel(ctx,'physical time',l+w,height-8,'right');
+
+      ctx.font='10px ui-sans-serif,system-ui';
+      ctx.fillStyle=COLORS.green;ctx.fillText('exact target',l+8,t+30);
+      ctx.fillStyle=COLORS.blue;ctx.fillText(`GOTHAM M=${M}`,l+78,t+30);
+      ctx.fillStyle=COLORS.orange;ctx.fillText('pointwise temporal error',l+8,botY+33);
     } else if(panel==='convergence'){
-      drawPlaceholder($('refinementConvergenceCanvas'),'Convergence at q = 1',[
-        `current order M = ${M}`,
-        'log waveform error · operator residual · frequency error',
-        'vertical marker follows the selected integer M'
-      ],COLORS.blue);
+      const canvas=$('refinementConvergenceCanvas');
+      const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height);
+      const l=66,r=28,t=42,b=52,w=width-l-r,h=height-t-b;
+      drawGrid(ctx,l,t,w,h,10,6);
+
+      const maxM=20;
+      const metrics=[];
+      let ymin=Infinity,ymax=-Infinity;
+      for(let m=0;m<=maxM;m++){
+        const mt=Model.metrics({ amplitude:A,q:1,M:m,hbar:-1,periods });
+        metrics.push(mt);
+        [mt.waveform,mt.residual,mt.frequency].forEach(v=>{
+          const z=Math.log10(Math.max(v,1e-14)); ymin=Math.min(ymin,z); ymax=Math.max(ymax,z);
+        });
+      }
+      ymin=Math.floor(ymin)-.3; ymax=Math.ceil(ymax)+.2;
+      const X=m=>l+m/maxM*w;
+      const Y=z=>t+(ymax-z)/(ymax-ymin)*h;
+
+      const plot=(key,c,d=[])=>{
+        ctx.save();ctx.strokeStyle=c;ctx.lineWidth=2.1;ctx.setLineDash(d);ctx.beginPath();
+        metrics.forEach((mt,m)=>{
+          const z=Math.log10(Math.max(mt[key],1e-14));
+          m?ctx.lineTo(X(m),Y(z)):ctx.moveTo(X(m),Y(z));
+        });ctx.stroke();ctx.restore();
+      };
+      plot('waveform',COLORS.blue);
+      plot('residual',COLORS.orange,[5,4]);
+      plot('frequency',COLORS.purple,[2,4]);
+
+      ctx.save();ctx.strokeStyle=COLORS.gold;ctx.lineWidth=1.4;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(X(M),t);ctx.lineTo(X(M),t+h);ctx.stroke();ctx.restore();
+
+      drawAxesLabel(ctx,'truncation order M',l+w,height-14,'right');
+      drawAxesLabel(ctx,'log10 error',l+4,t+12);
+      ctx.font='10px ui-sans-serif,system-ui';
+      ctx.fillStyle=COLORS.blue;ctx.fillText('waveform',l+8,t+30);
+      ctx.fillStyle=COLORS.orange;ctx.fillText('residual',l+72,t+30);
+      ctx.fillStyle=COLORS.purple;ctx.fillText('frequency',l+126,t+30);
+      ctx.fillStyle=COLORS.gold;ctx.fillText(`current M=${M}`,l+196,t+30);
     } else {
-      drawPlaceholder($('qmMapCanvas'),'Sampled view of one continuous q deformation',[
-        'vertical: continuous transport coordinate q',
-        'horizontal: integer truncation order M',
-        'color: selected accuracy metric'
+      drawPlaceholder($('qmMapCanvas'),'q–M map',[
+        'Refinement at q=1 is now connected.',
+        'The full continuous q–M landscape will be connected next.',
+        'Current guided target uses A=1.5 rad.'
       ],COLORS.gold);
     }
     updateMetricPlaceholders();
   }
 
   function updateMetricPlaceholders(){
-    const metrics = Model.metrics({ amplitude:GUIDED_AMPLITUDE, q:1, M:state.M, hbar:-1 });
+    const metrics = Model.metrics({ amplitude:GUIDED_AMPLITUDE, q:1, M:state.M, hbar:-1, periods:4 });
     const set=(id,val)=>$(id).textContent=val;
     if(metrics){
-      set('metricWave',metrics.waveform);set('metricResidual',metrics.residual);
-      set('metricFrequency',metrics.frequency);set('metricHorizon',metrics.horizon);
+      set('metricWave',metrics.waveformText);
+      set('metricResidual',metrics.residualText);
+      set('metricFrequency',metrics.frequencyText);
+      set('metricHorizon',metrics.horizonText);
     } else {
-      const m=state.M;
-      set('metricWave',m===0?'engine pending':'—');
-      set('metricResidual','—');set('metricFrequency','—');set('metricHorizon','—');
+      set('metricWave','—');set('metricResidual','—');set('metricFrequency','—');set('metricHorizon','—');
     }
   }
 
