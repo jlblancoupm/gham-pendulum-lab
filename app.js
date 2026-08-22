@@ -411,63 +411,132 @@
     const info=(ctx,x,y)=>{
       const lines=[`q = ${q.toFixed(3)}`,`Ω/Ω₀ = ${(current.omega/initial.omega).toFixed(3)}`,
                    `H3/H1 = ${h3pct.toFixed(2)} %`,`H5/H1 = ${h5pct.toFixed(3)} %`];
-      ctx.save(); ctx.font='10px ui-monospace,monospace';
-      ctx.fillStyle='rgba(5,16,28,.84)'; ctx.strokeStyle='rgba(174,202,229,.20)';
-      ctx.beginPath(); ctx.roundRect(x,y,142,66,8); ctx.fill(); ctx.stroke();
+      ctx.save();ctx.font='10px ui-monospace,monospace';
+      ctx.fillStyle='rgba(5,16,28,.86)';ctx.strokeStyle='rgba(174,202,229,.20)';
+      ctx.beginPath();ctx.roundRect(x,y,142,66,8);ctx.fill();ctx.stroke();
       lines.forEach((s,i)=>{ctx.fillStyle=i?COLORS.muted2:COLORS.gold;ctx.fillText(s,x+10,y+16+14*i);});
       ctx.restore();
     };
 
     if(view==='operator'){
-      const {ctx,width,height}=prepareCanvas($('transportOperatorCanvas')); clearCanvas(ctx,width,height);
-      const l=55,r=28,t=35,b=48,w=width-l-r,h=height-t-b; drawGrid(ctx,l,t,w,h,7,5);
+      const {ctx,width,height}=prepareCanvas($('transportOperatorCanvas'));clearCanvas(ctx,width,height);
+      const l=55,r=28,t=35,b=48,w=width-l-r,h=height-t-b;drawGrid(ctx,l,t,w,h,7,5);
       const xmin=-1.75,xmax=1.75,ymin=-1.75,ymax=1.75;
       const X=x=>l+(x-xmin)/(xmax-xmin)*w,Y=y=>t+(ymax-y)/(ymax-ymin)*h;
       const plot=(fn,c,lw,d=[])=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(d);ctx.beginPath();
-        for(let i=0;i<=500;i++){let x=xmin+(xmax-xmin)*i/500; i?ctx.lineTo(X(x),Y(fn(x))):ctx.moveTo(X(x),Y(fn(x)));}ctx.stroke();ctx.restore();};
-      plot(x=>x,COLORS.muted2,1.2,[5,5]); plot(x=>Math.sin(x),COLORS.green,1.2,[3,5]);
-      plot(x=>(1-q)*x+q*Math.sin(x),COLORS.gold,2.8);
-      drawAxesLabel(ctx,'x [rad]',l+w,height-14,'right'); drawAxesLabel(ctx,'g_q(x)',l+6,t+14);
+        for(let i=0;i<=500;i++){const x=xmin+(xmax-xmin)*i/500;i?ctx.lineTo(X(x),Y(fn(x))):ctx.moveTo(X(x),Y(fn(x)));}ctx.stroke();ctx.restore();};
+      plot(x=>x,COLORS.muted2,1.2,[5,5]);plot(x=>Math.sin(x),COLORS.green,1.2,[3,5]);plot(x=>(1-q)*x+q*Math.sin(x),COLORS.gold,2.8);
+      drawAxesLabel(ctx,'x [rad]',l+w,height-14,'right');drawAxesLabel(ctx,'g_q(x)',l+6,t+14);
       ctx.font='10px ui-sans-serif,system-ui';
       [[COLORS.muted2,'start q=0'],[COLORS.green,'target q=1'],[COLORS.gold,`current q=${q.toFixed(2)}`]]
         .forEach(([c,s],i)=>{ctx.fillStyle=c;ctx.fillText(s,l+8+i*76,t+31);});
-    } else if(view==='motion'){
-      const {ctx,width,height}=prepareCanvas($('transportMotionCanvas')); clearCanvas(ctx,width,height);
-      const l=58,r=28,t=38,b=48,w=width-l-r,h=height-t-b; drawGrid(ctx,l,t,w,h,8,5);
-      const X=v=>l+v/current.t[current.t.length-1]*w,Y=v=>t+(A*1.08-v)/(2*A*1.08)*h;
-      const plot=(res,c,lw,d,a=1)=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(d);ctx.globalAlpha=a;ctx.beginPath();
-        for(let i=0;i<res.t.length;i++) i?ctx.lineTo(X(res.t[i]),Y(res.x[i])):ctx.moveTo(X(res.t[i]),Y(res.x[i]));ctx.stroke();ctx.restore();};
-      plot(initial,COLORS.muted2,1.2,[6,5],.72); plot(target,COLORS.green,1.4,[3,5],.88); plot(current,COLORS.blue,2.6,[]);
-      drawAxesLabel(ctx,'physical time',l+w,height-14,'right'); drawAxesLabel(ctx,'x(t;q) [rad]',l+6,t+14);
+      return;
+    }
+
+    if(view==='motion'){
+      const {ctx,width,height}=prepareCanvas($('transportMotionCanvas'));clearCanvas(ctx,width,height);
+      const gap=18, topH=Math.round((height-gap)*.64), botY=topH+gap, botH=height-botY;
+      const l=58,r=28,t=34,b=26,w=width-l-r;
+      const plotTopH=topH-t-b, plotBotH=botH-28;
+      const X=v=>l+v/current.t[current.t.length-1]*w;
+      const Y=v=>t+(A*1.08-v)/(2*A*1.08)*plotTopH;
+      const Ye=v=>botY+6+(0.72-v)/(1.44)*plotBotH;
+      drawGrid(ctx,l,t,w,plotTopH,8,4);
+      drawGrid(ctx,l,botY+6,w,plotBotH,8,3);
+
+      const plot=(res,c,lw,d,a=1)=>{
+        ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(d);ctx.globalAlpha=a;ctx.beginPath();
+        for(let i=0;i<res.t.length;i++) i?ctx.lineTo(X(res.t[i]),Y(res.x[i])):ctx.moveTo(X(res.t[i]),Y(res.x[i]));
+        ctx.stroke();ctx.restore();
+      };
+      plot(initial,COLORS.muted2,1.15,[6,5],.68);
+      plot(target,COLORS.green,1.35,[3,5],.86);
+      plot(current,COLORS.blue,2.6,[]);
+
+      ctx.save();ctx.strokeStyle='rgba(244,202,92,.30)';ctx.setLineDash([4,5]);ctx.lineWidth=1;
+      [A,-A].forEach(v=>{ctx.beginPath();ctx.moveTo(l,Y(v));ctx.lineTo(l+w,Y(v));ctx.stroke();});
+      ctx.restore();
+
+      ctx.save();ctx.strokeStyle=COLORS.orange;ctx.lineWidth=1.8;ctx.beginPath();
+      for(let i=0;i<current.t.length;i++){
+        const e=(current.x[i]-initial.x[i])/A;
+        const ec=Math.max(-.72,Math.min(.72,e));
+        i?ctx.lineTo(X(current.t[i]),Ye(ec)):ctx.moveTo(X(current.t[i]),Ye(ec));
+      }
+      ctx.stroke();ctx.restore();
+      ctx.strokeStyle=COLORS.gridStrong;ctx.beginPath();ctx.moveTo(l,Ye(0));ctx.lineTo(l+w,Ye(0));ctx.stroke();
+
+      drawAxesLabel(ctx,'x(t;q) [rad]',l+6,t+12);
+      drawAxesLabel(ctx,'physical time',l+w,height-8,'right');
+      drawAxesLabel(ctx,'(x_q − x_0)/A',l+6,botY+16);
       ctx.font='10px ui-sans-serif,system-ui';
       [[COLORS.muted2,'start q=0'],[COLORS.green,'target q=1'],[COLORS.blue,`current q=${q.toFixed(2)}`]]
-        .forEach(([c,s],i)=>{ctx.fillStyle=c;ctx.fillText(s,l+8+i*72,t+31);});
-      info(ctx,Math.max(l+6,width-178),t+8);
-    } else if(view==='frequency'){
-      const {ctx,width,height}=prepareCanvas($('transportFrequencyCanvas')); clearCanvas(ctx,width,height);
+        .forEach(([c,s],i)=>{ctx.fillStyle=c;ctx.fillText(s,l+8+i*72,t+29);});
+      ctx.fillStyle=COLORS.orange;ctx.fillText('temporal deviation from q=0',l+8,botY+31);
+      ctx.fillStyle=COLORS.gold;ctx.fillText('±A constant: conservative system',l+190,botY+31);
+      info(ctx,Math.max(l+6,width-178),t+6);
+      return;
+    }
+
+    if(view==='frequency'){
+      const {ctx,width,height}=prepareCanvas($('transportFrequencyCanvas'));clearCanvas(ctx,width,height);
       const l=60,r=28,t=42,b=50,w=width-l-r,h=height-t-b,ymin=.82,ymax=1.01;
-      drawGrid(ctx,l,t,w,h,8,5); const X=v=>l+v*w,Y=v=>t+(ymax-v)/(ymax-ymin)*h;
+      drawGrid(ctx,l,t,w,h,8,5);const X=v=>l+v*w,Y=v=>t+(ymax-v)/(ymax-ymin)*h;
       ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2.4;ctx.beginPath();
-      for(let i=0;i<=240;i++){let qq=i/240,om=Model.omega({amplitude:A,q:qq,M:MT});i?ctx.lineTo(X(qq),Y(om)):ctx.moveTo(X(qq),Y(om));}ctx.stroke();
+      for(let i=0;i<=240;i++){const qq=i/240,om=Model.omega({amplitude:A,q:qq,M:MT});i?ctx.lineTo(X(qq),Y(om)):ctx.moveTo(X(qq),Y(om));}ctx.stroke();
       [[initial.omega,COLORS.muted2,[5,5]],[target.omega,COLORS.green,[3,5]]].forEach(([v,c,d])=>{
         ctx.save();ctx.strokeStyle=c;ctx.setLineDash(d);ctx.beginPath();ctx.moveTo(l,Y(v));ctx.lineTo(l+w,Y(v));ctx.stroke();ctx.restore();});
       ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(X(q),Y(current.omega),5,0,2*Math.PI);ctx.fill();
       drawAxesLabel(ctx,'q',l+w,height-14,'right');drawAxesLabel(ctx,`Ω^[${MT}](q)`,l+4,t+12);info(ctx,Math.max(l+6,width-178),t+8);
-    } else {
-      const {ctx,width,height}=prepareCanvas($('transportSpectrumCanvas')); clearCanvas(ctx,width,height,'rgba(179,124,255,.07)');
-      const l=64,r=28,t=42,b=50,w=width-l-r,h=height-t-b; drawGrid(ctx,l,t,w,h,8,5);
-      let h3=[],h5=[],ym=0;
-      for(let i=0;i<=160;i++){let qq=i/160,hh=Model.harmonics({amplitude:A,q:qq,M:MT});
-        let p3=100*hh.h3/Math.max(hh.h1,1e-12),p5=100*hh.h5/Math.max(hh.h1,1e-12);h3.push(p3);h5.push(p5);ym=Math.max(ym,p3,p5);}
-      ym=Math.max(.1,ym*1.18); const X=v=>l+v*w,Y=v=>t+(ym-v)/ym*h;
-      const plot=(arr,c,d=[])=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=2.3;ctx.setLineDash(d);ctx.beginPath();
-        arr.forEach((v,i)=>i?ctx.lineTo(X(i/160),Y(v)):ctx.moveTo(X(0),Y(v)));ctx.stroke();ctx.restore();};
-      plot(h3,COLORS.purple);plot(h5,COLORS.orange,[5,4]);
-      [[h3pct,COLORS.purple],[h5pct,COLORS.orange]].forEach(([v,c])=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(X(q),Y(v),5,0,2*Math.PI);ctx.fill();});
-      drawAxesLabel(ctx,'q',l+w,height-14,'right');drawAxesLabel(ctx,'relative harmonic content [%]',l+4,t+12);
-      ctx.font='10px ui-sans-serif,system-ui';ctx.fillStyle=COLORS.purple;ctx.fillText('H3 / H1',l+8,t+31);ctx.fillStyle=COLORS.orange;ctx.fillText('H5 / H1',l+70,t+31);
-      info(ctx,Math.max(l+6,width-178),t+8);
+      return;
     }
+
+    const {ctx,width,height}=prepareCanvas($('transportSpectrumCanvas'));clearCanvas(ctx,width,height,'rgba(179,124,255,.07)');
+    const l=66,r=28,t=42,b=52,w=width-l-r,h=height-t-b;
+    drawGrid(ctx,l,t,w,h,8,5);
+
+    const spectrum=(qq)=>{
+      const result=Model.evaluateTransport({amplitude:A,q:qq,M:MT,duration:1,samples:2});
+      const shape=result.shape,N=shape.length,lines=[];
+      for(let n=1;n<=15;n+=2){
+        let c=0,s=0;
+        for(let i=0;i<N;i++){
+          const th=2*Math.PI*i/N;
+          c+=shape[i]*Math.cos(n*th);s+=shape[i]*Math.sin(n*th);
+        }
+        const amp=2*Math.hypot(c,s)/N;
+        lines.push({n,omega:n*result.omega,amp});
+      }
+      return {omega:result.omega,lines};
+    };
+
+    const sp0=spectrum(0),spq=spectrum(q),sp1=spectrum(1);
+    const maxOmega=15*sp0.omega*1.03;
+    const maxAmp=Math.max(...sp0.lines.map(d=>d.amp),...spq.lines.map(d=>d.amp),...sp1.lines.map(d=>d.amp))*1.08;
+    const X=v=>l+v/maxOmega*w,Y=v=>t+(maxAmp-v)/maxAmp*h;
+
+    const stems=(sp,c,lw,alpha,dash=[])=>{
+      ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(dash);
+      sp.lines.forEach(d=>{ctx.beginPath();ctx.moveTo(X(d.omega),Y(0));ctx.lineTo(X(d.omega),Y(d.amp));ctx.stroke();});
+      ctx.restore();
+    };
+    stems(sp0,COLORS.muted2,1.0,.42,[3,4]);
+    stems(sp1,COLORS.green,1.0,.48,[2,4]);
+    stems(spq,COLORS.blue,2.2,1,[]);
+
+    ctx.save();ctx.strokeStyle=COLORS.blue;ctx.globalAlpha=.55;ctx.lineWidth=1.2;ctx.beginPath();
+    spq.lines.forEach((d,i)=>i?ctx.lineTo(X(d.omega),Y(d.amp)):ctx.moveTo(X(d.omega),Y(d.amp)));ctx.stroke();ctx.restore();
+    spq.lines.forEach(d=>{ctx.fillStyle=COLORS.blue;ctx.beginPath();ctx.arc(X(d.omega),Y(d.amp),3.2,0,2*Math.PI);ctx.fill();});
+
+    drawAxesLabel(ctx,'angular frequency ω',l+w,height-14,'right');
+    drawAxesLabel(ctx,'line-spectrum amplitude [rad]',l+4,t+12);
+    ctx.font='10px ui-sans-serif,system-ui';
+    ctx.fillStyle=COLORS.muted2;ctx.fillText('start spectrum q=0',l+8,t+30);
+    ctx.fillStyle=COLORS.green;ctx.fillText('target q=1',l+112,t+30);
+    ctx.fillStyle=COLORS.blue;ctx.fillText(`current q=${q.toFixed(2)}`,l+182,t+30);
+    ctx.fillStyle=COLORS.purple;ctx.fillText(`H3/H1 ${h3pct.toFixed(2)}%`,l+8,height-18);
+    ctx.fillStyle=COLORS.orange;ctx.fillText(`H5/H1 ${h5pct.toFixed(3)}%`,l+92,height-18);
+    info(ctx,Math.max(l+6,width-178),t+8);
   }
 
   function drawRefinementView() {
