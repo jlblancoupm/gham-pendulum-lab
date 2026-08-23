@@ -1090,3 +1090,80 @@ body{
   gap:5px !important;
   margin-top:6px !important;
 }
+
+/* v25.1 — Refinement desktop composition */
+@media (min-width:1100px){
+  #refinement .workspace-canvas-stack.tall{
+    height:400px !important;
+    min-height:400px !important;
+    max-height:400px !important;
+  }
+  #refinement .workspace-canvas-stack.tall canvas{
+    height:400px !important;
+    max-height:400px !important;
+  }
+
+  /* Give the chart priority; keep surrounding chrome compact. */
+  #refinement .lab-workspace{
+    gap:8px !important;
+  }
+  #refinement .workspace-footer{
+    margin-top:6px !important;
+    padding-top:4px !important;
+  }
+  #refinement .view-tabs,
+  #refinement .view-tabs.wrap{
+    margin-bottom:6px !important;
+  }
+
+  /* Target fix is contextual, not the main visual. */
+  #refinement .target-fix,
+  #refinement .target-fix-card,
+  #refinement [class*="target-fix"]{
+    min-height:0 !important;
+    padding:8px 10px !important;
+    margin:6px 0 !important;
+    font-size:9px !important;
+    line-height:1.25 !important;
+  }
+  #refinement .target-fix strong,
+  #refinement .target-fix-card strong,
+  #refinement [class*="target-fix"] strong{
+    font-size:10px !important;
+  }
+
+  #refinement .control-deck{
+    padding:10px !important;
+    gap:7px !important;
+  }
+  #refinement .control-group{
+    padding:7px 8px !important;
+    margin-bottom:5px !important;
+  }
+}
+
+/* Medium laptops: slightly shorter, same hierarchy. */
+@media (min-width:760px) and (max-width:1099px){
+  #refinement .workspace-canvas-stack.tall,
+  #refinement .workspace-canvas-stack.tall canvas{
+    height:340px !important;
+    min-height:340px !important;
+    max-height:340px !important;
+  }
+  #refinement .target-fix,
+  #refinement .target-fix-card,
+  #refinement [class*="target-fix"]{
+    padding:7px 9px !important;
+    font-size:9px !important;
+  }
+}
+
+/* Mobile: let width drive the plot and avoid tall fixed panels. */
+@media (max-width:759px){
+  #refinement .workspace-canvas-stack.tall,
+  #refinement .workspace-canvas-stack.tall canvas{
+    height:240px !important;
+    min-height:240px !important;
+    max-height:240px !important;
+  }
+}

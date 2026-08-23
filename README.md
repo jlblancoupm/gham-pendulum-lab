@@ -303,3 +303,8 @@ expression is green, matching the two pendulums exactly.
 - guided chart heights reduced to 220px;
 - q/M/hbar three-variable cards enlarged;
 - Playground control deck compacted vertically.
+
+## v25.1 — Refinement composition
+On standard desktop screens, the Refinement `.workspace-canvas-stack.tall` is fixed to 400 px.
+Surrounding controls, footer and Target fix are compacted so the chart remains the dominant element.
+Medium laptops use 340 px; mobile uses 240 px.
