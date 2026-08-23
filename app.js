@@ -1135,6 +1135,12 @@
     $('closeMathDrawer')?.addEventListener('click',closeMathDrawer);
     $('mathDrawerBackdrop')?.addEventListener('click',closeMathDrawer);
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMathDrawer();});
+    $$('[data-math-level]').forEach(btn=>btn.addEventListener('click',()=>{
+      $$('[data-math-level]').forEach(b=>b.classList.toggle('active',b===btn));
+      $$('[data-math-panel]').forEach(p=>p.classList.toggle('active',p.dataset.mathPanel===btn.dataset.mathLevel));
+      const panel=document.querySelector(`[data-math-panel="${btn.dataset.mathLevel}"]`);
+      if(panel){panel.scrollIntoView({block:'start'});typeset(panel);}
+    }));
     $('transportQ').addEventListener('input',updateTransport);
     $('transportReset').addEventListener('click',()=>{$('transportQ').value=0;updateTransport();});
     wireTabs('transport',v=>state.transport.view=v,drawTransportView);

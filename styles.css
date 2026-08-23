@@ -458,3 +458,42 @@ footer a { color:var(--gold); text-align:right; }
   }
   .math-card { width:calc(100% - 44px); }
 }
+
+/* v17: graduated mathematics */
+.math-drawer-intro{margin:10px 0 0;color:var(--muted);font-size:12px;max-width:520px}
+.math-level-tabs{
+  position:sticky;top:116px;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);
+  padding:10px 18px;background:rgba(8,26,43,.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);gap:7px
+}
+.math-level-tabs button{
+  min-height:38px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.02);
+  color:var(--muted);font:700 10px ui-sans-serif,system-ui;letter-spacing:.035em;cursor:pointer
+}
+.math-level-tabs button.active{color:var(--text);border-color:rgba(244,202,92,.42);background:rgba(244,202,92,.08)}
+.math-level{display:none}.math-level.active{display:block}
+.math-depth-note{display:flex;align-items:center;gap:12px;margin:8px 0 2px;padding:11px 13px;border-radius:10px;background:rgba(73,185,255,.05);color:var(--muted);font-size:11px}
+.math-depth-note strong{color:var(--blue);text-transform:uppercase;letter-spacing:.08em}
+.math-key-equation{margin:18px -12px;padding:26px 12px!important;border:1px solid rgba(244,202,92,.18)!important;border-radius:14px;background:rgba(244,202,92,.035)}
+.endpoint-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.endpoint-grid>div{padding:14px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.018)}
+.math-role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}
+.math-role-grid>div{padding:14px;border:1px solid var(--line);border-radius:10px}
+.math-role-grid b{display:block;font:800 24px ui-monospace,monospace;margin-bottom:5px}
+.math-role-grid span{color:var(--muted);font-size:11px}
+.role-q b{color:var(--gold)}.role-m b{color:var(--blue)}.role-h b{color:var(--purple)}
+.recursion-flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:18px 0;padding:15px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.015)}
+.recursion-flow span{padding:8px 10px;border-radius:8px;background:rgba(73,185,255,.07);color:var(--text)}
+.recursion-flow i{font-style:normal;color:var(--muted2);font-size:10px}
+.algorithm-card{display:grid;gap:8px;margin:18px 0}
+.algorithm-card>div{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;padding:11px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.014)}
+.algorithm-card>div>span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:rgba(244,202,92,.09);color:var(--gold);font:800 11px ui-monospace,monospace}
+.algorithm-card p{margin:4px 0!important}
+.metric-defs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.metric-defs>div{padding:12px;border:1px solid var(--line);border-radius:9px}
+.metric-defs b{display:block;font-size:11px;margin-bottom:4px}.metric-defs span{color:var(--muted);font-size:10px}
+@media(max-width:620px){
+ .math-level-tabs{top:126px;grid-template-columns:1fr 1fr}
+ .endpoint-grid,.math-role-grid,.metric-defs{grid-template-columns:1fr}
+ .math-drawer-body{padding-left:20px;padding-right:20px}
+}

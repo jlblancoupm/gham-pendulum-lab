@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=16.1">
+  <link rel="stylesheet" href="styles.css?v=17.1">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -22,7 +22,7 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script defer src="app.js?v=16.1"></script>
+  <script defer src="app.js?v=17.1"></script>
 </head>
 
 <body>
@@ -566,57 +566,193 @@
         <div>
           <p class="eyebrow">TECHNICAL LAYER</p>
           <h2 id="mathDrawerTitle">Mathematical formulation</h2>
+          <p class="math-drawer-intro">One construction, four depths. Start with the idea; descend only as far as you need.</p>
         </div>
         <button id="closeMathDrawer" type="button" aria-label="Close mathematics">×</button>
       </div>
+
+      <div class="math-level-tabs" role="tablist" aria-label="Mathematics depth">
+        <button class="active" type="button" data-math-level="intuition">Intuition</button>
+        <button type="button" data-math-level="formulation">Formulation</button>
+        <button type="button" data-math-level="derivation">Derivation</button>
+        <button type="button" data-math-level="computation">Computation</button>
+      </div>
+
       <div class="math-drawer-body">
-        <section>
-          <h3>1. Target problem</h3>
-          \[
-          \ddot x+\sin x=0,\qquad x(0)=A,\qquad \dot x(0)=0.
-          \]
-        </section>
-        <section>
-          <h3>2. Homotopy of problems</h3>
-          \[
-          \mathcal N_q[x]
-          =
-          \ddot x +(1-q)x+q\sin x.
-          \]
-          <p>\(q=0\) is the linear starting system; \(q=1\) is the nonlinear target.</p>
-        </section>
-        <section>
-          <h3>3. Series representation</h3>
-          \[
-          x(t;q)=\sum_{m=0}^{\infty}x_m(t)q^m.
-          \]
-          <p>The finite-order approximation retains the first \(M+1\) terms.</p>
-        </section>
-        <section>
-          <h3>4. Frequency correction</h3>
-          \[
-          \tau=\Omega(q)t,
-          \qquad
-          \Omega^2(q)=\sum_{m=0}^{\infty}\omega_m q^m.
-          \]
-          <p>The transported time scale prevents the approximation from accumulating the wrong period.</p>
-        </section>
-        <section>
-          <h3>5. Finite-order accuracy</h3>
-          \[
-          x^{[M]}(t;q)=\sum_{m=0}^{M}x_m(t)q^m.
-          \]
-          <p>The demo evaluates waveform error, operator residual, frequency error, and reliable horizon.</p>
-        </section>
-        <section>
-          <h3>6. Convergence control</h3>
-          \[
-          x^{[M]}_{\hbar}
-          =
-          \sum_{n=0}^{M}\mu_{M,n}(\hbar)x_n.
-          \]
-          <p>\(\hbar\) reshapes finite-order convergence without changing the target problem.</p>
-        </section>
+        <div class="math-level active" data-math-panel="intuition">
+          <div class="math-depth-note"><strong>Level 1</strong><span>What is being constructed?</span></div>
+          <section>
+            <h3>Start from a solved problem</h3>
+            <p>The nonlinear pendulum is the target:</p>
+            \[
+              \ddot x+\sin x=0,\qquad x(0)=A,\quad \dot x(0)=0.
+            \]
+            <p>The familiar small-angle model provides an analytically solved starting point:</p>
+            \[
+              \ddot x_0+x_0=0,\qquad x_0(t)=A\cos t.
+            \]
+          </section>
+          <section>
+            <h3>Build a continuous deformation</h3>
+            <p>Introduce an embedding coordinate \(q\in[0,1]\) and a deformation \(\Phi(t;q)\) satisfying</p>
+            \[
+              \Phi(t;0)=x_0(t),\qquad \Phi(t;1)=x(t).
+            \]
+            <div class="math-role-grid">
+              <div class="role-q"><b>q</b><span>where we are along the deformation</span></div>
+              <div class="role-m"><b>M</b><span>how many deformation terms we retain</span></div>
+              <div class="role-h"><b>ħ</b><span>how finite-order convergence is controlled</span></div>
+            </div>
+          </section>
+          <section>
+            <h3>Represent the path</h3>
+            \[
+              \Phi(t;q)=x_0(t)+\sum_{m=1}^{\infty}x_m(t)q^m,
+              \qquad
+              x^{[M]}(t;q)=x_0(t)+\sum_{m=1}^{M}x_m(t)q^m.
+            \]
+            <p>The web visualizes this same construction from three viewpoints: transport in \(q\), refinement in \(M\), and convergence control through \(\hbar\).</p>
+          </section>
+        </div>
+
+        <div class="math-level" data-math-panel="formulation">
+          <div class="math-depth-note"><strong>Level 2</strong><span>The operator formulation behind the demo</span></div>
+          <section>
+            <h3>Operators</h3>
+            <p>Write the target problem as a nonlinear operator equation</p>
+            \[
+              \mathcal N[x,\Omega]=0.
+            \]
+            <p>Choose an auxiliary linear operator \(\mathcal L\) whose inverse problem is simple and compatible with the starting solution \(x_0\).</p>
+          </section>
+          <section class="math-key-equation">
+            <h3>Zero-order deformation equation</h3>
+            \[
+              (1-q)\,\mathcal L\!\left[\Phi-x_0\right]
+              =
+              q\,\hbar\,\mathcal N[\Phi,\Omega].
+            \]
+            <p>This is the central mathematical bridge. At the two endpoints:</p>
+            <div class="endpoint-grid">
+              <div><b>\(q=0\)</b>\[\mathcal L[\Phi-x_0]=0\Rightarrow\Phi=x_0\]</div>
+              <div><b>\(q=1\)</b>\[\hbar\,\mathcal N[\Phi,\Omega]=0\Rightarrow\mathcal N[\Phi,\Omega]=0\]</div>
+            </div>
+          </section>
+          <section>
+            <h3>Series and transported time scale</h3>
+            \[
+              \Phi(\tau;q)=\sum_{m=0}^{\infty}x_m(\tau)q^m,
+              \qquad
+              \Omega^2(q)=\sum_{m=0}^{\infty}\omega_m q^m,
+              \qquad \tau=\Omega(q)t.
+            \]
+            <p>Transporting the frequency together with the waveform is essential for a periodic problem: otherwise a small frequency error becomes a growing phase error in physical time.</p>
+          </section>
+          <section>
+            <h3>The pendulum used here</h3>
+            <p>In normalized time, the target residual has the structure</p>
+            \[
+              \mathcal N[\Phi,\Omega]
+              =
+              \Omega^2\,\partial_{\tau\tau}\Phi+\sin\Phi.
+            \]
+            <p>The auxiliary problem is anchored to the harmonic oscillator. The browser implementation uses a frequency-corrected \(q\)-series so that each finite order carries both waveform and period information.</p>
+          </section>
+        </div>
+
+        <div class="math-level" data-math-panel="derivation">
+          <div class="math-depth-note"><strong>Level 3</strong><span>How the deformation generates the hierarchy</span></div>
+          <section>
+            <h3>Differentiate with respect to q</h3>
+            <p>Apply the \(m\)-th homotopy derivative to the zero-order deformation equation and evaluate at \(q=0\). With</p>
+            \[
+              x_m=
+              \left.
+              \frac{1}{m!}\frac{\partial^m\Phi}{\partial q^m}
+              \right|_{q=0},
+            \]
+            <p>the nonlinear problem is converted into a sequence of linear deformation problems.</p>
+          </section>
+          <section class="math-key-equation">
+            <h3>m-th order deformation equation</h3>
+            \[
+              \mathcal L\!\left[x_m-\chi_m x_{m-1}\right]
+              =
+              \hbar\,R_m,
+              \qquad
+              \chi_m=
+              \begin{cases}
+                0,&m=1,\\
+                1,&m>1.
+              \end{cases}
+            \]
+            \[
+              R_m=
+              \left.
+              \frac{1}{(m-1)!}
+              \frac{\partial^{m-1}}{\partial q^{m-1}}
+              \mathcal N[\Phi(q),\Omega(q)]
+              \right|_{q=0}.
+            \]
+          </section>
+          <section>
+            <h3>Recursive structure</h3>
+            <div class="recursion-flow" aria-label="GOTHAM recursion">
+              <span>\(x_0,\Omega_0\)</span><i>→ build</i><span>\(R_1\)</span><i>→ solve</i><span>\(x_1,\omega_1\)</span><i>→</i><span>\(R_2\)</span><i>→ solve</i><span>\(x_2,\omega_2\)</span><i>→ ···</i>
+            </div>
+            <p>At each order, previously computed terms determine the forcing \(R_m\). The auxiliary operator is solved again; the original nonlinear problem is not restarted from scratch.</p>
+          </section>
+          <section>
+            <h3>Periodic solvability and frequency correction</h3>
+            <p>For the pendulum, resonant forcing would generate secular terms. The frequency coefficients \(\omega_m\) are therefore chosen order by order so that the resonant component is removed. This is what lets the approximation remain periodic while its physical period deforms.</p>
+          </section>
+          <section>
+            <h3>Finite order and convergence control</h3>
+            <p>Stopping the hierarchy at \(M\) gives a computable approximation. In the generalized finite-order construction used by the demo, \(\hbar\) changes the effective weighting of retained deformation terms:</p>
+            \[
+              x_{\hbar}^{[M]}
+              =
+              \sum_{n=0}^{M}\mu_{M,n}(\hbar)\,x_n.
+            \]
+            <p>Hence \(M\) and \(\hbar\) have fundamentally different roles: one sets the available order; the other reshapes how that finite information converges.</p>
+          </section>
+        </div>
+
+        <div class="math-level" data-math-panel="computation">
+          <div class="math-depth-note"><strong>Level 4</strong><span>What the browser actually computes</span></div>
+          <section>
+            <h3>Offline idea, live evaluation</h3>
+            <p>The demo constructs the frequency-corrected deformation coefficients and then evaluates finite-order approximations interactively as \(q\), \(M\), and \(\hbar\) change.</p>
+            <div class="algorithm-card">
+              <div><span>0</span><p><b>Choose</b> \(\mathcal L\), \(x_0\), amplitude \(A\), and convergence control \(\hbar\).</p></div>
+              <div><span>1</span><p><b>Construct</b> the order-\(m\) residual \(R_m\) from already known coefficients.</p></div>
+              <div><span>2</span><p><b>Impose periodic solvability</b> to determine the frequency correction at that order.</p></div>
+              <div><span>3</span><p><b>Solve the linear deformation equation</b> for \(x_m\).</p></div>
+              <div><span>4</span><p><b>Repeat</b> until the requested maximum order is available.</p></div>
+              <div><span>5</span><p><b>Evaluate</b> the truncated construction at the selected \(q,M,\hbar\).</p></div>
+            </div>
+          </section>
+          <section>
+            <h3>Reliability is measured, not assumed</h3>
+            <p>The visualizations compare the finite construction against a numerical reference using complementary diagnostics:</p>
+            <div class="metric-defs">
+              <div><b>Waveform error</b><span>normalized discrepancy in \(x(t)\)</span></div>
+              <div><b>Residual</b><span>violation of the governing differential equation</span></div>
+              <div><b>Frequency error</b><span>relative error in the transported oscillation rate</span></div>
+              <div><b>Reliable horizon</b><span>how many periods remain within the chosen tolerance</span></div>
+            </div>
+          </section>
+          <section>
+            <h3>From computation to the q–M frontier</h3>
+            <p>For a tolerance \(\varepsilon\), the browser checks these diagnostics over the sampled \(q\)-grid and reports</p>
+            \[
+              q_{\max}(M;\varepsilon),
+              \qquad
+              M_{\min}(q;\varepsilon).
+            \]
+            <p>This is the computational meaning of “Go Farther”: increasing the available order can extend the portion of the homotopy path that is resolved reliably.</p>
+          </section>
+        </div>
       </div>
     </div>
   </aside>

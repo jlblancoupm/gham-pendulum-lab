@@ -170,3 +170,10 @@ Mathematics is optional:
 - a global Mathematical formulation drawer with target problem, homotopy operator, q-series, frequency correction, finite-order approximation, metrics, and hbar control.
 
 The scientific engine is unchanged from v15.1.
+
+## v17 — graduated mathematical layer
+The global Mathematics drawer now has four depths:
+Intuition → Formulation → Derivation → Computation.
+It introduces the operator formulation, zero-order deformation equation, q-series,
+frequency transport, higher-order deformation hierarchy, periodic solvability,
+finite-order hbar control, and the diagnostics used by the browser.
