@@ -234,3 +234,19 @@ The complete waveforms remain static by design; the instantaneous readout moves 
 - first Mathematics tab now colors equations inside MathJax itself, using the same Linear / Current / Target palette as the pendulums;
 - Phase portrait, Error decomposition, and Energy are now time-synchronized with the Playground pendulum;
 - Convergence remains intentionally static because its independent variable is M, not physical time.
+
+## v21.6 — operator cleanup + exact first-panel colors
+- removed vertical guides from Operator instantaneous markers;
+- first Mathematics panel now uses only the two colors of the initial pendulum comparison:
+  Linear = #f4ca5c, Target = #73d987;
+- Current remains neutral in that first mathematical bridge because it is not yet the third visual state there.
+
+## v21.7 — restore Current/error blue
+Blue is restored as the auxiliary Current/error semantic in the first mathematical panel
+and in the angular-gap cue, while Linear and Target keep their own pendulum colors.
+
+## v22 — collapsible method journey
+After Start Simple, visitors can now choose:
+- Enter the method: expand the full guided sequence.
+- Skip to Playground: jump directly to Explore while keeping the method hidden.
+A small "Method hidden / Show explanation" bar lets visitors reopen the method later.

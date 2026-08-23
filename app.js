@@ -1288,11 +1288,13 @@
         [xTarget,Math.sin(xTarget),COLORS.green,5]
       ];
       points.forEach(([xv,yv,c,rad])=>{
-        ctx.save();
-        ctx.strokeStyle=c;ctx.globalAlpha=.25;ctx.lineWidth=1;ctx.setLineDash([3,4]);
-        ctx.beginPath();ctx.moveTo(XX(xv),YY(0));ctx.lineTo(XX(xv),YY(yv));ctx.stroke();
-        ctx.restore();
-        ctx.fillStyle=c;ctx.beginPath();ctx.arc(XX(xv),YY(yv),rad,0,2*Math.PI);ctx.fill();
+        ctx.fillStyle=c;
+        ctx.beginPath();
+        ctx.arc(XX(xv),YY(yv),rad,0,2*Math.PI);
+        ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.55)';
+        ctx.lineWidth=1;
+        ctx.stroke();
       });
       ctx.fillStyle=COLORS.text;ctx.font='9px ui-monospace,monospace';
       ctx.fillText(`t=${displayTime.toFixed(2)} s`,l+8,t+h-12);
@@ -1570,7 +1572,41 @@
     h.classList.toggle('scrolled',window.scrollY>8);
   }
 
+
+  function setMethodExpanded(expanded,scrollInto=false){
+    const journey=$('methodJourney');
+    const toggle=$('toggleMethod');
+    const returnBar=$('methodReturnBar');
+    if(!journey||!toggle)return;
+
+    journey.hidden=!expanded;
+    toggle.setAttribute('aria-expanded',expanded?'true':'false');
+    toggle.querySelector('span').textContent=expanded?'Hide the method':'Enter the method';
+
+    if(returnBar) returnBar.hidden=expanded;
+
+    if(expanded){
+      // Newly revealed sections must become visible even if IntersectionObserver
+      // never saw them while hidden.
+      journey.querySelectorAll('.reveal').forEach(el=>el.classList.add('visible'));
+      if(scrollInto){
+        const first=journey.querySelector('section');
+        first?.scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    }
+  }
+
   function wireInteractions(){
+    $('toggleMethod')?.addEventListener('click',()=>{
+      const journey=$('methodJourney');
+      const expanded=journey && !journey.hidden;
+      setMethodExpanded(!expanded,!expanded);
+    });
+    $('skipToPlayground')?.addEventListener('click',()=>{
+      setMethodExpanded(false,false);
+      const bar=$('methodReturnBar'); if(bar) bar.hidden=false;
+    });
+    $('reopenMethod')?.addEventListener('click',()=>setMethodExpanded(true,true));
     window.addEventListener('scroll',updateFloatingHeader,{passive:true});
     updateFloatingHeader();
     $('openMathDrawer')?.addEventListener('click',openMathDrawer);
@@ -1663,7 +1699,7 @@
   }
 
   function init(){
-    wireInteractions();setupScrollEffects();setupReveal();
+    wireInteractions();setMethodExpanded(false,false);setupScrollEffects();setupReveal();
     updateTransport();updateGeometry();updateRefinement();updateControl();updatePlayInputs();
     drawOperatorComparison();drawBaselineMotion();drawHeroPendulum(0);
     let resizeTimer;

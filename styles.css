@@ -620,3 +620,65 @@ html.init-failed .reveal {
 .key-linear, .eq-linear { color: #89A0B5 !important; }
 .key-current, .eq-current { color: #49B9FF !important; }
 .key-target, .eq-target { color: #73D989 !important; }
+
+/* v21.6 — first-panel colors exactly match initial pendulums */
+.math-level[data-math-panel="intuition"] .key-linear,
+.math-level[data-math-panel="intuition"] .eq-linear {
+  color: #f4ca5c !important;
+}
+.math-level[data-math-panel="intuition"] .key-target,
+.math-level[data-math-panel="intuition"] .eq-target {
+  color: #73d987 !important;
+}
+.two-state-key { justify-content:center; }
+
+/* v21.7 — restore Current/error blue */
+.math-level[data-math-panel="intuition"] .key-current{color:#49b9ff!important}
+.math-color-note{margin-top:10px;color:var(--muted);font-size:11px}
+.three-role-key{justify-content:center}
+
+/* v22 — collapsible method journey */
+.method-journey[hidden]{display:none!important}
+.threshold-actions{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:20px;
+}
+.threshold-actions .button{min-width:190px;justify-content:center}
+.threshold-hint{
+  display:block;
+  margin-top:12px;
+  color:var(--muted2);
+  font-size:9px;
+}
+.method-return-bar{
+  width:min(calc(100% - 28px),1180px);
+  margin:18px auto 10px;
+}
+.method-return-bar>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:rgba(255,255,255,.018);
+}
+.method-return-bar span{
+  color:var(--muted);
+  font-size:10px;
+  font-weight:700;
+}
+.method-return-bar button{
+  border:1px solid rgba(244,202,92,.28);
+  background:rgba(244,202,92,.06);
+  color:var(--gold);
+  border-radius:8px;
+  padding:7px 10px;
+  font-size:9px;
+  font-weight:750;
+  cursor:pointer;
+}

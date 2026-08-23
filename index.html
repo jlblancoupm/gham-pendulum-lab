@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=21.5">
+  <link rel="stylesheet" href="styles.css?v=22">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -23,7 +23,7 @@
   </script>
   
   
-  <script defer src="app.js?v=21.5"></script>
+  <script defer src="app.js?v=22"></script>
   
   <script>
     window.MathJax = {
@@ -155,23 +155,33 @@
     </section>
 
 
-    <section class="method-threshold" aria-label="Transition from approximation to method">
+    
+    <section class="method-threshold" id="methodThreshold" aria-label="Choose how deeply to explore the method">
       <div class="threshold-line"></div>
       <div class="threshold-card reveal">
         <p class="eyebrow">THE APPROXIMATION WAS THE EASY PART</p>
         <h2>Start simple. <em>But don’t stop there.</em></h2>
-        <p>The linear model is already known. The question now changes: can that solved approximation become a controlled route to the nonlinear solution?</p>
-        <a class="button primary threshold-cta" href="#transport">
-          <span>Enter the method</span><i aria-hidden="true">↓</i>
-        </a>
+        <p>The linear model is already known. Choose how far you want to go.</p>
+        <div class="threshold-actions">
+          <button class="button primary" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
+            <span>Enter the method</span>
+          </button>
+          <a class="button secondary" id="skipToPlayground" href="#playground">
+            <span>Skip to Playground</span>
+          </a>
+        </div>
+        <small class="threshold-hint">You can expand or hide the method again at any time.</small>
       </div>
       <div class="threshold-line"></div>
     </section>
 
+
     <!-- =========================================================
          03 — CONTINUOUS q TRANSPORT
          ========================================================= -->
-    <section class="section lab-section" id="transport" data-section="transport" data-math-context="formulation">
+    
+    <div class="method-journey" id="methodJourney" hidden>
+<section class="section lab-section" id="transport" data-section="transport" data-math-context="formulation">
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">02 · BUILD A PATH</p>
@@ -509,7 +519,17 @@
     <!-- =========================================================
          08 — PLAYGROUND
          ========================================================= -->
-    <section class="section lab-section playground-section" id="playground" data-section="playground" data-math-context="computation">
+    
+    </div>
+
+    <section class="method-return-bar" id="methodReturnBar" hidden aria-label="Method explanation is hidden">
+      <div>
+        <span>Method hidden</span>
+        <button type="button" id="reopenMethod">Show explanation</button>
+      </div>
+    </section>
+
+<section class="section lab-section playground-section" id="playground" data-section="playground" data-math-context="computation">
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">07 · EXPLORE</p>
@@ -650,12 +670,12 @@
             <h3>Start from a solved problem</h3>
             <p>The nonlinear pendulum is the target:</p>
             \[
-      \color{#73D989}{\ddot x+\sin x=0}
+      \color{#73d987}{\ddot x+\sin x=0}
       \color{#DCE8F2}{,\qquad x(0)=A,\qquad \dot x(0)=0}
     \]
             <p>The familiar small-angle model provides an analytically solved starting point:</p>
             \[
-      \color{#89A0B5}{\ddot x_0+x_0=0}
+      \color{#f4ca5c}{\ddot x_0+x_0=0}
       \color{#DCE8F2}{,\qquad x_0(t)=A\cos t}
     \]
           </section>
@@ -663,15 +683,15 @@
             <h3>Build a continuous deformation</h3>
             <p>Introduce an embedding coordinate \(q\in[0,1]\) and a deformation \(\Phi(t;q)\) satisfying</p>
             \[
-      \color{#89A0B5}{\Phi(t;0)=x_0(t)}
+      \color{#f4ca5c}{\Phi(t;0)=x_0(t)}
       \;\longrightarrow\;
-      \color{#49B9FF}{\Phi(t;q)}
+      \color{#49b9ff}{\Phi(t;q)}
       \;\longrightarrow\;
-      \color{#73D989}{\Phi(t;1)=x(t)}
+      \color{#73d987}{\Phi(t;1)=x(t)}
     \]
-            <div class="math-semantic-key">
+            <div class="math-semantic-key three-role-key">
               <span class="key-linear">Linear · q = 0</span>
-              <span class="key-current">Current · q,M,ħ</span>
+              <span class="key-current">Current / angular error</span>
               <span class="key-target">Target · q = 1</span>
             </div>
             <div class="math-role-grid">
@@ -688,6 +708,7 @@
               x^{[M]}(t;q)=x_0(t)+\sum_{m=1}^{M}x_m(t)q^m.
             \]
             <p>The web visualizes this same construction from three viewpoints: transport in \(q\), refinement in \(M\), and convergence control through \(\hbar\).</p>
+            <p class="math-color-note"><span class="key-current">Blue</span> remains the auxiliary Current/error color: in the pendulum comparison it highlights the instantaneous angular gap to the target.</p>
           </section>
         </div>
 
