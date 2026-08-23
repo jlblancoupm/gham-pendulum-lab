@@ -221,3 +221,11 @@ Motion, Operator and Residual now share the same Playground animation clock.
 Operator shows instantaneous Linear / Current / Target positions on their restoring-law curves.
 Residual shows a synchronized time cursor plus Linear / Current / zero-reference residual markers.
 Cached trajectories are reused; no GOTHAM recomputation is performed per animation frame.
+
+## v21.4 — visible Motion synchronization
+Motion now has a visible playhead synchronized with the Playground pendulum:
+- moving vertical time cursor;
+- moving Linear / Current / Target markers;
+- elapsed-time shading;
+- live x(t) readout for all three trajectories.
+The complete waveforms remain static by design; the instantaneous readout moves along them.

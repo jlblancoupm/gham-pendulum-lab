@@ -1199,7 +1199,7 @@
     const Xtime=tt=>l+tt/duration*w;
 
     if(v==='motion'){
-      title('Linear → current → target','synchronized with the pendulum above · fixed endpoints q=0 and q=1');
+      title('Linear → current → target','moving cursor and markers follow the pendulum in real time');
       drawGrid(ctx,l,t,w,h,8,5);
       let ymax=Math.max(.2,p.amplitude*1.08);
       const Y=x=>t+(ymax-x)/(2*ymax)*h;
@@ -1211,6 +1211,58 @@
       plot(start.x,COLORS.muted2,1.1,[6,5],.38);
       plot(target.x,COLORS.green,1.7,[3,4],.75);
       plot(current.x,COLORS.blue,2.7,[],1);
+
+      // Dynamic playhead: same clock as the animated pendulum.
+      const displayTime=((state.time%duration)+duration)%duration;
+      const px=Xtime(displayTime);
+      const yLinear=playInterp(start.t,start.x,displayTime);
+      const yCurrent=playInterp(current.t,current.x,displayTime);
+      const yTarget=playInterp(target.t,target.x,displayTime);
+
+      // Soft trail showing how far the clock has progressed through the window.
+      ctx.save();
+      ctx.fillStyle='rgba(73,185,255,.045)';
+      ctx.fillRect(l,t,Math.max(0,px-l),h);
+      ctx.restore();
+
+      // Vertical time cursor.
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,.72)';
+      ctx.lineWidth=1.4;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath();
+      ctx.moveTo(px,t);
+      ctx.lineTo(px,t+h);
+      ctx.stroke();
+      ctx.restore();
+
+      // Instantaneous positions matching the three pendulum arms.
+      const marks=[
+        [yLinear,COLORS.muted2,5],
+        [yTarget,COLORS.green,6],
+        [yCurrent,COLORS.blue,7]
+      ];
+      marks.forEach(([yv,c,rad])=>{
+        ctx.fillStyle=c;
+        ctx.beginPath();
+        ctx.arc(px,Y(yv),rad,0,2*Math.PI);
+        ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.65)';
+        ctx.lineWidth=1;
+        ctx.stroke();
+      });
+
+      // Compact live readout.
+      const boxX=Math.min(px+10,l+w-156),boxY=t+10;
+      ctx.fillStyle='rgba(4,16,28,.84)';
+      ctx.strokeStyle='rgba(174,202,229,.18)';
+      ctx.beginPath();ctx.roundRect(boxX,boxY,146,56,8);ctx.fill();ctx.stroke();
+      ctx.font='9px ui-monospace,monospace';ctx.textAlign='left';
+      ctx.fillStyle=COLORS.text;ctx.fillText(`t = ${displayTime.toFixed(2)} s`,boxX+9,boxY+14);
+      ctx.fillStyle=COLORS.muted2;ctx.fillText(`Linear  ${yLinear.toFixed(3)}`,boxX+9,boxY+28);
+      ctx.fillStyle=COLORS.blue;ctx.fillText(`Current ${yCurrent.toFixed(3)}`,boxX+9,boxY+40);
+      ctx.fillStyle=COLORS.green;ctx.fillText(`Target  ${yTarget.toFixed(3)}`,boxX+9,boxY+52);
+
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'x(t) [rad]',l+4,t+10);
     } else if(v==='operator'){
       title('The problem moves with q','the markers follow the instantaneous pendulum state on each restoring law');
