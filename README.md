@@ -160,3 +160,13 @@ Visual-only refinement pass:
 - refinement convergence includes accuracy guides;
 - M–hbar heatmap overlays best-hbar trajectory;
 - Playground displays compact live Omega / waveform error / residual metrics.
+
+## v16 — narrative redesign
+The guided experience is now structured as:
+Start Simple → Build a Path → Add Detail → Go Farther → Converge Better → Put It Together → Explore.
+
+Mathematics is optional:
+- local “Show the mathematics” disclosures in the relevant sections;
+- a global Mathematical formulation drawer with target problem, homotopy operator, q-series, frequency correction, finite-order approximation, metrics, and hbar control.
+
+The scientific engine is unchanged from v15.1.

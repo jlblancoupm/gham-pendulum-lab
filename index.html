@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=15.1">
+  <link rel="stylesheet" href="styles.css?v=16.1">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -22,7 +22,7 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script defer src="app.js?v=15.1"></script>
+  <script defer src="app.js?v=16.1"></script>
 </head>
 
 <body>
@@ -35,13 +35,15 @@
       <span class="brand-copy"><strong>GOTHAM</strong><small>Pendulum Lab</small></span>
     </a>
     <nav aria-label="Primary navigation">
-      <a href="#idea">Idea</a>
-      <a href="#transport">Transport</a>
-      <a href="#geometry">q–M Geometry</a>
-      <a href="#refinement">Refinement</a>
-      <a href="#control">Control</a>
-      <a href="#playground">Playground</a>
+      <a href="#idea">Start Simple</a>
+      <a href="#transport">Build a Path</a>
+      <a href="#refinement">Add Detail</a>
+      <a href="#geometry">Go Farther</a>
+      <a href="#control">Converge Better</a>
+      <a href="#summary">Put It Together</a>
+      <a href="#playground">Explore</a>
     </nav>
+    <button class="header-math-button" id="openMathDrawer" type="button">Mathematics</button>
     <span class="header-chip">A = 1.5 rad</span>
   </header>
 
@@ -56,14 +58,12 @@
 
       <div class="hero-copy reveal">
         <div class="hero-kicker"><span></span> START SIMPLE</div>
-        <h1>Start from what you can solve. <em>Do not stop there.</em></h1>
+        <h1>Start from what you can solve. <em>But don’t stop there.</em></h1>
         <p class="hero-lead">
-          Two pendulums share the same pivot and release angle. The small-angle model is familiar; released almost horizontally at
-          \(1.5\,\mathrm{rad}\approx86^\circ\), however, it is already well outside the small-angle regime.
-          GOTHAM makes the path from the simple system to the nonlinear target explicit.
+          The approximation \(\sin x\approx x\) is elementary — the familiar school-level route to the harmonic pendulum. The point here is not to rediscover it, but to use that known, solvable model as the starting point of a controlled path back to the nonlinear problem.
         </p>
         <div class="hero-actions">
-          <a class="button primary" href="#idea"><span>Follow the construction</span><i aria-hidden="true">↘</i></a>
+          <a class="button primary" href="#idea"><span>See why simple is not enough</span><i aria-hidden="true">↘</i></a>
           <a class="button secondary" href="#playground">Open playground</a>
         </div>
         <div class="hero-principles" aria-label="Key concepts">
@@ -100,13 +100,11 @@
     <section class="section idea-section" id="idea" data-section="idea">
       <div class="section-heading split reveal">
         <div>
-          <p class="eyebrow">ACT I · WHY START SIMPLE?</p>
-          <h2>The easy model is useful. <em>It is not the answer.</em></h2>
+          <p class="eyebrow">01 · START SIMPLE</p>
+          <h2>The approximation is old. <em>The path back is the point.</em></h2>
         </div>
         <p>
-          At \(x=1.5\,\mathrm{rad}\), replacing \(\sin x\) by \(x\) substantially changes
-          the restoring law and the oscillation period. The approximation is valuable because
-          it gives us a solved starting point — not because it is already accurate.
+          For small angles, \(\sin x\approx x\) gives the textbook harmonic oscillator. At \(A=1.5\,\mathrm{rad}\approx86^\circ\), however, that approximation is no longer accurate enough. What matters is that it still gives us a clean, solvable starting point.
         </p>
       </div>
 
@@ -122,9 +120,28 @@
       </div>
 
       <div class="insight-callout reveal">
-        <strong>The starting problem is easy, not accurate.</strong>
-        <span>That is exactly why a controlled path to the target is useful.</span>
-      </div>
+        <strong>Start simple. But don’t stop there.</strong>
+        <span>What if the easy solution were not the answer, but the starting point?</span>
+      
+      <details class="math-card reveal">
+        <summary>Show the mathematics</summary>
+        <div class="math-card-body">
+          <p>The familiar small-angle approximation is</p>
+          \[
+          \sin x \approx x,
+          \]
+          which turns the nonlinear pendulum
+          \[
+          \ddot x+\sin x=0
+          \]
+          into
+          \[
+          \ddot x+x=0.
+          \]
+          <p>At \(A=1.5\,\mathrm{rad}\), the release-point restoring-law mismatch is already about \(33.5\%\).</p>
+        </div>
+      </details>
+</div>
     </section>
 
     <!-- =========================================================
@@ -133,13 +150,11 @@
     <section class="section lab-section" id="transport" data-section="transport">
       <div class="section-heading split reveal">
         <div>
-          <p class="eyebrow">ACT II · TRANSPORT THE SYSTEM</p>
-          <h2>Move continuously from \(x\) to <em>\(\sin x\)</em>.</h2>
+          <p class="eyebrow">02 · BUILD A PATH</p>
+          <h2>Move continuously from the easy problem to <em>the real one</em>.</h2>
         </div>
         <p>
-          The embedding coordinate \(q\in[0,1]\) is continuous. The browser will evaluate
-          one GOTHAM deformation while the slider moves; displayed checkpoints are visual samples,
-          not independent optimization runs.
+          Now introduce one variable only: \(q\). It tells us which problem we are solving along one continuous deformation. \(q=0\) is the easy model; \(q=1\) is the nonlinear target.
         </p>
       </div>
 
@@ -201,73 +216,16 @@
     </section>
 
 
-    <!-- =========================================================
-         04 — q–M TRANSPORT / REFINEMENT GEOMETRY
-         ========================================================= -->
-    <section class="section lab-section geometry-section" id="geometry" data-section="geometry">
-      <div class="section-heading split reveal">
-        <div>
-          <p class="eyebrow">TRANSPORT–REFINEMENT GEOMETRY</p>
-          <h2>How far can each order <em>reliably follow the path?</em></h2>
-        </div>
-        <p>
-          \(q\) remains the continuous transport coordinate. \(M\) controls finite-order resolution.
-          Their characteristic relation is summarized by \(q_{\max}(M;\varepsilon)\)
-          and the inverse budget \(M_{\min}(q;\varepsilon)\).
-        </p>
-      </div>
-      <div class="lab-shell reveal delay-1">
-        <aside class="control-deck">
-          <div class="deck-title"><span>q–M GEOMETRY</span><button id="geometryReset" type="button">Reset</button></div>
-          <div class="control-group accent-gold">
-            <div class="control-label"><label for="geometryTolerance">Accuracy target \(\varepsilon\)</label><output id="geometryToleranceOut">ε = 1e−4</output></div>
-            <input id="geometryTolerance" type="range" min="2" max="4" step="1" value="4">
-            <div class="range-ends"><span>1e−2</span><span>1e−4</span></div>
-          </div>
-          <div class="control-group accent-gold">
-            <div class="control-label"><label for="geometryQ">Inspect transport \(q\)</label><output id="geometryQOut">q = 1.00</output></div>
-            <input id="geometryQ" type="range" min="0" max="1" step="0.01" value="1">
-          </div>
-          <div class="control-group accent-blue">
-            <div class="control-label"><label for="geometryM">Inspect order \(M\)</label><output id="geometryMOut">M = 6</output></div>
-            <input id="geometryM" type="range" min="0" max="12" step="1" value="6">
-          </div>
-          <div class="metric-stack">
-            <div><span>Reliable reach</span><strong id="geometryQmax">—</strong></div>
-            <div><span>Required order</span><strong id="geometryMmin">—</strong></div>
-            <div><span>Status</span><strong id="geometryStatus">computing</strong></div>
-          </div>
-        </aside>
-        <div class="lab-workspace">
-          <div class="view-tabs" role="tablist" aria-label="q-M geometry views">
-            <button class="active" type="button" data-geometry-view="frontier">Frontier</button>
-            <button type="button" data-geometry-view="budget">Mmin(q)</button>
-            <button type="button" data-geometry-view="reach">qmax(M)</button>
-          </div>
-          <div class="workspace-canvas-stack tall">
-            <canvas class="active" id="geometryFrontierCanvas" data-geometry-panel="frontier"></canvas>
-            <canvas id="geometryBudgetCanvas" data-geometry-panel="budget"></canvas>
-            <canvas id="geometryReachCanvas" data-geometry-panel="reach"></canvas>
-          </div>
-          <div class="workspace-footer">
-            <span>Sampled checkpoints validate one continuous GOTHAM deformation; they are not independent runs.</span>
-            <span>A = 1.5 rad · ħ = −1</span>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- =========================================================
          04 — TARGET REACHED
          ========================================================= -->
     <section class="section target-section" id="target" data-section="target">
       <div class="target-card reveal">
-        <p class="eyebrow">TARGET REACHED</p>
-        <h2>\(q=1\). <em>The system no longer changes.</em></h2>
+        <p class="eyebrow">03 · ADD DETAIL</p>
+        <h2>The problem is fixed. <em>Now add detail.</em></h2>
         <p>
-          From this point onward the target is fixed:
-          \(\ddot x+\sin x=0\). The next control, \(M\), changes only the finite-order
-          approximation used to resolve that target.
+          At \(q=1\), the nonlinear problem is fixed. The next question is no longer which problem we solve, but how accurately we represent its solution.
         </p>
         <div class="target-lock"><span>q</span><strong>1.000</strong><small>locked in refinement views</small></div>
       </div>
@@ -279,12 +237,11 @@
     <section class="section lab-section refinement-section" id="refinement" data-section="refinement">
       <div class="section-heading split reveal">
         <div>
-          <p class="eyebrow">ACT III · REFINE THE TARGET</p>
-          <h2>Increase \(M\). <em>Do not move \(q\).</em></h2>
+          <p class="eyebrow">03 · ADD DETAIL</p>
+          <h2>Keep the problem fixed. <em>Increase the resolution.</em></h2>
         </div>
         <p>
-          At \(q=1\), the system is fixed. The integer truncation order \(M\) controls
-          how many terms of the GOTHAM construction are retained.
+          The integer order \(M\) tells us how many terms of the solution construction we keep. \(M\) does not change the target problem; it changes how much detail we retain.
         </p>
       </div>
 
@@ -329,7 +286,93 @@
           </div>
         </div>
       </div>
+
+      <details class="math-card reveal">
+        <summary>Show the mathematics</summary>
+        <div class="math-card-body">
+          \[
+          x(t;q)=\sum_{m=0}^{\infty}x_m(t)q^m,
+          \qquad
+          x^{[M]}(t;q)=\sum_{m=0}^{M}x_m(t)q^m.
+          \]
+          <p>\(M\) changes the finite-order approximation, not the problem itself.</p>
+          <p>The frequency-corrected construction also transports the time scale through</p>
+          \[
+          \tau=\Omega(q)t.
+          \]
+        </div>
+      </details>
     </section>
+
+    <!-- =========================================================
+         04 — q–M TRANSPORT / REFINEMENT GEOMETRY
+         ========================================================= -->
+    <section class="section lab-section geometry-section" id="geometry" data-section="geometry">
+      <div class="section-heading split reveal">
+        <div>
+          <p class="eyebrow">04 · GO FARTHER</p>
+          <h2>More detail lets us <em>go farther</em>.</h2>
+        </div>
+        <p>
+          Once \(q\) and \(M\) are understood separately, their relationship becomes the key question: how far along the path can each order reliably reach?
+        </p>
+      </div>
+      <div class="lab-shell reveal delay-1">
+        <aside class="control-deck">
+          <div class="deck-title"><span>q–M GEOMETRY</span><button id="geometryReset" type="button">Reset</button></div>
+          <div class="control-group accent-gold">
+            <div class="control-label"><label for="geometryTolerance">Accuracy target \(\varepsilon\)</label><output id="geometryToleranceOut">ε = 1e−4</output></div>
+            <input id="geometryTolerance" type="range" min="2" max="4" step="1" value="4">
+            <div class="range-ends"><span>1e−2</span><span>1e−4</span></div>
+          </div>
+          <div class="control-group accent-gold">
+            <div class="control-label"><label for="geometryQ">Inspect transport \(q\)</label><output id="geometryQOut">q = 1.00</output></div>
+            <input id="geometryQ" type="range" min="0" max="1" step="0.01" value="1">
+          </div>
+          <div class="control-group accent-blue">
+            <div class="control-label"><label for="geometryM">Inspect order \(M\)</label><output id="geometryMOut">M = 6</output></div>
+            <input id="geometryM" type="range" min="0" max="12" step="1" value="6">
+          </div>
+          <div class="metric-stack">
+            <div><span>Reliable reach</span><strong id="geometryQmax">—</strong></div>
+            <div><span>Required order</span><strong id="geometryMmin">—</strong></div>
+            <div><span>Status</span><strong id="geometryStatus">computing</strong></div>
+          </div>
+        </aside>
+        <div class="lab-workspace">
+          <div class="view-tabs" role="tablist" aria-label="q-M geometry views">
+            <button class="active" type="button" data-geometry-view="frontier">Frontier</button>
+            <button type="button" data-geometry-view="budget">Mmin(q)</button>
+            <button type="button" data-geometry-view="reach">qmax(M)</button>
+          </div>
+          <div class="workspace-canvas-stack tall">
+            <canvas class="active" id="geometryFrontierCanvas" data-geometry-panel="frontier"></canvas>
+            <canvas id="geometryBudgetCanvas" data-geometry-panel="budget"></canvas>
+            <canvas id="geometryReachCanvas" data-geometry-panel="reach"></canvas>
+          </div>
+          <div class="workspace-footer">
+            <span>Sampled checkpoints validate one continuous GOTHAM deformation; they are not independent runs.</span>
+            <span>A = 1.5 rad · ħ = −1</span>
+          </div>
+        </div>
+      </div>
+      <details class="math-card reveal">
+        <summary>Show the mathematics</summary>
+        <div class="math-card-body">
+          <p>For a chosen accuracy criterion \(\varepsilon\), define</p>
+          \[
+          q_{\max}(M;\varepsilon)
+          =
+          \max\{q:\text{the order-}M\text{ approximation is reliable at }q\}.
+          \]
+          <p>The inverse view is the resolution budget</p>
+          \[
+          M_{\min}(q;\varepsilon).
+          \]
+        </div>
+      </details>
+    </section>
+
 
     <!-- =========================================================
          06 — HBAR CONVERGENCE CONTROL
@@ -337,12 +380,11 @@
     <section class="section lab-section control-section" id="control" data-section="control">
       <div class="section-heading split reveal">
         <div>
-          <p class="eyebrow">CONVERGENCE CONTROL</p>
-          <h2>Use \(\hbar\) to reshape <em>finite-order convergence</em>.</h2>
+          <p class="eyebrow">05 · CONVERGE BETTER</p>
+          <h2>Same problem. Same \(M\). <em>Can we converge better?</em></h2>
         </div>
         <p>
-          \(\hbar\) does not change the target system. At fixed \(q=1\), it changes how
-          the finite-order terms combine and can reduce the order required to meet a chosen accuracy target.
+          \(\hbar\) is not another physical parameter. It changes how the retained terms are combined, so the same finite order can converge better or worse.
         </p>
       </div>
 
@@ -395,6 +437,19 @@
           </div>
         </div>
       </div>
+
+      <details class="math-card reveal">
+        <summary>Show the mathematics</summary>
+        <div class="math-card-body">
+          <p>At finite order, the convergence-control parameter modifies the effective contribution of the retained terms:</p>
+          \[
+          x^{[M]}_{\hbar}
+          =
+          \sum_{n=0}^{M}\mu_{M,n}(\hbar)\,x_n.
+          \]
+          <p>\(\hbar\) changes convergence behavior while leaving the target problem unchanged.</p>
+        </div>
+      </details>
     </section>
 
     <!-- =========================================================
@@ -402,18 +457,28 @@
          ========================================================= -->
     <section class="section summary-section" id="summary" data-section="summary">
       <div class="section-heading reveal">
-        <p class="eyebrow">THE THREE CONTROLS</p>
-        <h2>One path. Three <em>different jobs</em>.</h2>
+        <p class="eyebrow">06 · PUT IT TOGETHER</p>
+        <h2>Three variables. <em>Three different jobs.</em></h2>
       </div>
 
       <div class="takeaway-grid three reveal delay-1">
-        <article class="take-q"><span>q</span><strong>Transport</strong><small>Which system are we solving?</small></article>
-        <article class="take-m"><span>M</span><strong>Refinement</strong><small>How accurately are we resolving it?</small></article>
-        <article class="take-h"><span>ħ</span><strong>Convergence control</strong><small>How efficiently does finite-order refinement converge?</small></article>
+        <article class="take-q"><span>q</span><strong>Build the path</strong><small>Which problem are we solving?</small></article>
+        <article class="take-m"><span>M</span><strong>Add detail</strong><small>How much resolution do we keep?</small></article>
+        <article class="take-h"><span>ħ</span><strong>Converge better</strong><small>Can the same finite order be used more effectively?</small></article>
       </div>
 
       <div class="summary-line reveal">
-        Start from a problem you can solve. Transport the system continuously. Refine only as much as needed. Control how the refinement converges.
+        Start simple. Build the path. Add only the detail you need. Then control how efficiently that finite approximation converges.
+      </div>
+    </section>
+
+
+    <section class="section final-cta reveal" id="final-cta">
+      <div class="final-cta-card">
+        <p class="eyebrow">START SIMPLE. GO ALL THE WAY.</p>
+        <h2>You have seen the path, the resolution, and the convergence control.</h2>
+        <p>Now unlock everything and change the problem yourself.</p>
+        <a class="button primary" href="#playground"><span>Explore GOTHAM</span><i aria-hidden="true">→</i></a>
       </div>
     </section>
 
@@ -423,8 +488,8 @@
     <section class="section lab-section playground-section" id="playground" data-section="playground">
       <div class="section-heading split reveal">
         <div>
-          <p class="eyebrow">PLAYGROUND</p>
-          <h2>Now <em>break the guided story</em>.</h2>
+          <p class="eyebrow">07 · EXPLORE</p>
+          <h2>Now <em>take control</em>.</h2>
         </div>
         <p>
           This section deliberately exposes all controls at once. The guided demo uses \(A=1.5\,\mathrm{rad}\); here you can also try the harder \(A=2\,\mathrm{rad}\) case and beyond.
@@ -493,5 +558,68 @@
     <div><strong>GOTHAM Pendulum Lab</strong><span>Interactive research companion</span></div>
     <div><span>Static HTML · vanilla JavaScript · GitHub Pages ready</span><a href="#top">Back to top ↑</a></div>
   </footer>
+
+  <aside class="math-drawer" id="mathDrawer" aria-hidden="true" aria-label="Mathematical formulation">
+    <div class="math-drawer-backdrop" id="mathDrawerBackdrop"></div>
+    <div class="math-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="mathDrawerTitle">
+      <div class="math-drawer-head">
+        <div>
+          <p class="eyebrow">TECHNICAL LAYER</p>
+          <h2 id="mathDrawerTitle">Mathematical formulation</h2>
+        </div>
+        <button id="closeMathDrawer" type="button" aria-label="Close mathematics">×</button>
+      </div>
+      <div class="math-drawer-body">
+        <section>
+          <h3>1. Target problem</h3>
+          \[
+          \ddot x+\sin x=0,\qquad x(0)=A,\qquad \dot x(0)=0.
+          \]
+        </section>
+        <section>
+          <h3>2. Homotopy of problems</h3>
+          \[
+          \mathcal N_q[x]
+          =
+          \ddot x +(1-q)x+q\sin x.
+          \]
+          <p>\(q=0\) is the linear starting system; \(q=1\) is the nonlinear target.</p>
+        </section>
+        <section>
+          <h3>3. Series representation</h3>
+          \[
+          x(t;q)=\sum_{m=0}^{\infty}x_m(t)q^m.
+          \]
+          <p>The finite-order approximation retains the first \(M+1\) terms.</p>
+        </section>
+        <section>
+          <h3>4. Frequency correction</h3>
+          \[
+          \tau=\Omega(q)t,
+          \qquad
+          \Omega^2(q)=\sum_{m=0}^{\infty}\omega_m q^m.
+          \]
+          <p>The transported time scale prevents the approximation from accumulating the wrong period.</p>
+        </section>
+        <section>
+          <h3>5. Finite-order accuracy</h3>
+          \[
+          x^{[M]}(t;q)=\sum_{m=0}^{M}x_m(t)q^m.
+          \]
+          <p>The demo evaluates waveform error, operator residual, frequency error, and reliable horizon.</p>
+        </section>
+        <section>
+          <h3>6. Convergence control</h3>
+          \[
+          x^{[M]}_{\hbar}
+          =
+          \sum_{n=0}^{M}\mu_{M,n}(\hbar)x_n.
+          \]
+          <p>\(\hbar\) reshapes finite-order convergence without changing the target problem.</p>
+        </section>
+      </div>
+    </div>
+  </aside>
+
 </body>
 </html>

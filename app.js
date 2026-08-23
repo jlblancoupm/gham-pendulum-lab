@@ -1111,7 +1111,30 @@
     }));
   }
 
+
+  function openMathDrawer(){
+    const drawer=$('mathDrawer');
+    if(!drawer)return;
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    $('closeMathDrawer')?.focus();
+    typeset(drawer);
+  }
+
+  function closeMathDrawer(){
+    const drawer=$('mathDrawer');
+    if(!drawer)return;
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  }
+
   function wireInteractions(){
+    $('openMathDrawer')?.addEventListener('click',openMathDrawer);
+    $('closeMathDrawer')?.addEventListener('click',closeMathDrawer);
+    $('mathDrawerBackdrop')?.addEventListener('click',closeMathDrawer);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMathDrawer();});
     $('transportQ').addEventListener('input',updateTransport);
     $('transportReset').addEventListener('click',()=>{$('transportQ').value=0;updateTransport();});
     wireTabs('transport',v=>state.transport.view=v,drawTransportView);
@@ -1131,6 +1154,8 @@
     wireTabs('control',v=>state.control.view=v,drawControlView);
     $('scanHbar').addEventListener('click',scanBestHbar);
     $('applyBestHbar').addEventListener('click',()=>{if(state.control.bestHbar==null)return;$('controlHbar').value=state.control.bestHbar;updateControl();});
+
+    $$('details.math-card').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)typeset(d);}));
 
     ['playAmplitude','playQ','playM','playHbar'].forEach(id=>$(id).addEventListener('input',updatePlayInputs));
     $('playgroundReset').addEventListener('click',()=>{
