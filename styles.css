@@ -762,3 +762,112 @@ html.init-failed .reveal {
     min-height:160px !important;
   }
 }
+
+/* v23.3 — only one Playground view canvas at a time */
+.playground-section [data-play-panel] { display:none !important; }
+.playground-section [data-play-panel].active { display:block !important; }
+.playground-section [data-play-panel][hidden] { display:none !important; }
+
+/* v23.4 — color MathJax after rendering, not inside TeX */
+.math-eq-target,
+.math-eq-target mjx-container,
+.math-eq-target mjx-container * {
+  color:#73d987 !important;
+}
+.math-eq-linear,
+.math-eq-linear mjx-container,
+.math-eq-linear mjx-container * {
+  color:#f4ca5c !important;
+}
+
+/* v23.5 — exact colors for the hero equation under the two pendulums */
+.hero-equation-semantic{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:18px;
+  margin:8px 0 2px;
+}
+.hero-equation-semantic .hero-eq-linear,
+.hero-equation-semantic .hero-eq-linear mjx-container,
+.hero-equation-semantic .hero-eq-linear mjx-container *{
+  color:#f4ca5c !important;
+}
+.hero-equation-semantic .hero-eq-target,
+.hero-equation-semantic .hero-eq-target mjx-container,
+.hero-equation-semantic .hero-eq-target mjx-container *{
+  color:#73d987 !important;
+}
+.hero-equation-semantic .hero-eq-arrow{
+  color:var(--muted);
+  font-size:24px;
+}
+.hero-equation-semantic mjx-container[display="true"]{
+  margin:0 !important;
+}
+
+/* v23.6 — cleaner Playground grouping */
+.play-view-groups>div{
+  border:0 !important;
+  background:transparent !important;
+  padding:4px 0 0 !important;
+}
+.play-view-groups small{
+  margin-bottom:5px !important;
+  padding-bottom:0 !important;
+  border:0 !important;
+}
+
+/* v23.6 — more compact initial pendulum hero */
+.hero-stage,
+.hero-visual,
+.hero-canvas-wrap{
+  min-height:0 !important;
+  height:auto !important;
+}
+#heroCanvas{
+  height:260px !important;
+  max-height:260px !important;
+}
+.hero-equation{
+  margin-top:4px !important;
+}
+.stage-footer{
+  margin-top:6px !important;
+}
+@media(max-width:760px){
+  #heroCanvas{
+    height:210px !important;
+    max-height:210px !important;
+  }
+}
+
+/* v23.6 — tighten top rhythm */
+.hero,
+.hero-section,
+main > .hero:first-child{
+  padding-top:18px !important;
+  margin-top:0 !important;
+}
+.hero .hero-copy,
+.hero-copy{
+  padding-top:8px !important;
+}
+body{
+  padding-top:74px !important;
+}
+@media(max-width:760px){
+  body{padding-top:66px !important}
+}
+
+.playground-fit-row{
+  display:flex;
+  justify-content:flex-end;
+  margin:-6px 0 8px;
+}
+#fitPlayground{
+  min-height:32px;
+  padding:6px 10px;
+  font-size:9px;
+}

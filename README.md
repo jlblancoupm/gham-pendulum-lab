@@ -262,3 +262,22 @@ and corrected first local MathJax comparison: nonlinear green vs linear small-an
 
 ## v23.2 — Playground height cleanup
 Removed inherited minimum heights from the Playground containers so the card ends close to the visual content instead of leaving a large empty area underneath.
+
+## v23.3 — Playground view isolation + defaults
+Only one Playground canvas is visible at a time; changing tabs explicitly hides all others.
+Initial/reset values: A=1.5 rad, q=0.5, M=7, hbar=-1.
+
+## v23.4 — MathJax color render fix
+Removed TeX color commands entirely. The nonlinear and linear equations are now plain MathJax
+and receive green/gold through CSS on the rendered MathJax DOM, preventing "color..." text/errors.
+
+## v23.5 — hero equation corrected
+The MathJax formula directly beneath the two initial pendulums now labels the small-angle side
+as "linear" instead of "easy". The complete linear expression is gold and the complete target
+expression is green, matching the two pendulums exactly.
+
+## v23.6 — layout fit pass
+- added Fit Playground button to align the Playground just below the floating header;
+- reduced initial pendulum hero height;
+- reduced whitespace between header and Start Simple;
+- removed purely decorative box borders/lines around PRIMARY and DIAGNOSTICS groups.

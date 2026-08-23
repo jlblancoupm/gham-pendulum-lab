@@ -22,7 +22,7 @@
     geometry: { q: 1.0, M: 6, toleranceExp: 4, view: 'frontier' },
     refinement: { M: 0, view: 'trajectory' },
     control: { M: 8, hbar: -1.0, view: 'heatmap', bestHbar: null, bestError: null },
-    playground: { amplitude: 1.5, q: 1.0, M: 8, hbar: -1.0, view: 'motion', result: null }
+    playground: { amplitude: 1.5, q: 0.5, M: 7, hbar: -1, view: 'motion', result: null }
   };
 
   const $ = (id) => document.getElementById(id);
@@ -1478,8 +1478,15 @@
   }
 
   function switchPanels(group, view){
-    $$(`[data-${group}-view]`).forEach(btn=>btn.classList.toggle('active',btn.dataset[`${group}View`]===view));
-    $$(`[data-${group}-panel]`).forEach(panel=>panel.classList.toggle('active',panel.dataset[`${group}Panel`]===view));
+    $$(`[data-${group}-view]`).forEach(btn=>{
+      btn.classList.toggle('active',btn.dataset[`${group}View`]===view);
+    });
+    $$(`[data-${group}-panel]`).forEach(panel=>{
+      const active=panel.dataset[`${group}Panel`]===view;
+      panel.classList.toggle('active',active);
+      panel.hidden=!active;
+      panel.style.display=active?'block':'none';
+    });
   }
 
   function updateTransport(){
@@ -1604,6 +1611,15 @@
   }
 
   function wireInteractions(){
+    $('fitPlayground')?.addEventListener('click',()=>{
+      const section=$('playground');
+      const header=$('siteHeader');
+      if(!section)return;
+      const headerH=header?.getBoundingClientRect().height||0;
+      const y=window.scrollY+section.getBoundingClientRect().top-headerH-10;
+      window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+    });
+
     $('toggleMethod')?.addEventListener('click',()=>{
       const journey=$('methodJourney');
       const expanded=journey && !journey.hidden;
@@ -1651,7 +1667,7 @@
 
     ['playAmplitude','playQ','playM','playHbar'].forEach(id=>$(id).addEventListener('input',updatePlayInputs));
     $('playgroundReset').addEventListener('click',()=>{
-      $('playAmplitude').value=1.5;$('playQ').value=1;$('playM').value=8;$('playHbar').value=-1;state.playground.result=null;state.time=0;updatePlayInputs();
+      $('playAmplitude').value=1.5;$('playQ').value=0.5;$('playM').value=7;$('playHbar').value=-1;state.playground.result=null;state.time=0;updatePlayInputs();
     });
     $('playPause').addEventListener('click',()=>{
       state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';drawHeroLikePlayPendulum();if(['motion','operator','residual','phase','decomposition','energy'].includes(state.playground.view))drawPlayground();

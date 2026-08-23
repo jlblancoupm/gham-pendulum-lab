@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=23.2">
+  <link rel="stylesheet" href="styles.css?v=23.6">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -23,15 +23,7 @@
   </script>
   
   
-  <script defer src="app.js?v=23.2"></script>
-  
-  <script>
-    window.MathJax = {
-      tex: {
-        packages: {'[+]': ['color']}
-      }
-    };
-  </script>
+  <script defer src="app.js?v=23.6"></script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
@@ -89,11 +81,19 @@
         </div>
         <canvas id="heroCanvas" aria-label="Pendulum comparison between linear and nonlinear motion"></canvas>
         <div class="hero-equation">
-          \[
-          \underbrace{\ddot x+x=0}_{\text{easy}}
-          \qquad\Longrightarrow\qquad
-          \underbrace{\ddot x+\sin x=0}_{\text{target}}
-          \]
+          <div class="hero-equation-semantic">
+          <span class="hero-eq-linear">
+            \[
+            \underbrace{\ddot x+x=0}_{\text{linear}}
+            \]
+          </span>
+          <span class="hero-eq-arrow" aria-hidden="true">→</span>
+          <span class="hero-eq-target">
+            \[
+            \underbrace{\ddot x+\sin x=0}_{\text{target}}
+            \]
+          </span>
+        </div>
         </div>
         <div class="stage-footer">
           <span>release angle \(x(0)=1.5\,\mathrm{rad}\approx86^\circ\)</span>
@@ -140,13 +140,17 @@
           \sin x \approx x,
           \]
           connecting the nonlinear pendulum
+          <div class="math-eq-target">
           \[
-          \color[rgb]{0.451,0.851,0.529}{\ddot x+\sin x=0}
+          \ddot x+\sin x=0
           \]
+        </div>
           to the linear, small-angle model
+          <div class="math-eq-linear">
           \[
-          \color[rgb]{0.957,0.792,0.361}{\ddot x+x=0}.
+          \ddot x+x=0.
           \]
+        </div>
           <p>At \(A=1.5\,\mathrm{rad}\), the release-point restoring-law mismatch is already about \(33.5\%\).</p>
         </div>
       </details>
@@ -555,12 +559,12 @@
             <input id="playAmplitude" type="range" min="0.2" max="2.2" step="0.05" value="1.5">
           </div>
           <div class="control-group accent-gold">
-            <div class="control-label"><label for="playQ">q</label><output id="playQOut">q = 1.000</output></div>
-            <input id="playQ" type="range" min="0" max="1" step="0.001" value="1">
+            <div class="control-label"><label for="playQ">q</label><output id="playQOut">q = 0.500</output></div>
+            <input id="playQ" type="range" min="0" max="1" step="0.001" value="0.5">
           </div>
           <div class="control-group accent-blue">
-            <div class="control-label"><label for="playM">M</label><output id="playMOut">M = 8</output></div>
-            <input id="playM" type="range" min="0" max="20" step="1" value="8">
+            <div class="control-label"><label for="playM">M</label><output id="playMOut">M = 7</output></div>
+            <input id="playM" type="range" min="0" max="20" step="1" value="7">
           </div>
           <div class="control-group accent-purple">
             <div class="control-label"><label for="playHbar">ħ</label><output id="playHbarOut">ħ = −1.00</output></div>
@@ -589,6 +593,11 @@
             <div><small>RESIDUAL</small><strong id="playResidualScore">—</strong><span>equation violation</span></div>
             <div><small>FREQUENCY ERROR</small><strong id="playFreqError">—</strong><span>current → exact@q</span></div>
           </div>
+      <div class="playground-fit-row">
+        <button class="button secondary compact" id="fitPlayground" type="button" title="Align the Playground with the top of the usable viewport">
+          <span>Fit Playground</span>
+        </button>
+      </div>
 
           <div class="playground-split">
             <div class="play-pendulum-card">
@@ -624,14 +633,14 @@
 
               <div class="workspace-canvas-stack playground-stack">
                 <canvas class="active" id="playMotionCanvas" data-play-panel="motion"></canvas>
-                <canvas id="playOperatorCanvas" data-play-panel="operator"></canvas>
-                <canvas id="playFrequencyCanvas" data-play-panel="frequency"></canvas>
-                <canvas id="playSpectrumCanvas" data-play-panel="spectrum"></canvas>
-                <canvas id="playResidualCanvas" data-play-panel="residual"></canvas>
-                <canvas id="playPhaseCanvas" data-play-panel="phase"></canvas>
-                <canvas id="playDecompositionCanvas" data-play-panel="decomposition"></canvas>
-                <canvas id="playConvergenceCanvas" data-play-panel="convergence"></canvas>
-                <canvas id="playEnergyCanvas" data-play-panel="energy"></canvas>
+                <canvas id="playOperatorCanvas" data-play-panel="operator" hidden></canvas>
+                <canvas id="playFrequencyCanvas" data-play-panel="frequency" hidden></canvas>
+                <canvas id="playSpectrumCanvas" data-play-panel="spectrum" hidden></canvas>
+                <canvas id="playResidualCanvas" data-play-panel="residual" hidden></canvas>
+                <canvas id="playPhaseCanvas" data-play-panel="phase" hidden></canvas>
+                <canvas id="playDecompositionCanvas" data-play-panel="decomposition" hidden></canvas>
+                <canvas id="playConvergenceCanvas" data-play-panel="convergence" hidden></canvas>
+                <canvas id="playEnergyCanvas" data-play-panel="energy" hidden></canvas>
               </div>
             </div>
           </div>
@@ -676,24 +685,24 @@
             <h3>Start from a solved problem</h3>
             <p>The nonlinear pendulum is the target:</p>
             \[
-      \color[rgb]{0.451,0.851,0.529}{\ddot x+\sin x=0}
-      \color[rgb]{0.863,0.910,0.949}{,\qquad x(0)=A,\qquad \dot x(0)=0}
+      \ddot x+\sin x=0
+      ,\qquad x(0)=A,\qquad \dot x(0)=0
     \]
             <p>The familiar small-angle model provides an analytically solved starting point:</p>
             \[
-      \color[rgb]{0.957,0.792,0.361}{\ddot x_0+x_0=0}
-      \color[rgb]{0.863,0.910,0.949}{,\qquad x_0(t)=A\cos t}
+      \ddot x_0+x_0=0
+      ,\qquad x_0(t)=A\cos t
     \]
           </section>
           <section>
             <h3>Build a continuous deformation</h3>
             <p>Introduce an embedding coordinate \(q\in[0,1]\) and a deformation \(\Phi(t;q)\) satisfying</p>
             \[
-      \color[rgb]{0.957,0.792,0.361}{\Phi(t;0)=x_0(t)}
+      \Phi(t;0)=x_0(t)
       \;\longrightarrow\;
-      \color[rgb]{0.286,0.725,1.000}{\Phi(t;q)}
+      \Phi(t;q)
       \;\longrightarrow\;
-      \color[rgb]{0.451,0.851,0.529}{\Phi(t;1)=x(t)}
+      \Phi(t;1)=x(t)
     \]
             <div class="math-semantic-key three-role-key">
               <span class="key-linear">Linear · q = 0</span>
