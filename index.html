@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -22,7 +22,7 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script defer src="app.js?v=13"></script>
+  <script defer src="app.js?v=14"></script>
 </head>
 
 <body>
@@ -37,6 +37,7 @@
     <nav aria-label="Primary navigation">
       <a href="#idea">Idea</a>
       <a href="#transport">Transport</a>
+      <a href="#geometry">q–M Geometry</a>
       <a href="#refinement">Refinement</a>
       <a href="#control">Control</a>
       <a href="#playground">Playground</a>
@@ -87,7 +88,7 @@
         </div>
         <div class="stage-footer">
           <span>release angle \(x(0)=1.5\,\mathrm{rad}\approx86^\circ\)</span>
-          <span>shell only · new GOTHAM engine pending</span>
+          <span>live browser computation · A = 1.5 rad</span>
         </div>
       </div>
       <div class="hero-scroll" aria-hidden="true"><span></span>Explore</div>
@@ -199,6 +200,63 @@
       </div>
     </section>
 
+
+    <!-- =========================================================
+         04 — q–M TRANSPORT / REFINEMENT GEOMETRY
+         ========================================================= -->
+    <section class="section lab-section geometry-section" id="geometry" data-section="geometry">
+      <div class="section-heading split reveal">
+        <div>
+          <p class="eyebrow">TRANSPORT–REFINEMENT GEOMETRY</p>
+          <h2>How far can each order <em>reliably follow the path?</em></h2>
+        </div>
+        <p>
+          \(q\) remains the continuous transport coordinate. \(M\) controls finite-order resolution.
+          Their characteristic relation is summarized by \(q_{\max}(M;\varepsilon)\)
+          and the inverse budget \(M_{\min}(q;\varepsilon)\).
+        </p>
+      </div>
+      <div class="lab-shell reveal delay-1">
+        <aside class="control-deck">
+          <div class="deck-title"><span>q–M GEOMETRY</span><button id="geometryReset" type="button">Reset</button></div>
+          <div class="control-group accent-gold">
+            <div class="control-label"><label for="geometryTolerance">Accuracy target \(\varepsilon\)</label><output id="geometryToleranceOut">ε = 1e−4</output></div>
+            <input id="geometryTolerance" type="range" min="2" max="4" step="1" value="4">
+            <div class="range-ends"><span>1e−2</span><span>1e−4</span></div>
+          </div>
+          <div class="control-group accent-gold">
+            <div class="control-label"><label for="geometryQ">Inspect transport \(q\)</label><output id="geometryQOut">q = 1.00</output></div>
+            <input id="geometryQ" type="range" min="0" max="1" step="0.01" value="1">
+          </div>
+          <div class="control-group accent-blue">
+            <div class="control-label"><label for="geometryM">Inspect order \(M\)</label><output id="geometryMOut">M = 6</output></div>
+            <input id="geometryM" type="range" min="0" max="12" step="1" value="6">
+          </div>
+          <div class="metric-stack">
+            <div><span>Reliable reach</span><strong id="geometryQmax">—</strong></div>
+            <div><span>Required order</span><strong id="geometryMmin">—</strong></div>
+            <div><span>Status</span><strong id="geometryStatus">computing</strong></div>
+          </div>
+        </aside>
+        <div class="lab-workspace">
+          <div class="view-tabs" role="tablist" aria-label="q-M geometry views">
+            <button class="active" type="button" data-geometry-view="frontier">Frontier</button>
+            <button type="button" data-geometry-view="budget">Mmin(q)</button>
+            <button type="button" data-geometry-view="reach">qmax(M)</button>
+          </div>
+          <div class="workspace-canvas-stack tall">
+            <canvas class="active" id="geometryFrontierCanvas" data-geometry-panel="frontier"></canvas>
+            <canvas id="geometryBudgetCanvas" data-geometry-panel="budget"></canvas>
+            <canvas id="geometryReachCanvas" data-geometry-panel="reach"></canvas>
+          </div>
+          <div class="workspace-footer">
+            <span>Sampled checkpoints validate one continuous GOTHAM deformation; they are not independent runs.</span>
+            <span>A = 1.5 rad · ħ = −1</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- =========================================================
          04 — TARGET REACHED
          ========================================================= -->
@@ -258,13 +316,11 @@
           <div class="view-tabs" role="tablist" aria-label="Refinement views">
             <button class="active" type="button" data-refinement-view="trajectory">Trajectory + error</button>
             <button type="button" data-refinement-view="convergence">Convergence</button>
-            <button type="button" data-refinement-view="qmmap">q–M map</button>
           </div>
 
           <div class="workspace-canvas-stack tall">
             <canvas class="active" id="refinementTrajectoryCanvas" data-refinement-panel="trajectory"></canvas>
             <canvas id="refinementConvergenceCanvas" data-refinement-panel="convergence"></canvas>
-            <canvas id="qmMapCanvas" data-refinement-panel="qmmap"></canvas>
           </div>
 
           <div class="workspace-footer">
@@ -311,10 +367,10 @@
           </div>
 
           <div class="scan-card">
-            <div><span>AUTOMATED SCAN</span><small>Find the best \(\hbar\) for the current finite order once the new engine is connected.</small></div>
+            <div><span>AUTOMATED SCAN</span><small>Scan the range and find the \(\hbar\) that minimizes waveform error at the current order.</small></div>
             <button class="button tiny" id="scanHbar" type="button">Scan ħ</button>
             <button class="button tiny secondary" id="applyBestHbar" type="button" disabled>Apply best</button>
-            <output id="scanReadout">Engine not connected</output>
+            <output id="scanReadout">Ready to scan</output>
           </div>
         </aside>
 
@@ -426,7 +482,7 @@
 
           <div class="workspace-footer">
             <span id="playgroundMessage">All controls are unlocked.</span>
-            <span>new engine placeholder</span>
+            <span>live A · q · M · ħ model</span>
           </div>
         </div>
       </div>

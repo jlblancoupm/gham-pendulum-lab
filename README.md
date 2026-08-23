@@ -145,3 +145,7 @@ No scientific definitions changed.
 Each page section now owns its own scientific controls. Transport q, Refinement M,
 Control M/hbar, and Playground A/q/M/hbar can no longer overwrite one another.
 This is an architecture fix; no scientific computation has been changed.
+
+## v14 complete
+q–M geometry is now its own section. All Control and Playground cards are live.
+The browser uses the frequency-corrected q-series and finite-order generalized hbar weighting.

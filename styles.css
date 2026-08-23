@@ -312,3 +312,5 @@ footer a { color:var(--gold); text-align:right; }
   .insight-callout,footer { flex-direction:column; align-items:flex-start; }
   footer a { text-align:left; }
 }
+
+.geometry-section{background:linear-gradient(180deg,rgba(244,202,92,.025),rgba(7,23,39,.16));}
