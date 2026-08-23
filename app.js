@@ -1611,14 +1611,6 @@
   }
 
   function wireInteractions(){
-    $('fitPlayground')?.addEventListener('click',()=>{
-      const section=$('playground');
-      const header=$('siteHeader');
-      if(!section)return;
-      const headerH=header?.getBoundingClientRect().height||0;
-      const y=window.scrollY+section.getBoundingClientRect().top-headerH-10;
-      window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
-    });
 
     $('toggleMethod')?.addEventListener('click',()=>{
       const journey=$('methodJourney');
@@ -1673,6 +1665,17 @@
       state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';drawHeroLikePlayPendulum();if(['motion','operator','residual','phase','decomposition','energy'].includes(state.playground.view))drawPlayground();
     });
     $('playTimeReset').addEventListener('click',()=>{state.time=0;drawPlayground();});
+    $('fitPlayground')?.addEventListener('click',()=>{
+      const section=$('playground');
+      const header=$('siteHeader');
+      if(!section)return;
+      const headerH=header?.getBoundingClientRect().height||0;
+      const workspace=section.querySelector('.lab-shell') || section.querySelector('.lab-workspace') || section;
+      const rect=workspace.getBoundingClientRect();
+      const targetTop=headerH+8;
+      const y=window.scrollY+rect.top-targetTop;
+      window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+    });
     wireTabs('play',v=>{state.playground.view=v;if(!state.playground.result)updatePlaygroundResult();},drawPlayground);
   }
 

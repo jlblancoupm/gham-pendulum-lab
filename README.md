@@ -281,3 +281,10 @@ expression is green, matching the two pendulums exactly.
 - reduced initial pendulum hero height;
 - reduced whitespace between header and Start Simple;
 - removed purely decorative box borders/lines around PRIMARY and DIAGNOSTICS groups.
+
+## v23.7 — compact layout and playback Fit control
+- removed Explore;
+- shortened copy and tightened vertical spacing;
+- removed Playground minimum-height constraints;
+- moved Fit beside Pause and t=0;
+- Fit aligns the actual Playground workspace immediately below the floating header at 100% zoom.

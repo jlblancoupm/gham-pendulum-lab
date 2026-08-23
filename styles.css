@@ -871,3 +871,33 @@ body{
   padding:6px 10px;
   font-size:9px;
 }
+
+/* v23.7 — tighter vertical rhythm */
+.hero-copy h1{margin-bottom:10px!important}
+.hero-copy p{margin-bottom:12px!important}
+.hero-stage{padding-top:8px!important;padding-bottom:8px!important}
+.stage-header,.stage-footer{padding-top:5px!important;padding-bottom:5px!important}
+.hero-equation-semantic{margin-top:3px!important;margin-bottom:0!important}
+.section-heading{margin-bottom:16px!important}
+
+/* Playground should hug content; no minimum height */
+.playground-section,
+.playground-section .lab-shell,
+.playground-section .lab-workspace,
+.playground-section .playground-split,
+.playground-section .play-pendulum-card,
+.playground-section .workspace-canvas-stack,
+.playground-section .workspace-panel,
+.playground-section .visual-card,
+.playground-section .playground-stack{
+  min-height:0!important;
+}
+.playground-section .playground-stack{
+  height:auto!important;
+}
+.playground-section .workspace-footer{
+  margin-top:5px!important;
+}
+
+/* Fit lives with Pause and t=0 */
+#fitPlayground{min-width:auto!important}
