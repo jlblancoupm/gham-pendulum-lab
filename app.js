@@ -1438,7 +1438,7 @@
   }
 
   function updateFloatingHeader(){
-    const h=$('floatingHeader'); if(!h)return;
+    const h=document.querySelector('[data-floating-header]'); if(!h)return;
     h.classList.toggle('scrolled',window.scrollY>8);
   }
 
@@ -1453,7 +1453,7 @@
       $$('[data-math-level]').forEach(b=>b.classList.toggle('active',b===btn));
       $$('[data-math-panel]').forEach(p=>p.classList.toggle('active',p.dataset.mathPanel===btn.dataset.mathLevel));
       const panel=document.querySelector(`[data-math-panel="${btn.dataset.mathLevel}"]`);
-      if(panel){panel.scrollIntoView({block:'linear'});typeset(panel);}
+      if(panel){panel.scrollIntoView({block:'start'});typeset(panel);}
     }));
     $('transportQ').addEventListener('input',updateTransport);
     $('transportReset').addEventListener('click',()=>{$('transportQ').value=0;updateTransport();});
@@ -1530,5 +1530,11 @@
     requestAnimationFrame(animationLoop);
   }
 
-  init();
+  try{
+    init();
+  }catch(err){
+    console.error('[GOTHAM init failed]', err);
+    document.documentElement.classList.add('init-failed');
+    document.querySelectorAll('.reveal').forEach(el=>el.classList.add('visible'));
+  }
 })();

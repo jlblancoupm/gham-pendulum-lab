@@ -203,3 +203,10 @@ Built from v19.2 and verified before packaging:
 - Mathematics opens at the level associated with the currently visible section;
 - large narrative threshold “Enter the method” replaces the weak mid-page transition;
 - v19.2 Linear q=0 and Playground A=1.5 defaults are preserved.
+
+## v21.1 — startup/runtime correction
+- normalized the header to a single stable id;
+- app initialization no longer waits for MathJax;
+- MathJax is asynchronous and optional for initial page rendering;
+- fixed invalid scrollIntoView option;
+- added a fail-safe so a JS exception cannot leave all reveal content invisible.

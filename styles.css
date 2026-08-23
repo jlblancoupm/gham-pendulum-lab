@@ -594,3 +594,24 @@ body{padding-top:86px}
   .method-threshold{grid-template-columns:1fr;padding:26px 0;margin:24px auto}
   .threshold-line{display:none}
 }
+
+/* v21.1 — runtime safety */
+#siteHeader.floating-header {
+  position: fixed !important;
+  top: 12px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(calc(100% - 24px), 1180px) !important;
+  z-index: 5000 !important;
+}
+html.init-failed .reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+}
+@media (max-width:760px){
+  #siteHeader.floating-header{
+    top:6px !important;
+    width:calc(100% - 12px) !important;
+  }
+}
