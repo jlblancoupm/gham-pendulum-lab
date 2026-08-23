@@ -149,3 +149,14 @@ This is an architecture fix; no scientific computation has been changed.
 ## v14 complete
 q–M geometry is now its own section. All Control and Playground cards are live.
 The browser uses the frequency-corrected q-series and finite-order generalized hbar weighting.
+
+## v15 — visual review
+Visual-only refinement pass:
+- shared-pivot hero pendulum comparison with Δx(t) arc;
+- restoring-law mismatch shading and release-point discrepancy;
+- cleaner Transport motion hierarchy plus period-shift readout;
+- physical spectrum shown in relative dB so nonlinear harmonics remain readable;
+- q–M frontier emphasized with crosshair guides and explicit live interpretation;
+- refinement convergence includes accuracy guides;
+- M–hbar heatmap overlays best-hbar trajectory;
+- Playground displays compact live Omega / waveform error / residual metrics.

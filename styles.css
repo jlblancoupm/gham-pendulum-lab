@@ -314,3 +314,14 @@ footer a { color:var(--gold); text-align:right; }
 }
 
 .geometry-section{background:linear-gradient(180deg,rgba(244,202,92,.025),rgba(7,23,39,.16));}
+
+/* v15 visual review */
+.geometry-section .workspace-canvas-stack,
+.refinement-section .workspace-canvas-stack,
+.control-section .workspace-canvas-stack {
+  background: linear-gradient(180deg, rgba(3,14,24,.44), rgba(2,12,22,.30));
+}
+@media (max-width: 700px) {
+  .workspace-footer { align-items:flex-start; flex-direction:column; }
+  .stage-footer { flex-direction:column; gap:4px; }
+}
