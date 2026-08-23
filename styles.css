@@ -1167,3 +1167,63 @@ body{
     max-height:240px !important;
   }
 }
+
+/* v25.2 — cleaner Playground, graph-first layout */
+.play-view-toolbar{
+  gap:4px !important;
+}
+.play-view-label,
+.play-view-sep{
+  display:none !important;
+}
+
+.playground-section .playground-split{
+  grid-template-columns:minmax(180px,0.72fr) minmax(0,2.28fr) !important;
+  gap:10px !important;
+}
+
+.playground-section .play-pendulum-card{
+  min-width:0 !important;
+}
+
+.playground-section #playPendulumCanvas{
+  width:100% !important;
+}
+
+.playground-section .workspace-canvas-stack{
+  width:100% !important;
+  max-width:none !important;
+}
+
+.playground-section .playground-stack,
+.playground-section .playground-stack canvas{
+  width:100% !important;
+  max-width:none !important;
+}
+
+.playground-section .workspace-footer{
+  font-size:8px !important;
+  margin-top:2px !important;
+}
+
+/* More graph pixels within the same overall screen budget */
+.playground-section .playground-stack,
+.playground-section .playground-stack canvas{
+  height:155px !important;
+  max-height:155px !important;
+}
+.playground-section #playPendulumCanvas{
+  height:155px !important;
+  max-height:155px !important;
+}
+
+@media(max-width:900px){
+  .playground-section .playground-split{
+    grid-template-columns:minmax(150px,.8fr) minmax(0,2fr) !important;
+  }
+}
+@media(max-width:700px){
+  .playground-section .playground-split{
+    grid-template-columns:1fr !important;
+  }
+}

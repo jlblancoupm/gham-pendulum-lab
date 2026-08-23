@@ -308,3 +308,9 @@ expression is green, matching the two pendulums exactly.
 On standard desktop screens, the Refinement `.workspace-canvas-stack.tall` is fixed to 400 px.
 Surrounding controls, footer and Target fix are compacted so the chart remains the dominant element.
 Medium laptops use 340 px; mobile uses 240 px.
+
+## v25.2 — Playground cleanup
+- removed Primary/Diagnostics labels;
+- removed redundant A/q/M/hbar text from graph canvas;
+- pendulum aligned to the right inside its card;
+- graph column widened and canvas internal margins reduced to maximize plot area.

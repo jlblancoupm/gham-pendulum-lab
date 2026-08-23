@@ -1142,7 +1142,7 @@
     const {ctx,width,height}=prepareCanvas(canvas);
     clearCanvas(ctx,width,height,'rgba(115,217,135,.045)');
     const {start,current,target,exactAtQ}=state.playground.result;
-    const cx=width*.5,cy=height*.18,L=Math.min(width,height)*.34;
+    const cx=width*.68,cy=height*.18,L=Math.min(width,height)*.34;
     const aS=playInterp(start.t,start.x,state.time);
     const aC=playInterp(current.t,current.x,state.time);
     const aT=playInterp(target.t,target.x,state.time);
@@ -1189,7 +1189,7 @@
     };
     const canvas=$(canvasMap[v]);if(!canvas)return;
     const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height,'rgba(115,217,135,.025)');
-    const l=62,r=28,t=52,b=52,w=width-l-r,h=height-t-b;
+    const l=48,r=14,t=38,b=28,w=width-l-r,h=height-t-b;
     const n=Math.min(start.x.length,current.x.length,target.x.length,exactAtQ.x.length);
     const time=exactAtQ.t, duration=exactAtQ.duration;
     const title=(a,b='')=>{
@@ -1466,14 +1466,6 @@
       ctx.fillStyle=COLORS.text;ctx.font='9px ui-monospace,monospace';ctx.fillText(`t=${displayTime.toFixed(2)} s`,px+6,t+12);
 
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'energy',l+4,t+10);
-    }
-
-    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-monospace,monospace';ctx.textAlign='left';
-    ctx.fillText(`A=${p.amplitude.toFixed(2)} · q=${p.q.toFixed(2)} · M=${p.M} · ħ=${fmtMinus(p.hbar,2)}`,l,height-12);
-    if(p.q<1e-9){
-      ctx.fillStyle=COLORS.gold;ctx.textAlign='right';ctx.fillText('q=0 invariant: CURRENT = LINEAR',l+w,height-12);
-    } else if(p.q>1-1e-9){
-      ctx.fillStyle=COLORS.green;ctx.textAlign='right';ctx.fillText('q=1: CURRENT should converge to TARGET as M improves',l+w,height-12);
     }
   }
 
