@@ -855,6 +855,60 @@
 
   }
 
+  const geometryCache={key:null,qSteps:40,maxM:12,rows:[],computing:false,token:0};
+  const geometryEps=()=>Math.pow(10,-state.geometry.toleranceExp);
+  function ensureGeometryData(){
+    const A=GUIDED_AMPLITUDE,qSteps=window.innerWidth<700?24:40,maxM=12,key=`${A}|${qSteps}|${maxM}`;
+    if(geometryCache.key===key&&(geometryCache.computing||geometryCache.rows.filter(Boolean).length===qSteps+1))return;
+    geometryCache.key=key;geometryCache.qSteps=qSteps;geometryCache.maxM=maxM;geometryCache.rows=new Array(qSteps+1);geometryCache.computing=true;
+    const token=++geometryCache.token;let iq=0;
+    const batch=()=>{if(token!==geometryCache.token)return;let n=0,per=window.innerWidth<700?1:2;
+      while(iq<=qSteps&&n<per){const q=iq/qSteps,row=[];for(let M=0;M<=maxM;M++)row[M]=Model.qmMetrics({amplitude:A,q,M,periods:3});geometryCache.rows[iq]=row;iq++;n++;}
+      drawGeometryView();if(iq<=qSteps)requestAnimationFrame(batch);else{geometryCache.computing=false;drawGeometryView();}};
+    requestAnimationFrame(batch);
+  }
+  function geometryResolved(mt,eps){return mt&&mt.waveform<eps&&mt.residual<eps&&mt.frequency<eps/10&&mt.horizon>=3-1e-9;}
+  function geometryFrontiers(){
+    const eps=geometryEps(),qs=geometryCache.qSteps,maxM=geometryCache.maxM,qmax=new Array(maxM+1).fill(0),mmin=new Array(qs+1).fill(null);
+    for(let M=0;M<=maxM;M++){let last=0;for(let iq=0;iq<=qs;iq++){const row=geometryCache.rows[iq];if(row&&geometryResolved(row[M],eps))last=iq/qs;}qmax[M]=last;}
+    for(let iq=0;iq<=qs;iq++){const row=geometryCache.rows[iq];if(!row)continue;for(let M=0;M<=maxM;M++){if(geometryResolved(row[M],eps)){mmin[iq]=M;break;}}}
+    return {qmax,mmin};
+  }
+  function updateGeometryReadouts(){
+    const {qmax,mmin}=geometryFrontiers(),M=Math.min(state.geometry.M,geometryCache.maxM),iq=Math.round(state.geometry.q*geometryCache.qSteps);
+    $('geometryQmax').textContent=`q_max = ${(qmax[M]||0).toFixed(2)}`;$('geometryMmin').textContent=mmin[iq]==null?'M_min > range':`M_min = ${mmin[iq]}`;
+    $('geometryStatus').textContent=geometryCache.computing?'computing':'ready';
+  }
+  function drawGeometryView(){
+    const map={frontier:'geometryFrontierCanvas',budget:'geometryBudgetCanvas',reach:'geometryReachCanvas'},canvas=$(map[state.geometry.view]);
+    if(!canvas||canvas.offsetParent===null)return;const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height,'rgba(244,202,92,.05)');
+    if(!geometryCache.rows.filter(Boolean).length){drawPlaceholder(canvas,'q–M geometry',['computing validation checkpoints…'],COLORS.gold);return;}
+    const {qmax,mmin}=geometryFrontiers(),eps=geometryEps(),l=76,r=30,t=54,b=58,w=width-l-r,h=height-t-b;drawGrid(ctx,l,t,w,h,8,5);
+    if(state.geometry.view==='frontier'){
+      const X=M=>l+M/geometryCache.maxM*w,Y=q=>t+(1-q)*h;
+      ctx.strokeStyle=COLORS.red;ctx.lineWidth=3;ctx.beginPath();qmax.forEach((q,M)=>M?ctx.lineTo(X(M),Y(q)):ctx.moveTo(X(M),Y(q)));ctx.stroke();
+      qmax.forEach((q,M)=>{ctx.fillStyle=COLORS.red;ctx.beginPath();ctx.arc(X(M),Y(q),3,0,2*Math.PI);ctx.fill();});
+      ctx.strokeStyle='white';ctx.lineWidth=2;ctx.beginPath();ctx.arc(X(state.geometry.M),Y(state.geometry.q),7,0,2*Math.PI);ctx.stroke();
+      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(X(state.geometry.M),Y(state.geometry.q),3,0,2*Math.PI);ctx.fill();
+      drawAxesLabel(ctx,'truncation order M',l+w,height-14,'right');drawAxesLabel(ctx,'continuous transport q',l+4,t+12);
+    }else if(state.geometry.view==='budget'){
+      const X=q=>l+q*w,Y=M=>t+(geometryCache.maxM-M)/geometryCache.maxM*h;ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2.6;ctx.beginPath();let begun=false;
+      mmin.forEach((M,iq)=>{if(M==null)return;const q=iq/geometryCache.qSteps;if(!begun){ctx.moveTo(X(q),Y(M));begun=true;}else ctx.lineTo(X(q),Y(M));});ctx.stroke();
+      drawAxesLabel(ctx,'continuous transport q',l+w,height-14,'right');drawAxesLabel(ctx,'minimum required M',l+4,t+12);
+    }else{
+      const X=M=>l+M/geometryCache.maxM*w,Y=q=>t+(1-q)*h;ctx.strokeStyle=COLORS.red;ctx.lineWidth=2.6;ctx.beginPath();qmax.forEach((q,M)=>M?ctx.lineTo(X(M),Y(q)):ctx.moveTo(X(M),Y(q)));ctx.stroke();
+      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(X(state.geometry.M),Y(qmax[state.geometry.M]||0),5,0,2*Math.PI);ctx.fill();
+      drawAxesLabel(ctx,'truncation order M',l+w,height-14,'right');drawAxesLabel(ctx,'maximum reliable q',l+4,t+12);
+    }
+    ctx.fillStyle=COLORS.text;ctx.font='700 12px ui-sans-serif,system-ui';ctx.fillText(`ε=${eps.toExponential(0)} · ${state.geometry.view}`,l,t-18);
+    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-sans-serif,system-ui';ctx.fillText(geometryCache.computing?'computing progressively…':'validation grid cached',l,t+h+34);updateGeometryReadouts();
+  }
+  function updateGeometry(){
+    state.geometry.q=Number($('geometryQ').value);state.geometry.M=Number($('geometryM').value);state.geometry.toleranceExp=Number($('geometryTolerance').value);
+    $('geometryQOut').textContent=`q = ${state.geometry.q.toFixed(2)}`;$('geometryMOut').textContent=`M = ${state.geometry.M}`;$('geometryToleranceOut').textContent=`ε = 1e−${state.geometry.toleranceExp}`;
+    ensureGeometryData();drawGeometryView();
+  }
+
   function drawRefinementView() {
     const M = state.refinement.M;
     const panel = state.refinement.view;
