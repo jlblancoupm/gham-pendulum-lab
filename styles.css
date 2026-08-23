@@ -524,3 +524,6 @@ footer a { color:var(--gold); text-align:right; }
 @media(max-width:560px){
  .play-scoreboard{grid-template-columns:1fr}
 }
+
+/* v19.1 endpoint semantics */
+.compare-ideal::after{content:''}

@@ -1048,16 +1048,29 @@
   function updatePlaygroundResult(){
     const p=state.playground;
     const samples=1200, periods=4;
-    const ideal=Model.exactIntermediate({amplitude:p.amplitude,q:p.q,periods,samples});
+
+    // Exact solution of the intermediate problem: diagnostic only.
+    const exactAtQ=Model.exactIntermediate({amplitude:p.amplitude,q:p.q,periods,samples});
+
+    // Current finite GOTHAM approximation at the selected q, M and hbar.
     const current=Model.evaluateControlled({
       amplitude:p.amplitude,q:p.q,M:p.M,hbar:p.hbar,
-      duration:ideal.duration,samples
+      duration:exactAtQ.duration,samples
     });
+
+    // Fixed endpoints of the story, evaluated on the same physical time window.
     const start=Model.evaluateTransport({
       amplitude:p.amplitude,q:0,M:Math.max(8,p.M),
-      duration:ideal.duration,samples
+      duration:exactAtQ.duration,samples
     });
-    p.result={start,current,ideal};
+    const targetRef=Model.exactIntermediate({amplitude:p.amplitude,q:1,periods,samples});
+    const target=Model.exactIntermediate({
+      amplitude:p.amplitude,q:1,
+      periods:Math.max(1,exactAtQ.duration/targetRef.period),
+      samples
+    });
+
+    p.result={start,current,target,exactAtQ};
   }
 
   function playRms(arr){
@@ -1113,11 +1126,11 @@
   }
 
   function updatePlayScoreboard(){
-    const p=state.playground,{start,current,ideal}=p.result;
-    const physics=playRms(playDiff(ideal.x,start.x))/Math.max(1e-12,playRms(ideal.x));
-    const approx=playRms(playDiff(current.x,ideal.x))/Math.max(1e-12,playRms(ideal.x));
+    const p=state.playground,{start,current,target,exactAtQ}=p.result;
+    const physics=playRms(playDiff(exactAtQ.x,start.x))/Math.max(1e-12,playRms(exactAtQ.x));
+    const approx=playRms(playDiff(current.x,exactAtQ.x))/Math.max(1e-12,playRms(exactAtQ.x));
     const residual=playRms(current.residual);
-    const ferr=Math.abs(current.omega-ideal.omega)/Math.max(1e-12,ideal.omega);
+    const ferr=Math.abs(current.omega-exactAtQ.omega)/Math.max(1e-12,exactAtQ.omega);
     $('playPhysicsShift').textContent=physics.toExponential(2);
     $('playApproxError').textContent=approx.toExponential(2);
     $('playResidualScore').textContent=residual.toExponential(2);
@@ -1128,11 +1141,12 @@
     const canvas=$('playPendulumCanvas');if(!canvas||!state.playground.result)return;
     const {ctx,width,height}=prepareCanvas(canvas);
     clearCanvas(ctx,width,height,'rgba(115,217,135,.045)');
-    const {start,current,ideal}=state.playground.result;
+    const {start,current,target,exactAtQ}=state.playground.result;
     const cx=width*.5,cy=height*.18,L=Math.min(width,height)*.34;
     const aS=playInterp(start.t,start.x,state.time);
     const aC=playInterp(current.t,current.x,state.time);
-    const aI=playInterp(ideal.t,ideal.x,state.time);
+    const aT=playInterp(target.t,target.x,state.time);
+    const aE=playInterp(exactAtQ.t,exactAtQ.x,state.time);
 
     ctx.strokeStyle='rgba(174,202,229,.22)';ctx.lineWidth=3;
     ctx.beginPath();ctx.moveTo(cx-58,cy-10);ctx.lineTo(cx+58,cy-10);ctx.stroke();
@@ -1145,17 +1159,17 @@
       ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,2*Math.PI);ctx.fill();ctx.restore();
     };
     arm(aS,COLORS.muted2,1.2,[6,5],.45,6);
-    arm(aI,COLORS.green,1.8,[3,4],.82,7);
+    arm(aT,COLORS.green,1.8,[3,4],.82,7);
     arm(aC,COLORS.blue,2.8,[],1,9);
 
     ctx.font='10px ui-sans-serif,system-ui';ctx.textAlign='left';
-    ctx.fillStyle=COLORS.muted2;ctx.fillText('start',14,22);
+    ctx.fillStyle=COLORS.muted2;ctx.fillText('linear',14,22);
     ctx.fillStyle=COLORS.blue;ctx.fillText('current',14,39);
-    ctx.fillStyle=COLORS.green;ctx.fillText('ideal',14,56);
+    ctx.fillStyle=COLORS.green;ctx.fillText('target q=1',14,56);
 
-    const d=Math.abs(aC-aI);
+    const d=Math.abs(aC-aE);
     if(d>.025){
-      const r=Math.min(48,L*.2),a0=Math.min(aC,aI),a1=Math.max(aC,aI);
+      const r=Math.min(48,L*.2),a0=Math.min(aC,aE),a1=Math.max(aC,aE);
       ctx.strokeStyle=COLORS.orange;ctx.lineWidth=1.3;ctx.setLineDash([3,3]);
       ctx.beginPath();ctx.arc(cx,cy,r,Math.PI/2-a1,Math.PI/2-a0);ctx.stroke();ctx.setLineDash([]);
       ctx.fillStyle=COLORS.orange;ctx.textAlign='center';ctx.fillText('remaining error',cx,cy+r+18);
@@ -1167,7 +1181,7 @@
     updatePlayScoreboard();
     drawHeroLikePlayPendulum();
 
-    const p=state.playground,{start,current,ideal}=p.result,v=p.view;
+    const p=state.playground,{start,current,target,exactAtQ}=p.result,v=p.view;
     const canvasMap={
       motion:'playMotionCanvas',operator:'playOperatorCanvas',frequency:'playFrequencyCanvas',
       spectrum:'playSpectrumCanvas',residual:'playResidualCanvas',phase:'playPhaseCanvas',
@@ -1176,8 +1190,8 @@
     const canvas=$(canvasMap[v]);if(!canvas)return;
     const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height,'rgba(115,217,135,.025)');
     const l=62,r=28,t=52,b=52,w=width-l-r,h=height-t-b;
-    const n=Math.min(start.x.length,current.x.length,ideal.x.length);
-    const time=ideal.t, duration=ideal.duration;
+    const n=Math.min(start.x.length,current.x.length,target.x.length,exactAtQ.x.length);
+    const time=exactAtQ.t, duration=exactAtQ.duration;
     const title=(a,b='')=>{
       ctx.textAlign='left';ctx.fillStyle=COLORS.text;ctx.font='700 12px ui-sans-serif,system-ui';ctx.fillText(a,l,t-25);
       if(b){ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-sans-serif,system-ui';ctx.fillText(b,l,t-9);}
@@ -1185,7 +1199,7 @@
     const Xtime=tt=>l+tt/duration*w;
 
     if(v==='motion'){
-      title('Start → current → ideal','same q for current and ideal; same physical time for all three');
+      title('Linear → current → target','fixed endpoints q=0 and q=1; current moves between them');
       drawGrid(ctx,l,t,w,h,8,5);
       let ymax=Math.max(.2,p.amplitude*1.08);
       const Y=x=>t+(ymax-x)/(2*ymax)*h;
@@ -1195,11 +1209,11 @@
         ctx.stroke();ctx.restore();
       };
       plot(start.x,COLORS.muted2,1.1,[6,5],.38);
-      plot(ideal.x,COLORS.green,1.7,[3,4],.75);
+      plot(target.x,COLORS.green,1.7,[3,4],.75);
       plot(current.x,COLORS.blue,2.7,[],1);
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'x(t) [rad]',l+4,t+10);
     } else if(v==='operator'){
-      title('The problem moves with q','start law → current problem → final target');
+      title('The problem moves with q','linear law → current problem → final target');
       drawGrid(ctx,l,t,w,h,7,5);
       const A=Math.max(1.65,p.amplitude*1.08),XX=x=>l+(x+A)/(2*A)*w,YY=y=>t+(A-y)/(2*A)*h;
       const plot=(fn,c,lw,dash=[],alpha=1)=>{
@@ -1214,9 +1228,9 @@
     } else if(v==='frequency'){
       title('Frequency','physical change and remaining approximation error are different quantities');
       const vals=[
-        ['START',start.omega,COLORS.muted2],
+        ['LINEAR',start.omega,COLORS.muted2],
         ['CURRENT',current.omega,COLORS.blue],
-        ['IDEAL @ q',ideal.omega,COLORS.green]
+        ['TARGET q=1',target.omega,COLORS.green]
       ];
       const mn=Math.min(...vals.map(d=>d[1]))-.025,mx=Math.max(...vals.map(d=>d[1]))+.025;
       vals.forEach((d,i)=>{
@@ -1226,13 +1240,13 @@
         ctx.fillText(d[1].toFixed(6),l+w-76,yy);
       });
       ctx.fillStyle=COLORS.gold;ctx.font='10px ui-sans-serif,system-ui';
-      ctx.fillText(`physics shift  |Ωideal−Ωstart| = ${Math.abs(ideal.omega-start.omega).toExponential(2)}`,l,t+h-38);
+      ctx.fillText(`distance from linear  |Ωideal−Ωstart| = ${Math.abs(target.omega-start.omega).toExponential(2)}`,l,t+h-38);
       ctx.fillStyle=COLORS.orange;
-      ctx.fillText(`remaining error |Ωcurrent−Ωideal| = ${Math.abs(current.omega-ideal.omega).toExponential(2)}`,l,t+h-20);
+      ctx.fillText(`local approx. error |Ωcurrent−Ωexact(q)| = ${Math.abs(current.omega-exactAtQ.omega).toExponential(2)}`,l,t+h-20);
     } else if(v==='spectrum'){
-      title('Spectrum','start / current / ideal on the same relative dB scale');
+      title('Spectrum','linear / current / ideal on the same relative dB scale');
       drawGrid(ctx,l,t,w,h,8,6);
-      const ss=playSpectrum(start.x,start.t,start.omega),sc=playSpectrum(current.x,current.t,current.omega),si=playSpectrum(ideal.x,ideal.t,ideal.omega);
+      const ss=playSpectrum(start.x,start.t,start.omega),sc=playSpectrum(current.x,current.t,current.omega),si=playSpectrum(target.x,target.t,target.omega);
       const maxO=Math.max(ss.at(-1)?.omega||1,sc.at(-1)?.omega||1,si.at(-1)?.omega||1)*1.05;
       const XX=o=>l+o/maxO*w,YY=db=>t+(3-db)/83*h;
       const stems=(arr,c,lw,alpha,dash=[])=>{
@@ -1262,9 +1276,9 @@
       ctx.strokeStyle=COLORS.green;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(l,Y(0));ctx.lineTo(l+w,Y(0));ctx.stroke();ctx.setLineDash([]);
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'R(t)',l+4,t+10);
     } else if(v==='phase'){
-      title('Phase portrait','dynamic geometry: start / current / ideal');
+      title('Phase portrait','dynamic geometry: linear / current / ideal');
       drawGrid(ctx,l,t,w,h,6,6);
-      const vs=playVelocity(start.x,start.t),vc=playVelocity(current.x,current.t),vi=ideal.v||playVelocity(ideal.x,ideal.t);
+      const vs=playVelocity(start.x,start.t),vc=playVelocity(current.x,current.t),vi=target.v||playVelocity(target.x,target.t);
       const xmax=Math.max(.2,p.amplitude*1.08),vmax=Math.max(.2,...Array.from(vs,Math.abs),...Array.from(vc,Math.abs),...Array.from(vi,Math.abs));
       const XX=x=>l+(x+xmax)/(2*xmax)*w,YY=y=>t+(vmax-y)/(2*vmax)*h;
       const plot=(x,v,c,lw,dash=[],alpha=1)=>{
@@ -1272,22 +1286,23 @@
         for(let i=0;i<Math.min(x.length,v.length);i++){i?ctx.lineTo(XX(x[i]),YY(v[i])):ctx.moveTo(XX(x[i]),YY(v[i]));}
         ctx.stroke();ctx.restore();
       };
-      plot(start.x,vs,COLORS.muted2,1.1,[6,5],.4);plot(ideal.x,vi,COLORS.green,1.7,[3,4],.75);plot(current.x,vc,COLORS.blue,2.6,[],1);
+      plot(start.x,vs,COLORS.muted2,1.1,[6,5],.4);plot(target.x,vi,COLORS.green,1.7,[3,4],.75);plot(current.x,vc,COLORS.blue,2.6,[],1);
       drawAxesLabel(ctx,'x',l+w,height-14,'right');drawAxesLabel(ctx,'ẋ',l+4,t+10);
     } else if(v==='decomposition'){
       title('Error decomposition','gold = physical deformation; orange = numerical error still remaining');
       drawGrid(ctx,l,t,w,h,8,5);
-      const phys=playDiff(ideal.x,start.x),err=playDiff(current.x,ideal.x);
-      const maxE=Math.max(1e-8,...Array.from(phys,Math.abs),...Array.from(err,Math.abs));
+      const phys=playDiff(target.x,start.x),err=playDiff(current.x,target.x),local=playDiff(current.x,exactAtQ.x);
+      const maxE=Math.max(1e-8,...Array.from(phys,Math.abs),...Array.from(err,Math.abs),...Array.from(local,Math.abs));
       const Y=x=>t+h/2-x/(2*maxE)*h*.88;
       const plot=(arr,c,lw)=>{
         ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.beginPath();
         for(let i=0;i<arr.length;i++){i?ctx.lineTo(Xtime(time[i]),Y(arr[i])):ctx.moveTo(Xtime(time[i]),Y(arr[i]));}
         ctx.stroke();
       };
-      plot(phys,COLORS.gold,1.7);plot(err,COLORS.orange,2.5);
-      ctx.fillStyle=COLORS.gold;ctx.font='10px ui-sans-serif,system-ui';ctx.fillText('ideal − start = physics shift',l,t+h-20);
-      ctx.fillStyle=COLORS.orange;ctx.fillText('current − ideal = remaining approximation error',l+220,t+h-20);
+      plot(phys,COLORS.gold,1.5);plot(err,COLORS.orange,2.3);plot(local,COLORS.purple,1.4);
+      ctx.fillStyle=COLORS.gold;ctx.font='10px ui-sans-serif,system-ui';ctx.fillText('target − linear = full nonlinear departure',l,t+h-20);
+      ctx.fillStyle=COLORS.orange;ctx.fillText('current − target = distance still to final target',l+205,t+h-20);
+      ctx.fillStyle=COLORS.purple;ctx.fillText('current − exact(q) = local approximation error',l,t+h-6);
     } else if(v==='convergence'){
       title('Convergence at this q and ħ','the selected M is one point in the whole finite-order sequence');
       drawGrid(ctx,l,t,w,h,8,6);
@@ -1311,7 +1326,7 @@
         for(let i=0;i<x.length;i++)out[i]=.5*vel[i]*vel[i]+(1-q)*.5*x[i]*x[i]+q*(1-Math.cos(x[i]));
         return out;
       };
-      const es=energy(start.x,start.t,0),ec=energy(current.x,current.t,p.q),ei=energy(ideal.x,ideal.t,p.q);
+      const es=energy(start.x,start.t,0),ec=energy(current.x,current.t,p.q),ei=energy(target.x,target.t,1);
       const all=[...es,...ec,...ei],emin=Math.min(...all),emax=Math.max(...all),span=Math.max(1e-9,emax-emin);
       const Y=e=>t+(emax-e)/span*h;
       const plot=(arr,c,lw,dash=[],alpha=1)=>{
@@ -1325,6 +1340,11 @@
 
     ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-monospace,monospace';ctx.textAlign='left';
     ctx.fillText(`A=${p.amplitude.toFixed(2)} · q=${p.q.toFixed(2)} · M=${p.M} · ħ=${fmtMinus(p.hbar,2)}`,l,height-12);
+    if(p.q<1e-9){
+      ctx.fillStyle=COLORS.gold;ctx.textAlign='right';ctx.fillText('q=0 invariant: CURRENT = LINEAR',l+w,height-12);
+    } else if(p.q>1-1e-9){
+      ctx.fillStyle=COLORS.green;ctx.textAlign='right';ctx.fillText('q=1: CURRENT should converge to TARGET as M improves',l+w,height-12);
+    }
   }
 
   function switchPanels(group, view){
@@ -1404,7 +1424,7 @@
       $$('[data-math-level]').forEach(b=>b.classList.toggle('active',b===btn));
       $$('[data-math-panel]').forEach(p=>p.classList.toggle('active',p.dataset.mathPanel===btn.dataset.mathLevel));
       const panel=document.querySelector(`[data-math-panel="${btn.dataset.mathLevel}"]`);
-      if(panel){panel.scrollIntoView({block:'start'});typeset(panel);}
+      if(panel){panel.scrollIntoView({block:'linear'});typeset(panel);}
     }));
     $('transportQ').addEventListener('input',updateTransport);
     $('transportReset').addEventListener('click',()=>{$('transportQ').value=0;updateTransport();});

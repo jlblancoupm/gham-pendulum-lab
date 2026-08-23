@@ -181,6 +181,17 @@ finite-order hbar control, and the diagnostics used by the browser.
 ## v19 — Playground rebuilt from stable v17
 The Playground was rebuilt rather than patched.
 Default/reset amplitude is now A=1.5 rad.
-Every view uses the same Start / Current / Ideal semantics, and the pendulum comparison uses one shared pivot.
+Every view uses the same Linear / Current / Ideal semantics, and the pendulum comparison uses one shared pivot.
 Primary views: Motion, Operator, Frequency, Spectrum, Residual.
 Diagnostics: Phase portrait, Error decomposition, Convergence, Energy.
+
+## v19.1 — endpoint semantics
+Playground visual references are now:
+Linear = q=0, Current = selected (q,M,hbar), Target = exact q=1.
+An Exact@q reference is retained internally only for local approximation diagnostics.
+At q=0 the UI explicitly states CURRENT = LINEAR; at q=1 it states that CURRENT should converge toward TARGET with refinement.
+
+## v19.2 — Linear semantics
+The q=0 reference is now labelled Linear throughout the Playground.
+Visible comparison: Linear (q=0) → Current (q,M,hbar) → Target (q=1).
+Exact@q remains an internal/local diagnostic reference.

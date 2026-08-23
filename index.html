@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=19">
+  <link rel="stylesheet" href="styles.css?v=19.2">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -22,7 +22,7 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script defer src="app.js?v=19"></script>
+  <script defer src="app.js?v=19.2"></script>
 </head>
 
 <body>
@@ -526,25 +526,25 @@
         <div class="lab-workspace">
           <div class="playground-compare-head">
             <div class="compare-legend" aria-label="Comparison legend">
-              <span class="compare-start"><i></i>Start · q=0</span>
+              <span class="compare-start"><i></i>Linear · q=0</span>
               <span class="compare-current"><i></i>Current · q,M,ħ</span>
-              <span class="compare-ideal"><i></i>Ideal · same q</span>
+              <span class="compare-ideal"><i></i>Target · q=1</span>
             </div>
             <p><b>Read every view the same way:</b> what changed because the problem moved, and what error remains because the approximation is finite?</p>
           </div>
 
           <div class="play-scoreboard" id="playScoreboard">
-            <div><small>PHYSICS SHIFT</small><strong id="playPhysicsShift">—</strong><span>start → ideal</span></div>
-            <div><small>APPROX. ERROR</small><strong id="playApproxError">—</strong><span>current → ideal</span></div>
+            <div><small>DISTANCE FROM LINEAR</small><strong id="playPhysicsShift">—</strong><span>linear → exact@q</span></div>
+            <div><small>APPROX. ERROR</small><strong id="playApproxError">—</strong><span>current → exact@q</span></div>
             <div><small>RESIDUAL</small><strong id="playResidualScore">—</strong><span>equation violation</span></div>
-            <div><small>FREQUENCY ERROR</small><strong id="playFreqError">—</strong><span>current → ideal</span></div>
+            <div><small>FREQUENCY ERROR</small><strong id="playFreqError">—</strong><span>current → exact@q</span></div>
           </div>
 
           <div class="playground-split">
             <div class="play-pendulum-card">
-              <canvas id="playPendulumCanvas" aria-label="Start, current and ideal pendulums sharing one pivot"></canvas>
+              <canvas id="playPendulumCanvas" aria-label="Linear, current and target pendulums sharing one pivot"></canvas>
               <div class="play-pendulum-caption">
-                <strong>Same pivot. Same clock.</strong>
+                <strong>Same pivot. Same clock. Same endpoints.</strong>
                 <span>The separation is the comparison.</span>
               </div>
             </div>
@@ -587,7 +587,7 @@
           </div>
 
           <div class="workspace-footer">
-            <span id="playgroundMessage">Start is fixed at q=0; ideal always uses the same current q.</span>
+            <span id="playgroundMessage">Linear is fixed at q=0; Target is fixed at q=1. Exact@q is used internally to measure local approximation error.</span>
             <span>live A · q · M · ħ model</span>
           </div>
         </div>
