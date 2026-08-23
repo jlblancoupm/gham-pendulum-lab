@@ -1509,10 +1509,16 @@
     state.playground.q=Number($('playQ').value);
     state.playground.M=Number($('playM').value);
     state.playground.hbar=Number($('playHbar').value);
+
     $('playAmplitudeOut').textContent=`${state.playground.amplitude.toFixed(2)} rad`;
     $('playQOut').textContent=`q = ${state.playground.q.toFixed(3)}`;
     $('playMOut').textContent=`M = ${state.playground.M}`;
     $('playHbarOut').textContent=`ħ = ${fmtMinus(state.playground.hbar,2)}`;
+
+    // Any parameter change defines a new experiment: discard cached trajectories,
+    // rebuild all references, and restart the shared animation clock at t=0.
+    state.playground.result=null;
+    state.time=0;
     updatePlaygroundResult();
     drawPlayground();
   }
@@ -1645,13 +1651,13 @@
 
     ['playAmplitude','playQ','playM','playHbar'].forEach(id=>$(id).addEventListener('input',updatePlayInputs));
     $('playgroundReset').addEventListener('click',()=>{
-      $('playAmplitude').value=1.5;$('playQ').value=1;$('playM').value=8;$('playHbar').value=-1;updatePlayInputs();
+      $('playAmplitude').value=1.5;$('playQ').value=1;$('playM').value=8;$('playHbar').value=-1;state.playground.result=null;state.time=0;updatePlayInputs();
     });
     $('playPause').addEventListener('click',()=>{
       state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';drawHeroLikePlayPendulum();if(['motion','operator','residual','phase','decomposition','energy'].includes(state.playground.view))drawPlayground();
     });
     $('playTimeReset').addEventListener('click',()=>{state.time=0;drawPlayground();});
-    wireTabs('play',v=>state.playground.view=v,drawPlayground);
+    wireTabs('play',v=>{state.playground.view=v;if(!state.playground.result)updatePlaygroundResult();},drawPlayground);
   }
 
   function setupScrollEffects(){

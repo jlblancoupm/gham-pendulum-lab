@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=23">
+  <link rel="stylesheet" href="styles.css?v=23.2">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -23,7 +23,7 @@
   </script>
   
   
-  <script defer src="app.js?v=23"></script>
+  <script defer src="app.js?v=23.2"></script>
   
   <script>
     window.MathJax = {
@@ -141,11 +141,11 @@
           \]
           connecting the nonlinear pendulum
           \[
-          \color{#73d987}{\ddot x+\sin x=0}
+          \color[rgb]{0.451,0.851,0.529}{\ddot x+\sin x=0}
           \]
           to the linear, small-angle model
           \[
-          \color{#f4ca5c}{\ddot x+x=0}.
+          \color[rgb]{0.957,0.792,0.361}{\ddot x+x=0}.
           \]
           <p>At \(A=1.5\,\mathrm{rad}\), the release-point restoring-law mismatch is already about \(33.5\%\).</p>
         </div>
@@ -676,24 +676,24 @@
             <h3>Start from a solved problem</h3>
             <p>The nonlinear pendulum is the target:</p>
             \[
-      \color{#73d987}{\ddot x+\sin x=0}
-      \color{#DCE8F2}{,\qquad x(0)=A,\qquad \dot x(0)=0}
+      \color[rgb]{0.451,0.851,0.529}{\ddot x+\sin x=0}
+      \color[rgb]{0.863,0.910,0.949}{,\qquad x(0)=A,\qquad \dot x(0)=0}
     \]
             <p>The familiar small-angle model provides an analytically solved starting point:</p>
             \[
-      \color{#f4ca5c}{\ddot x_0+x_0=0}
-      \color{#DCE8F2}{,\qquad x_0(t)=A\cos t}
+      \color[rgb]{0.957,0.792,0.361}{\ddot x_0+x_0=0}
+      \color[rgb]{0.863,0.910,0.949}{,\qquad x_0(t)=A\cos t}
     \]
           </section>
           <section>
             <h3>Build a continuous deformation</h3>
             <p>Introduce an embedding coordinate \(q\in[0,1]\) and a deformation \(\Phi(t;q)\) satisfying</p>
             \[
-      \color{#f4ca5c}{\Phi(t;0)=x_0(t)}
+      \color[rgb]{0.957,0.792,0.361}{\Phi(t;0)=x_0(t)}
       \;\longrightarrow\;
-      \color{#49b9ff}{\Phi(t;q)}
+      \color[rgb]{0.286,0.725,1.000}{\Phi(t;q)}
       \;\longrightarrow\;
-      \color{#73d987}{\Phi(t;1)=x(t)}
+      \color[rgb]{0.451,0.851,0.529}{\Phi(t;1)=x(t)}
     \]
             <div class="math-semantic-key three-role-key">
               <span class="key-linear">Linear · q = 0</span>

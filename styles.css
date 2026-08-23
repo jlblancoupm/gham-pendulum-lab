@@ -713,3 +713,52 @@ html.init-failed .reveal {
   .method-journey-openbar{top:76px}
   .playground-stack,.playground-stack canvas,.play-pendulum-card canvas,#playPendulumCanvas{height:160px!important;max-height:160px!important;min-height:160px!important}
 }
+
+/* v23.2 — Playground card hugs its content */
+.playground-section,
+.playground-section .lab-shell,
+.playground-section .lab-workspace,
+.playground-section .playground-split,
+.playground-section .play-pendulum-card,
+.playground-section .workspace-canvas-stack,
+.playground-section .workspace-panel,
+.playground-section .visual-card {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+.playground-section .lab-workspace {
+  padding-bottom: 16px !important;
+}
+
+.playground-section .playground-split {
+  margin-bottom: 0 !important;
+}
+
+.playground-section .workspace-footer {
+  margin-top: 8px !important;
+  padding-bottom: 0 !important;
+}
+
+.playground-section .playground-stack {
+  min-height: 180px !important;
+  height: 180px !important;
+  margin-bottom: 0 !important;
+}
+
+.playground-section .playground-stack canvas,
+.playground-section #playPendulumCanvas {
+  display: block !important;
+  height: 180px !important;
+  max-height: 180px !important;
+}
+
+@media(max-width:760px){
+  .playground-section .playground-stack,
+  .playground-section .playground-stack canvas,
+  .playground-section #playPendulumCanvas{
+    height:160px !important;
+    max-height:160px !important;
+    min-height:160px !important;
+  }
+}

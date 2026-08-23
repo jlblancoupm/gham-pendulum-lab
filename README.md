@@ -254,3 +254,11 @@ A small "Method hidden / Show explanation" bar lets visitors reopen the method l
 ## v23
 Visible +/− method accordion, no header amplitude chip, compact Playground,
 and corrected first local MathJax comparison: nonlinear green vs linear small-angle gold.
+
+## v23.1 — Playground state + MathJax color fix
+- moving any Playground control now invalidates cached trajectories, rebuilds Linear/Current/Target,
+  and restarts the shared clock at t=0;
+- MathJax colors use rgb syntax instead of #hex, avoiding the macro-parameter '#' error.
+
+## v23.2 — Playground height cleanup
+Removed inherited minimum heights from the Playground containers so the card ends close to the visual content instead of leaving a large empty area underneath.
