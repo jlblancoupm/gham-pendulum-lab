@@ -1000,3 +1000,93 @@ body{
 }
 .playground-section .lab-workspace{gap:5px !important}
 .playground-section .workspace-footer{margin-top:3px !important}
+
+/* v25 — method nav follows expansion state */
+#siteHeader.method-hidden [data-method-nav]{
+  display:none !important;
+}
+#siteHeader:not(.method-hidden) [data-method-nav]{
+  display:inline-flex !important;
+}
+
+/* Remove obsolete method openbar completely */
+.method-journey-openbar{display:none!important}
+
+/* Guided visualizations: shorter so text + chart fit in one screen */
+.lab-workspace canvas,
+.visual-card canvas,
+.workspace-canvas-stack canvas,
+#transportCanvas,
+#refinementCanvas,
+#geometryCanvas,
+#controlCanvas{
+  max-height:220px !important;
+  height:220px !important;
+}
+.lab-shell,
+.lab-workspace,
+.visual-card{
+  min-height:0 !important;
+}
+.section-heading{
+  margin-bottom:14px !important;
+}
+.section.lab-section{
+  padding-top:42px !important;
+  padding-bottom:42px !important;
+}
+
+/* Three variables: larger, clearer cards */
+.three-variable-grid,
+.variable-grid,
+.three-variables{
+  gap:12px !important;
+}
+.three-variable-grid > *,
+.variable-grid > *,
+.three-variables > *{
+  min-height:118px !important;
+  padding:18px 16px !important;
+}
+.three-variable-grid b,
+.variable-grid b,
+.three-variables b{
+  font-size:26px !important;
+}
+.three-variable-grid span,
+.variable-grid span,
+.three-variables span{
+  font-size:11px !important;
+  line-height:1.4 !important;
+}
+
+/* Playground left controls: compact, easier to scan */
+.playground-section .control-deck{
+  padding:10px !important;
+  gap:7px !important;
+}
+.playground-section .deck-title{
+  margin-bottom:5px !important;
+}
+.playground-section .control-group{
+  padding:7px 8px !important;
+  margin-bottom:5px !important;
+}
+.playground-section .control-label{
+  margin-bottom:4px !important;
+}
+.playground-section .control-label label{
+  font-size:9px !important;
+}
+.playground-section .control-label output{
+  font-size:9px !important;
+}
+.playground-section input[type="range"]{
+  height:16px !important;
+  margin:0 !important;
+}
+.playground-section .playback-row,
+.playground-section .deck-actions{
+  gap:5px !important;
+  margin-top:6px !important;
+}

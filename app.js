@@ -1611,6 +1611,9 @@
     if(icon) icon.textContent=expanded?'−':'+';
     toggle.classList.toggle('expanded',expanded);
     if(returnBar) returnBar.hidden=expanded;
+    const header=$('siteHeader');
+    if(header) header.classList.toggle('method-hidden',!expanded);
+
     const headerToggle=$('headerMethodToggle');
     if(headerToggle){
       headerToggle.setAttribute('aria-expanded',expanded?'true':'false');
@@ -1642,7 +1645,6 @@
       const bar=$('methodReturnBar'); if(bar) bar.hidden=false;
     });
     $('reopenMethod')?.addEventListener('click',()=>setMethodExpanded(true,true));
-    $('hideMethodInline')?.addEventListener('click',()=>setMethodExpanded(false,false));
     window.addEventListener('scroll',updateFloatingHeader,{passive:true});
     updateFloatingHeader();
     $('openMathDrawer')?.addEventListener('click',openMathDrawer);

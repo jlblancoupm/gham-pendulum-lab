@@ -296,3 +296,10 @@ expression is green, matching the two pendulums exactly.
 - Primary and Diagnostics Playground controls share one compact row;
 - Playground visual height limited to 145 px;
 - Fit uses the same style as t=0.
+
+## v25 — conditional method nav + compact visuals/controls
+- removed floating Method expanded banner;
+- method-specific header links hide when the method is collapsed and reappear when expanded;
+- guided chart heights reduced to 220px;
+- q/M/hbar three-variable cards enlarged;
+- Playground control deck compacted vertically.
