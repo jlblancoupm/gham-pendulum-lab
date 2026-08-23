@@ -195,3 +195,12 @@ At q=0 the UI explicitly states CURRENT = LINEAR; at q=1 it states that CURRENT 
 The q=0 reference is now labelled Linear throughout the Playground.
 Visible comparison: Linear (q=0) → Current (q,M,hbar) → Target (q=1).
 Exact@q remains an internal/local diagnostic reference.
+
+## v20 — readability pass
+- Linear reference explicitly shows q=0.
+- Mathematics uses the same semantic colors as Linear / Current / Target and opens contextually for the section currently in view.
+- Header restored as sticky/floating.
+- Refinement waveform/error plots now show explicit y-axis values and maximum temporal error.
+- q–M geometry uses distinct colors for frontier vs selected (q,M), plus clearer scientific notation.
+- M–hbar map shows crosshairs and exact selected M/hbar values; Apply best hbar explains why it is disabled until a scan is run.
+- Playground remains at A=1.5 rad by default and Motion has a synchronized time cursor/markers with the animated pendulum.

@@ -889,7 +889,7 @@
       ctx.strokeStyle=COLORS.red;ctx.lineWidth=3;ctx.beginPath();qmax.forEach((q,M)=>M?ctx.lineTo(X(M),Y(q)):ctx.moveTo(X(M),Y(q)));ctx.stroke();
       qmax.forEach((q,M)=>{ctx.fillStyle=COLORS.red;ctx.beginPath();ctx.arc(X(M),Y(q),3,0,2*Math.PI);ctx.fill();});
       ctx.strokeStyle='white';ctx.lineWidth=2;ctx.beginPath();ctx.arc(X(state.geometry.M),Y(state.geometry.q),7,0,2*Math.PI);ctx.stroke();
-      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(X(state.geometry.M),Y(state.geometry.q),3,0,2*Math.PI);ctx.fill();
+      ctx.fillStyle=COLORS.purple;ctx.beginPath();ctx.arc(X(state.geometry.M),Y(state.geometry.q),4,0,2*Math.PI);ctx.fill();
       drawAxesLabel(ctx,'truncation order M',l+w,height-14,'right');drawAxesLabel(ctx,'continuous transport q',l+4,t+12);
     }else if(state.geometry.view==='budget'){
       const X=q=>l+q*w,Y=M=>t+(geometryCache.maxM-M)/geometryCache.maxM*h;ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2.6;ctx.beginPath();let begun=false;
@@ -900,12 +900,14 @@
       ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(X(state.geometry.M),Y(qmax[state.geometry.M]||0),5,0,2*Math.PI);ctx.fill();
       drawAxesLabel(ctx,'truncation order M',l+w,height-14,'right');drawAxesLabel(ctx,'maximum reliable q',l+4,t+12);
     }
-    ctx.fillStyle=COLORS.text;ctx.font='700 12px ui-sans-serif,system-ui';ctx.fillText(`ε=${eps.toExponential(0)} · ${state.geometry.view}`,l,t-18);
-    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-sans-serif,system-ui';ctx.fillText(geometryCache.computing?'computing progressively…':'validation grid cached',l,t+h+34);updateGeometryReadouts();
+    ctx.fillStyle=COLORS.text;ctx.font='700 12px ui-sans-serif,system-ui';ctx.fillText(`ε=10^${Math.round(Math.log10(eps))} · ${state.geometry.view}`,l,t-18);
+    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-sans-serif,system-ui';
+    const note=geometryCache.computing?'computing progressively…':'red = reliable frontier · purple = selected (q,M)';
+    ctx.fillText(note,l,t+h+34);updateGeometryReadouts();
   }
   function updateGeometry(){
     state.geometry.q=Number($('geometryQ').value);state.geometry.M=Number($('geometryM').value);state.geometry.toleranceExp=Number($('geometryTolerance').value);
-    $('geometryQOut').textContent=`q = ${state.geometry.q.toFixed(2)}`;$('geometryMOut').textContent=`M = ${state.geometry.M}`;$('geometryToleranceOut').textContent=`ε = 1e−${state.geometry.toleranceExp}`;
+    $('geometryQOut').textContent=`q = ${state.geometry.q.toFixed(2)}`;$('geometryMOut').textContent=`M = ${state.geometry.M}`;$('geometryToleranceOut').textContent=`ε = 10^−${state.geometry.toleranceExp}`;
     ensureGeometryData();drawGeometryView();
   }
 
@@ -934,6 +936,12 @@
       drawGrid(ctx,l,t,w,topPlotH,8,4);
       drawGrid(ctx,l,botY+8,w,botPlotH,8,3);
 
+      // Explicit y scales: waveform and error must be quantitatively readable.
+      ctx.font='9px ui-monospace,monospace';ctx.fillStyle=COLORS.muted2;ctx.textAlign='right';
+      [A,0,-A].forEach(v=>ctx.fillText(v.toFixed(2),l-7,Y(v)+3));
+      [maxErr,0,-maxErr].forEach(v=>ctx.fillText(v===0?'0':v.toExponential(1),l-7,Ye(v)+3));
+      ctx.textAlign='left';
+
       const plot=(tarr,xarr,c,lw,d=[])=>{
         ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(d);ctx.beginPath();
         for(let i=0;i<tarr.length;i++) i?ctx.lineTo(X(tarr[i]),Y(xarr[i])):ctx.moveTo(X(tarr[i]),Y(xarr[i]));
@@ -958,7 +966,7 @@
       ctx.font='10px ui-sans-serif,system-ui';
       ctx.fillStyle=COLORS.green;ctx.fillText('exact target',l+8,t+30);
       ctx.fillStyle=COLORS.blue;ctx.fillText(`GOTHAM M=${M}`,l+78,t+30);
-      ctx.fillStyle=COLORS.orange;ctx.fillText('pointwise temporal error',l+8,botY+33);
+      ctx.fillStyle=COLORS.orange;ctx.fillText(`pointwise temporal error · max |e| = ${maxErr.toExponential(2)} rad`,l+8,botY+33);
     } else if(panel==='convergence'){
       const canvas=$('refinementConvergenceCanvas');
       const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height);
@@ -996,10 +1004,10 @@
         if(z<ymin||z>ymax)return;
         ctx.save();ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
         ctx.beginPath();ctx.moveTo(l,Y(z));ctx.lineTo(l+w,Y(z));ctx.stroke();ctx.restore();
-        ctx.fillStyle=COLORS.muted2;ctx.font='9px ui-monospace,monospace';ctx.fillText(`1e−${idx+2}`,l+w-28,Y(z)-4);
+        ctx.fillStyle=COLORS.muted2;ctx.font='9px ui-monospace,monospace';ctx.fillText(`10^−${idx+2}`,l+w-34,Y(z)-4);
       });
 
-      ctx.save();ctx.strokeStyle=COLORS.gold;ctx.lineWidth=1.4;ctx.setLineDash([4,4]);
+      ctx.save();ctx.strokeStyle=COLORS.purple;ctx.lineWidth=1.8;ctx.setLineDash([4,4]);
       ctx.beginPath();ctx.moveTo(X(M),t);ctx.lineTo(X(M),t+h);ctx.stroke();ctx.restore();
 
       drawAxesLabel(ctx,'truncation order M',l+w,height-14,'right');
@@ -1008,7 +1016,7 @@
       ctx.fillStyle=COLORS.blue;ctx.fillText('waveform',l+8,t+30);
       ctx.fillStyle=COLORS.orange;ctx.fillText('residual',l+72,t+30);
       ctx.fillStyle=COLORS.purple;ctx.fillText('frequency',l+126,t+30);
-      ctx.fillStyle=COLORS.gold;ctx.fillText(`current M=${M}`,l+196,t+30);
+      ctx.fillStyle=COLORS.purple;ctx.fillText(`current M=${M}`,l+196,t+30);
     }
     updateMetricPlaceholders();
   }
@@ -1042,7 +1050,7 @@
     }else{drawGrid(ctx,l,t,w,h,Math.max(4,M),5);let a=[],mn=0,mx=1;for(let n=0;n<=M;n++){const x=n?Model.hbarWeight(M,n,hb):1;a.push(x);mn=Math.min(mn,x);mx=Math.max(mx,x);}const pad=.1*Math.max(1,mx-mn);mn-=pad;mx+=pad;const X=n=>l+(M?n/M:0)*w,Y=x=>t+(mx-x)/(mx-mn)*h;ctx.strokeStyle=COLORS.purple;ctx.lineWidth=2.2;ctx.beginPath();a.forEach((x,n)=>n?ctx.lineTo(X(n),Y(x)):ctx.moveTo(X(n),Y(x)));ctx.stroke();a.forEach((x,n)=>{ctx.fillStyle=COLORS.purple;ctx.beginPath();ctx.arc(X(n),Y(x),4,0,2*Math.PI);ctx.fill();});drawAxesLabel(ctx,'term n',l+w,height-14,'right');drawAxesLabel(ctx,'μ_M,n(ħ)',l+4,t+12);}
     ctx.fillStyle=COLORS.text;ctx.font='700 12px ui-sans-serif,system-ui';ctx.fillText(`M=${M} · ħ=${fmtMinus(hb,2)}`,l,t-18);
   }
-  function scanBestHbar(){let best=Infinity,bh=-1;for(let i=0;i<=64;i++){const hv=-1.6+1.2*i/64,e=controlMetric(state.control.M,hv).waveform;if(e<best){best=e;bh=hv;}}state.control.bestHbar=bh;state.control.bestError=best;$('scanReadout').textContent=`best ħ ${fmtMinus(bh,3)} · error ${best.toExponential(2)}`;$('applyBestHbar').disabled=false;}
+  function scanBestHbar(){let best=Infinity,bh=-1;for(let i=0;i<=64;i++){const hv=-1.6+1.2*i/64,e=controlMetric(state.control.M,hv).waveform;if(e<best){best=e;bh=hv;}}state.control.bestHbar=bh;state.control.bestError=best;$('scanReadout').textContent=`best ħ = ${fmtMinus(bh,3)} · waveform error = ${best.toExponential(2)} · Apply best ħ is now enabled`;$('applyBestHbar').disabled=false;}
 
 
   function updatePlaygroundResult(){
@@ -1211,6 +1219,18 @@
       plot(start.x,COLORS.muted2,1.1,[6,5],.38);
       plot(target.x,COLORS.green,1.7,[3,4],.75);
       plot(current.x,COLORS.blue,2.7,[],1);
+
+      // Synchronized time cursor with the animated pendulum.
+      const displayTime=((state.time%duration)+duration)%duration;
+      const px=Xtime(displayTime);
+      ctx.save();ctx.strokeStyle='rgba(255,255,255,.48)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+      ctx.beginPath();ctx.moveTo(px,t);ctx.lineTo(px,t+h);ctx.stroke();ctx.restore();
+      const ys=playInterp(start.t,start.x,displayTime),yc=playInterp(current.t,current.x,displayTime),yt=playInterp(target.t,target.x,displayTime);
+      [[ys,COLORS.muted2,4],[yt,COLORS.green,4],[yc,COLORS.blue,5]].forEach(([yv,c,rad])=>{
+        ctx.fillStyle=c;ctx.beginPath();ctx.arc(px,Y(yv),rad,0,2*Math.PI);ctx.fill();
+      });
+      ctx.fillStyle=COLORS.text;ctx.font='9px ui-monospace,monospace';ctx.fillText(`t=${displayTime.toFixed(2)}`,px+6,t+12);
+
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'x(t) [rad]',l+4,t+10);
     } else if(v==='operator'){
       title('The problem moves with q','linear law → current problem → final target');
@@ -1397,12 +1417,34 @@
   }
 
 
+
+  function currentMathContext(){
+    const sections=$$('section[data-math-context]');
+    let best=null,bestDist=Infinity;
+    const anchor=window.innerHeight*.32;
+    sections.forEach(sec=>{
+      const rect=sec.getBoundingClientRect();
+      if(rect.bottom<80 || rect.top>window.innerHeight*.9)return;
+      const d=Math.abs(rect.top-anchor);
+      if(d<bestDist){bestDist=d;best=sec;}
+    });
+    return best?.dataset.mathContext || 'intuition';
+  }
+
+  function activateMathLevel(level){
+    $$('[data-math-level]').forEach(b=>b.classList.toggle('active',b.dataset.mathLevel===level));
+    $$('[data-math-panel]').forEach(p=>p.classList.toggle('active',p.dataset.mathPanel===level));
+    const panel=document.querySelector(`[data-math-panel="${level}"]`);
+    if(panel){typeset(panel);}
+  }
+
   function openMathDrawer(){
     const drawer=$('mathDrawer');
     if(!drawer)return;
     drawer.classList.add('open');
     drawer.setAttribute('aria-hidden','false');
     document.body.style.overflow='hidden';
+    activateMathLevel(currentMathContext());
     $('closeMathDrawer')?.focus();
     typeset(drawer);
   }

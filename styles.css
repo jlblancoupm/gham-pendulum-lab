@@ -527,3 +527,26 @@ footer a { color:var(--gold); text-align:right; }
 
 /* v19.1 endpoint semantics */
 .compare-ideal::after{content:''}
+
+/* v20 readability and contextual navigation */
+.site-header, header.site-header, .site-header-wrap {
+  position: sticky !important;
+  top: 0;
+  z-index: 1500;
+}
+.site-header {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.colored-equation{
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;
+  margin:18px 0;padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.015);
+  font-size:1.05rem
+}
+.eq-linear{color:var(--muted2)}
+.eq-current{color:var(--blue)}
+.eq-target{color:var(--green)}
+.eq-sep{color:var(--text)}
+.equation-main{font-size:1.15rem}
+.geometry-section .metric-stack strong{font-variant-numeric:tabular-nums}
+#applyBestHbar:disabled{opacity:.38;cursor:not-allowed}
