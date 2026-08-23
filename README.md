@@ -314,3 +314,8 @@ Medium laptops use 340 px; mobile uses 240 px.
 - removed redundant A/q/M/hbar text from graph canvas;
 - pendulum aligned to the right inside its card;
 - graph column widened and canvas internal margins reduced to maximize plot area.
+
+## v25.3 — unified guided chart sizing + larger Playground plot
+Build a Path, Go Farther and Converge Better now use the exact same chart sizing
+as Refinement: 400 px desktop, 340 px medium laptop, 240 px mobile.
+The Playground graph column is wider, the pendulum column narrower, and plot margins/chrome are reduced.

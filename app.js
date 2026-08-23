@@ -1189,7 +1189,7 @@
     };
     const canvas=$(canvasMap[v]);if(!canvas)return;
     const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height,'rgba(115,217,135,.025)');
-    const l=48,r=14,t=38,b=28,w=width-l-r,h=height-t-b;
+    const l=42,r=8,t=32,b=22,w=width-l-r,h=height-t-b;
     const n=Math.min(start.x.length,current.x.length,target.x.length,exactAtQ.x.length);
     const time=exactAtQ.t, duration=exactAtQ.duration;
     const title=(a,b='')=>{
