@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=18.1">
+  <link rel="stylesheet" href="styles.css?v=19">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -22,7 +22,7 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script defer src="app.js?v=18.1"></script>
+  <script defer src="app.js?v=19"></script>
 </head>
 
 <body>
@@ -492,7 +492,7 @@
           <h2>Now <em>take control</em>.</h2>
         </div>
         <p>
-          This section deliberately exposes all controls at once. The guided demo uses \(A=1.5\,\mathrm{rad}\); here you can also try the harder \(A=2\,\mathrm{rad}\) case and beyond.
+          This section keeps the guided case \(A=1.5\,\mathrm{rad}\) as its starting point. You can move away from it deliberately once the comparison is clear.
         </p>
       </div>
 
@@ -501,8 +501,8 @@
           <div class="deck-title"><span>FULL CONTROL DECK</span><button id="playgroundReset" type="button">Reset</button></div>
 
           <div class="control-group">
-            <div class="control-label"><label for="playAmplitude">Amplitude \(A\)</label><output id="playAmplitudeOut">2.00 rad</output></div>
-            <input id="playAmplitude" type="range" min="0.2" max="2.8" step="0.05" value="2">
+            <div class="control-label"><label for="playAmplitude">Amplitude \(A\)</label><output id="playAmplitudeOut">1.50 rad</output></div>
+            <input id="playAmplitude" type="range" min="0.2" max="2.2" step="0.05" value="1.5">
           </div>
           <div class="control-group accent-gold">
             <div class="control-label"><label for="playQ">q</label><output id="playQOut">q = 1.000</output></div>
@@ -530,28 +530,7 @@
               <span class="compare-current"><i></i>Current · q,M,ħ</span>
               <span class="compare-ideal"><i></i>Ideal · same q</span>
             </div>
-            <p><b>Two questions:</b> how much has the physics changed, and how much approximation error remains?</p>
-          </div>
-          <div class="play-view-groups">
-            <div>
-              <small>PRIMARY</small>
-              <div class="view-tabs wrap">
-                <button class="active" type="button" data-play-view="motion">Motion</button>
-                <button type="button" data-play-view="operator">Operator</button>
-                <button type="button" data-play-view="frequency">Frequency</button>
-                <button type="button" data-play-view="spectrum">Spectrum</button>
-                <button type="button" data-play-view="residual">Residual</button>
-              </div>
-            </div>
-            <div>
-              <small>DIAGNOSTICS</small>
-              <div class="view-tabs wrap diagnostic-tabs">
-                <button type="button" data-play-view="phase">Phase portrait</button>
-                <button type="button" data-play-view="decomposition">Error decomposition</button>
-                <button type="button" data-play-view="convergence">Convergence</button>
-                <button type="button" data-play-view="energy">Energy</button>
-              </div>
-            </div>
+            <p><b>Read every view the same way:</b> what changed because the problem moved, and what error remains because the approximation is finite?</p>
           </div>
 
           <div class="play-scoreboard" id="playScoreboard">
@@ -562,22 +541,53 @@
           </div>
 
           <div class="playground-split">
-            <canvas id="playPendulumCanvas" aria-label="Animated pendulum"></canvas>
-            <div class="workspace-canvas-stack">
-              <canvas class="active" id="playMotionCanvas" data-play-panel="motion"></canvas>
-              <canvas id="playOperatorCanvas" data-play-panel="operator"></canvas>
-              <canvas id="playFrequencyCanvas" data-play-panel="frequency"></canvas>
-              <canvas id="playSpectrumCanvas" data-play-panel="spectrum"></canvas>
-              <canvas id="playResidualCanvas" data-play-panel="residual"></canvas>
-              <canvas id="playPhaseCanvas" data-play-panel="phase"></canvas>
-              <canvas id="playDecompositionCanvas" data-play-panel="decomposition"></canvas>
-              <canvas id="playConvergenceCanvas" data-play-panel="convergence"></canvas>
-              <canvas id="playEnergyCanvas" data-play-panel="energy"></canvas>
+            <div class="play-pendulum-card">
+              <canvas id="playPendulumCanvas" aria-label="Start, current and ideal pendulums sharing one pivot"></canvas>
+              <div class="play-pendulum-caption">
+                <strong>Same pivot. Same clock.</strong>
+                <span>The separation is the comparison.</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="play-view-groups">
+                <div>
+                  <small>PRIMARY</small>
+                  <div class="view-tabs wrap">
+                    <button class="active" type="button" data-play-view="motion">Motion</button>
+                    <button type="button" data-play-view="operator">Operator</button>
+                    <button type="button" data-play-view="frequency">Frequency</button>
+                    <button type="button" data-play-view="spectrum">Spectrum</button>
+                    <button type="button" data-play-view="residual">Residual</button>
+                  </div>
+                </div>
+                <div>
+                  <small>DIAGNOSTICS</small>
+                  <div class="view-tabs wrap diagnostic-tabs">
+                    <button type="button" data-play-view="phase">Phase portrait</button>
+                    <button type="button" data-play-view="decomposition">Error decomposition</button>
+                    <button type="button" data-play-view="convergence">Convergence</button>
+                    <button type="button" data-play-view="energy">Energy</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="workspace-canvas-stack playground-stack">
+                <canvas class="active" id="playMotionCanvas" data-play-panel="motion"></canvas>
+                <canvas id="playOperatorCanvas" data-play-panel="operator"></canvas>
+                <canvas id="playFrequencyCanvas" data-play-panel="frequency"></canvas>
+                <canvas id="playSpectrumCanvas" data-play-panel="spectrum"></canvas>
+                <canvas id="playResidualCanvas" data-play-panel="residual"></canvas>
+                <canvas id="playPhaseCanvas" data-play-panel="phase"></canvas>
+                <canvas id="playDecompositionCanvas" data-play-panel="decomposition"></canvas>
+                <canvas id="playConvergenceCanvas" data-play-panel="convergence"></canvas>
+                <canvas id="playEnergyCanvas" data-play-panel="energy"></canvas>
+              </div>
             </div>
           </div>
 
           <div class="workspace-footer">
-            <span id="playgroundMessage">All controls are unlocked.</span>
+            <span id="playgroundMessage">Start is fixed at q=0; ideal always uses the same current q.</span>
             <span>live A · q · M · ħ model</span>
           </div>
         </div>

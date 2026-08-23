@@ -178,12 +178,9 @@ It introduces the operator formulation, zero-order deformation equation, q-serie
 frequency transport, higher-order deformation hierarchy, periodic solvability,
 finite-order hbar control, and the diagnostics used by the browser.
 
-## v18 — comparative Playground
-Playground now uses a stable Start / Current / Ideal comparison across primary views and adds:
-Phase portrait, Error decomposition, Convergence-at-current-point, and Energy consistency.
-A live scorecard separates physics shift from approximation error, residual, and frequency error.
-No new model controls were added.
-
-## v18.1 — Playground wiring fix
-The v18 diagnostic renderer now uses the existing per-view canvas architecture and the correct isolated playground state.
-All primary and diagnostic buttons have a matching canvas panel.
+## v19 — Playground rebuilt from stable v17
+The Playground was rebuilt rather than patched.
+Default/reset amplitude is now A=1.5 rad.
+Every view uses the same Start / Current / Ideal semantics, and the pendulum comparison uses one shared pivot.
+Primary views: Motion, Operator, Frequency, Spectrum, Residual.
+Diagnostics: Phase portrait, Error decomposition, Convergence, Energy.
