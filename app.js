@@ -1047,17 +1047,22 @@
 
   function updatePlaygroundResult(){const p=state.playground,ex=Model.exactIntermediate({amplitude:p.amplitude,q:p.q,periods:4,samples:1000}),ap=Model.evaluateControlled({amplitude:p.amplitude,q:p.q,M:p.M,hbar:p.hbar,duration:ex.duration,samples:1000});p.result={exact:ex,approx:ap};}
   function drawPlayground(){
-    const canvas=$('playCanvas'); if(!canvas)return;
+    const p=state.playground;
+    const canvasMap={
+      motion:'playMotionCanvas',operator:'playOperatorCanvas',frequency:'playFrequencyCanvas',
+      spectrum:'playSpectrumCanvas',residual:'playResidualCanvas',phase:'playPhaseCanvas',
+      decomposition:'playDecompositionCanvas',convergence:'playConvergenceCanvas',energy:'playEnergyCanvas'
+    };
+    const canvas=$(canvasMap[p.view]); if(!canvas)return;
     const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height);
-    const p=state.play;
     const A=p.amplitude, q=p.q, M=p.M, hb=p.hbar;
     const periods=3, samples=900;
 
     // Three semantically stable references.
-    const startSol=Model.evaluateTransport({amplitude:A,q:0,M:Math.max(M,8),duration:periods*2*Math.PI,samples});
-    const current=Model.evaluateTransport({amplitude:A,q,M,duration:periods*2*Math.PI,samples,hbar:hb});
-    const ideal=Model.referenceSolution({amplitude:A,q,duration:periods*2*Math.PI,samples});
-    const finalTarget=Model.referenceSolution({amplitude:A,q:1,duration:periods*2*Math.PI,samples});
+    const ideal=Model.exactIntermediate({amplitude:A,q,periods,samples});
+    const startSol=Model.evaluateTransport({amplitude:A,q:0,M:Math.max(M,8),duration:ideal.duration,samples});
+    const current=Model.evaluateControlled({amplitude:A,q,M,hbar:hb,duration:ideal.duration,samples});
+    const finalTarget=Model.exactIntermediate({amplitude:A,q:1,periods,samples});
 
     const curX=current.x||current.waveform||current.values||[];
     const stX=startSol.x||startSol.waveform||startSol.values||[];
@@ -1130,7 +1135,7 @@
       drawAxesLabel(ctx,'ω',l+w,height-14,'right');drawAxesLabel(ctx,'dB re H1',l+4,t+10);
     } else if(p.view==='residual'){
       title('Residual','how bad stopping at the simple model would be versus the current construction');
-      const curR=metrics.residualSeries||[];
+      const curR=Array.from(current.residual||[]);
       // Evaluate start waveform against current-q operator numerically.
       const rr=[]; const dt=(periods*2*Math.PI)/Math.max(1,stX.length-1);
       for(let i=1;i<stX.length-1;i++){const dd=(stX[i+1]-2*stX[i]+stX[i-1])/(dt*dt);rr.push(dd+(1-q)*stX[i]+q*Math.sin(stX[i]));}

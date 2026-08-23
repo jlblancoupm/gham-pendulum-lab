@@ -524,24 +524,55 @@
         </aside>
 
         <div class="lab-workspace">
-          <div class="view-tabs wrap" role="tablist" aria-label="Playground views">
-            <button class="active" type="button" data-play-view="motion">Motion</button>
-            <button type="button" data-play-view="error">Error</button>
-            <button type="button" data-play-view="operator">Operator</button>
-            <button type="button" data-play-view="frequency">Frequency</button>
-            <button type="button" data-play-view="spectrum">Spectrum</button>
-            <button type="button" data-play-view="residual">Residual</button>
+          <div class="playground-compare-head">
+            <div class="compare-legend" aria-label="Comparison legend">
+              <span class="compare-start"><i></i>Start · q=0</span>
+              <span class="compare-current"><i></i>Current · q,M,ħ</span>
+              <span class="compare-ideal"><i></i>Ideal · same q</span>
+            </div>
+            <p><b>Two questions:</b> how much has the physics changed, and how much approximation error remains?</p>
+          </div>
+          <div class="play-view-groups">
+            <div>
+              <small>PRIMARY</small>
+              <div class="view-tabs wrap">
+                <button class="active" type="button" data-play-view="motion">Motion</button>
+                <button type="button" data-play-view="operator">Operator</button>
+                <button type="button" data-play-view="frequency">Frequency</button>
+                <button type="button" data-play-view="spectrum">Spectrum</button>
+                <button type="button" data-play-view="residual">Residual</button>
+              </div>
+            </div>
+            <div>
+              <small>DIAGNOSTICS</small>
+              <div class="view-tabs wrap diagnostic-tabs">
+                <button type="button" data-play-view="phase">Phase portrait</button>
+                <button type="button" data-play-view="decomposition">Error decomposition</button>
+                <button type="button" data-play-view="convergence">Convergence</button>
+                <button type="button" data-play-view="energy">Energy</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="play-scoreboard" id="playScoreboard">
+            <div><small>PHYSICS SHIFT</small><strong id="playPhysicsShift">—</strong><span>start → ideal</span></div>
+            <div><small>APPROX. ERROR</small><strong id="playApproxError">—</strong><span>current → ideal</span></div>
+            <div><small>RESIDUAL</small><strong id="playResidualScore">—</strong><span>equation violation</span></div>
+            <div><small>FREQUENCY ERROR</small><strong id="playFreqError">—</strong><span>current → ideal</span></div>
           </div>
 
           <div class="playground-split">
             <canvas id="playPendulumCanvas" aria-label="Animated pendulum"></canvas>
             <div class="workspace-canvas-stack">
               <canvas class="active" id="playMotionCanvas" data-play-panel="motion"></canvas>
-              <canvas id="playErrorCanvas" data-play-panel="error"></canvas>
               <canvas id="playOperatorCanvas" data-play-panel="operator"></canvas>
               <canvas id="playFrequencyCanvas" data-play-panel="frequency"></canvas>
               <canvas id="playSpectrumCanvas" data-play-panel="spectrum"></canvas>
               <canvas id="playResidualCanvas" data-play-panel="residual"></canvas>
+              <canvas id="playPhaseCanvas" data-play-panel="phase"></canvas>
+              <canvas id="playDecompositionCanvas" data-play-panel="decomposition"></canvas>
+              <canvas id="playConvergenceCanvas" data-play-panel="convergence"></canvas>
+              <canvas id="playEnergyCanvas" data-play-panel="energy"></canvas>
             </div>
           </div>
 

@@ -183,3 +183,7 @@ Playground now uses a stable Start / Current / Ideal comparison across primary v
 Phase portrait, Error decomposition, Convergence-at-current-point, and Energy consistency.
 A live scorecard separates physics shift from approximation error, residual, and frequency error.
 No new model controls were added.
+
+## v18.1 — Playground wiring fix
+The v18 diagnostic renderer now uses the existing per-view canvas architecture and the correct isolated playground state.
+All primary and diagnostic buttons have a matching canvas panel.
