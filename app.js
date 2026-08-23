@@ -1046,18 +1046,141 @@
 
 
   function updatePlaygroundResult(){const p=state.playground,ex=Model.exactIntermediate({amplitude:p.amplitude,q:p.q,periods:4,samples:1000}),ap=Model.evaluateControlled({amplitude:p.amplitude,q:p.q,M:p.M,hbar:p.hbar,duration:ex.duration,samples:1000});p.result={exact:ex,approx:ap};}
-  function drawPlayground(){if(!state.playground.result)updatePlaygroundResult();drawHeroLikePlayPendulum();const p=state.playground,{exact:ex,approx:ap}=p.result,v=p.view,map={motion:'playMotionCanvas',error:'playErrorCanvas',operator:'playOperatorCanvas',frequency:'playFrequencyCanvas',spectrum:'playSpectrumCanvas',residual:'playResidualCanvas'},canvas=$(map[v]),{ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height,'rgba(115,217,135,.04)');const l=60,r=28,t=42,b=50,w=width-l-r,h=height-t-b;
-    if(v==='motion'||v==='error'||v==='residual'){drawGrid(ctx,l,t,w,h,8,5);const X=x=>l+x/ex.duration*w;if(v==='motion'){const A=p.amplitude,Y=x=>t+(A*1.1-x)/(2.2*A)*h;const plot=(arr,c,d=[])=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=2;ctx.setLineDash(d);ctx.beginPath();arr.forEach((x,i)=>i?ctx.lineTo(X(ex.t[i]),Y(x)):ctx.moveTo(X(ex.t[i]),Y(x)));ctx.stroke();ctx.restore();};plot(ex.x,COLORS.green,[4,4]);plot(ap.x,COLORS.blue);drawAxesLabel(ctx,'time',l+w,height-14,'right');drawAxesLabel(ctx,'x(t)',l+4,t+12);}
-      else if(v==='error'){let me=1e-8;for(let i=0;i<ex.x.length;i++)me=Math.max(me,Math.abs(ap.x[i]-ex.x[i]));const Y=e=>t+(me-e)/(2*me)*h;ctx.strokeStyle=COLORS.orange;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<ex.x.length;i++){const e=ap.x[i]-ex.x[i];i?ctx.lineTo(X(ex.t[i]),Y(e)):ctx.moveTo(X(ex.t[i]),Y(e));}ctx.stroke();drawAxesLabel(ctx,'time',l+w,height-14,'right');drawAxesLabel(ctx,'error',l+4,t+12);}
-      else{let mr=1e-8;for(const e of ap.residual)mr=Math.max(mr,Math.abs(e));const Y=e=>t+(mr-e)/(2*mr)*h;ctx.strokeStyle=COLORS.red;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<ap.residual.length;i++){const e=ap.residual[i];i?ctx.lineTo(X(ap.t[i]),Y(e)):ctx.moveTo(X(ap.t[i]),Y(e));}ctx.stroke();drawAxesLabel(ctx,'time',l+w,height-14,'right');drawAxesLabel(ctx,'residual',l+4,t+12);}}
-    else if(v==='operator'){drawGrid(ctx,l,t,w,h,7,5);const A=Math.max(1.1,p.amplitude*1.12),X=x=>l+(x+A)/(2*A)*w,Y=y=>t+(A-y)/(2*A)*h;const plot=(fn,c,d=[],lw=2)=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(d);ctx.beginPath();for(let i=0;i<=400;i++){const x=-A+2*A*i/400;i?ctx.lineTo(X(x),Y(fn(x))):ctx.moveTo(X(x),Y(fn(x)));}ctx.stroke();ctx.restore();};plot(x=>x,COLORS.muted2,[5,5],1.2);plot(x=>Math.sin(x),COLORS.green,[3,5],1.2);plot(x=>(1-p.q)*x+p.q*Math.sin(x),COLORS.gold,[],2.6);drawAxesLabel(ctx,'x',l+w,height-14,'right');drawAxesLabel(ctx,'g_q(x)',l+4,t+12);}
-    else if(v==='frequency'){drawGrid(ctx,l,t,w,h,8,5);let vals=[],refs=[],mn=1e9,mx=-1e9;for(let i=0;i<=20;i++){const q=i/20,o=Model.evaluateControlled({amplitude:p.amplitude,q,M:p.M,hbar:p.hbar,duration:1,samples:2}).omega;vals.push(o);mn=Math.min(mn,o);mx=Math.max(mx,o);}for(let i=0;i<=8;i++){const q=i/8,o=Model.exactIntermediate({amplitude:p.amplitude,q,periods:2,samples:400}).omega;refs.push([q,o]);mn=Math.min(mn,o);mx=Math.max(mx,o);}const X=q=>l+q*w,Y=o=>t+(mx-o)/Math.max(mx-mn,1e-9)*h;ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2.2;ctx.beginPath();vals.forEach((o,i)=>i?ctx.lineTo(X(i/20),Y(o)):ctx.moveTo(X(0),Y(o)));ctx.stroke();refs.forEach(([q,o])=>{ctx.fillStyle=COLORS.green;ctx.beginPath();ctx.arc(X(q),Y(o),3,0,2*Math.PI);ctx.fill();});drawAxesLabel(ctx,'q',l+w,height-14,'right');drawAxesLabel(ctx,'Ω',l+4,t+12);}
-    else{drawGrid(ctx,l,t,w,h,8,5);const shape=ap.shape,N=shape.length,lines=[];let ma=0;for(let n=1;n<=15;n+=2){let c=0,s=0;for(let i=0;i<N;i++){const th=2*Math.PI*i/N;c+=shape[i]*Math.cos(n*th);s+=shape[i]*Math.sin(n*th);}const a=2*Math.hypot(c,s)/N;lines.push([n*ap.omega,a]);ma=Math.max(ma,a);}const mo=lines.at(-1)[0]*1.05,X=o=>l+o/mo*w,Y=a=>t+(ma-a)/Math.max(ma,1e-9)*h;lines.forEach(([o,a])=>{ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(X(o),Y(0));ctx.lineTo(X(o),Y(a));ctx.stroke();ctx.fillStyle=COLORS.blue;ctx.beginPath();ctx.arc(X(o),Y(a),3,0,2*Math.PI);ctx.fill();});drawAxesLabel(ctx,'ω',l+w,height-14,'right');drawAxesLabel(ctx,'amplitude',l+4,t+12);}
-    const mt=Model.generalMetrics({amplitude:p.amplitude,q:p.q,M:p.M,hbar:p.hbar,periods:3,samples:700});
-    ctx.fillStyle=COLORS.text;ctx.font='700 11px ui-sans-serif,system-ui';
-    ctx.fillText(`A=${p.amplitude.toFixed(2)} · q=${p.q.toFixed(2)} · M=${p.M} · ħ=${fmtMinus(p.hbar,2)}`,l,t-16);
-    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-monospace,monospace';
-    ctx.fillText(`Ω=${ap.omega.toFixed(4)} · E=${mt.waveform.toExponential(2)} · R=${mt.residual.toExponential(2)}`,l+260,t-16);
+  function drawPlayground(){
+    const canvas=$('playCanvas'); if(!canvas)return;
+    const {ctx,width,height}=prepareCanvas(canvas); clearCanvas(ctx,width,height);
+    const p=state.play;
+    const A=p.amplitude, q=p.q, M=p.M, hb=p.hbar;
+    const periods=3, samples=900;
+
+    // Three semantically stable references.
+    const startSol=Model.evaluateTransport({amplitude:A,q:0,M:Math.max(M,8),duration:periods*2*Math.PI,samples});
+    const current=Model.evaluateTransport({amplitude:A,q,M,duration:periods*2*Math.PI,samples,hbar:hb});
+    const ideal=Model.referenceSolution({amplitude:A,q,duration:periods*2*Math.PI,samples});
+    const finalTarget=Model.referenceSolution({amplitude:A,q:1,duration:periods*2*Math.PI,samples});
+
+    const curX=current.x||current.waveform||current.values||[];
+    const stX=startSol.x||startSol.waveform||startSol.values||[];
+    const idX=ideal.x||ideal.waveform||ideal.values||[];
+    const tarX=finalTarget.x||finalTarget.waveform||finalTarget.values||[];
+    const N=Math.min(curX.length,stX.length,idX.length)||samples;
+    const rms=a=>Math.sqrt(a.reduce((s,v)=>s+v*v,0)/Math.max(1,a.length));
+    const diff=(a,b)=>Array.from({length:Math.min(a.length,b.length)},(_,i)=>a[i]-b[i]);
+    const physics=Math.max(1e-12,rms(diff(idX,stX)))/(Math.max(1e-12,rms(idX)));
+    const approx=Math.max(1e-12,rms(diff(curX,idX)))/(Math.max(1e-12,rms(idX)));
+    const metrics=Model.generalMetrics({amplitude:A,q,M,hbar:hb,periods,samples:700});
+    const idealOmega=ideal.omega||current.omega||1;
+    const freqErr=Math.abs((current.omega-idealOmega)/idealOmega);
+
+    const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};
+    set('playPhysicsShift',physics.toExponential(2));
+    set('playApproxError',approx.toExponential(2));
+    set('playResidualScore',(metrics.residual||0).toExponential(2));
+    set('playFreqError',freqErr.toExponential(2));
+
+    const l=58,r=26,t=58,b=48,w=width-l-r,h=height-t-b;
+    drawGrid(ctx,l,t,w,h,8,5);
+    const X=i=>l+i/(Math.max(1,N-1))*w;
+    const maxAbs=Math.max(A*1.08,...curX.slice(0,N).map(Math.abs),...idX.slice(0,N).map(Math.abs),1);
+    const Y=v=>t+h/2-v/(2*maxAbs)*h*.92;
+    const plot=(arr,color,lw=2,dash=[],alpha=1)=>{
+      ctx.save();ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.setLineDash(dash);ctx.globalAlpha=alpha;ctx.beginPath();
+      for(let i=0;i<Math.min(N,arr.length);i++){i?ctx.lineTo(X(i),Y(arr[i])):ctx.moveTo(X(i),Y(arr[i]));}
+      ctx.stroke();ctx.restore();
+    };
+
+    const title=(txt,sub='')=>{
+      ctx.fillStyle=COLORS.text;ctx.font='700 12px ui-sans-serif,system-ui';ctx.textAlign='left';ctx.fillText(txt,l,t-25);
+      if(sub){ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-sans-serif,system-ui';ctx.fillText(sub,l,t-9);}
+    };
+
+    if(p.view==='motion'){
+      title('Start → current → ideal','same amplitude, same clock, same current q for ideal reference');
+      plot(stX,COLORS.muted2,1.2,[6,5],.45);
+      plot(idX,COLORS.green,1.8,[3,4],.82);
+      plot(curX,COLORS.blue,2.8,[],1);
+      ctx.strokeStyle=COLORS.gridStrong;ctx.beginPath();ctx.moveTo(l,Y(0));ctx.lineTo(l+w,Y(0));ctx.stroke();
+      drawAxesLabel(ctx,'time',l+w,height-14,'right');drawAxesLabel(ctx,'x(t)',l+4,t+10);
+    } else if(p.view==='operator'){
+      title('The problem itself','start law, current-q law, and final nonlinear target');
+      const xmin=-Math.max(1.7,A*1.08),xmax=-xmin,ymin=xmin,ymax=xmax;
+      const XX=x=>l+(x-xmin)/(xmax-xmin)*w, YY=y=>t+(ymax-y)/(ymax-ymin)*h;
+      const fn=(f,c,lw,dash=[],alpha=1)=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(dash);ctx.globalAlpha=alpha;ctx.beginPath();for(let i=0;i<=400;i++){let x=xmin+(xmax-xmin)*i/400;i?ctx.lineTo(XX(x),YY(f(x))):ctx.moveTo(XX(x),YY(f(x)));}ctx.stroke();ctx.restore()};
+      fn(x=>x,COLORS.muted2,1.2,[6,5],.5);
+      fn(x=>(1-q)*x+q*Math.sin(x),COLORS.blue,2.8,[],1);
+      fn(x=>Math.sin(x),COLORS.green,1.7,[3,4],.8);
+      drawAxesLabel(ctx,'state x',l+w,height-14,'right');drawAxesLabel(ctx,'restoring law',l+4,t+10);
+    } else if(p.view==='frequency'){
+      title('Frequency transport','physics shift versus remaining finite-order error');
+      const vals=[{name:'START',v:1,c:COLORS.muted2},{name:'CURRENT',v:current.omega,c:COLORS.blue},{name:'IDEAL @ q',v:idealOmega,c:COLORS.green}];
+      const vmin=Math.min(...vals.map(d=>d.v))-.04,vmax=Math.max(...vals.map(d=>d.v))+.04;
+      vals.forEach((d,i)=>{const yy=t+70+i*72;ctx.fillStyle=d.c;ctx.font='700 11px ui-monospace,monospace';ctx.fillText(d.name,l,yy);ctx.fillRect(l+95,yy-9,Math.max(2,(d.v-vmin)/(vmax-vmin)*(w-190)),12);ctx.fillText(d.v.toFixed(5),l+w-75,yy);});
+      ctx.fillStyle=COLORS.gold;ctx.font='10px ui-sans-serif,system-ui';ctx.fillText(`physics shift: ${Math.abs(idealOmega-1).toExponential(2)}`,l,t+h-30);
+      ctx.fillStyle=COLORS.orange;ctx.fillText(`remaining error: ${freqErr.toExponential(2)}`,l+180,t+h-30);
+    } else if(p.view==='spectrum'){
+      title('Spectrum','nonlinear structure gained versus structure still missed');
+      const spec=(arr,omega)=>{
+        const NN=arr.length, out=[];
+        for(let n=1;n<=11;n+=2){let c=0,s=0;for(let i=0;i<NN;i++){const th=2*Math.PI*i/NN;c+=arr[i]*Math.cos(n*th);s+=arr[i]*Math.sin(n*th);}out.push({n,omega:n*omega,amp:2*Math.hypot(c,s)/NN});}
+        const f=Math.max(1e-12,out[0]?.amp||1);out.forEach(d=>d.db=20*Math.log10(Math.max(1e-8,d.amp/f)));return out;
+      };
+      const S=[['start',spec(stX,startSol.omega),COLORS.muted2,.35],['ideal',spec(idX,idealOmega),COLORS.green,.75],['current',spec(curX,current.omega),COLORS.blue,1]];
+      const maxO=11*Math.max(1,current.omega,idealOmega), YY=db=>t+(3-db)/(83)*h;
+      S.forEach(([nm,sp,c,a],si)=>sp.forEach(d=>{const xx=l+d.omega/maxO*w;ctx.save();ctx.globalAlpha=a;ctx.strokeStyle=c;ctx.lineWidth=si===2?2.5:1.4;ctx.beginPath();ctx.moveTo(xx,YY(-80));ctx.lineTo(xx,YY(Math.max(-80,d.db)));ctx.stroke();ctx.restore()}));
+      drawAxesLabel(ctx,'ω',l+w,height-14,'right');drawAxesLabel(ctx,'dB re H1',l+4,t+10);
+    } else if(p.view==='residual'){
+      title('Residual','how bad stopping at the simple model would be versus the current construction');
+      const curR=metrics.residualSeries||[];
+      // Evaluate start waveform against current-q operator numerically.
+      const rr=[]; const dt=(periods*2*Math.PI)/Math.max(1,stX.length-1);
+      for(let i=1;i<stX.length-1;i++){const dd=(stX[i+1]-2*stX[i]+stX[i-1])/(dt*dt);rr.push(dd+(1-q)*stX[i]+q*Math.sin(stX[i]));}
+      const maxR=Math.max(1e-5,...rr.map(Math.abs),...curR.map(Math.abs));
+      const Yr=v=>t+h/2-v/(2*maxR)*h*.9;
+      const pr=(arr,c,lw,dash=[],alpha=1)=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(dash);ctx.globalAlpha=alpha;ctx.beginPath();arr.forEach((v,i)=>{const xx=l+i/Math.max(1,arr.length-1)*w;i?ctx.lineTo(xx,Yr(v)):ctx.moveTo(xx,Yr(v))});ctx.stroke();ctx.restore()};
+      pr(rr,COLORS.muted2,1.2,[5,4],.55); if(curR.length)pr(curR,COLORS.blue,2.4,[],1);
+      ctx.strokeStyle=COLORS.green;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(l,Yr(0));ctx.lineTo(l+w,Yr(0));ctx.stroke();ctx.setLineDash([]);
+      drawAxesLabel(ctx,'time',l+w,height-14,'right');drawAxesLabel(ctx,'R(t)',l+4,t+10);
+    } else if(p.view==='phase'){
+      title('Phase portrait','does the finite approximation recover the geometry of the orbit?');
+      const vel=a=>a.map((v,i)=>i===0?(a[1]-a[0]):i===a.length-1?(a[i]-a[i-1]):(a[i+1]-a[i-1])/2);
+      const sv=vel(stX),cv=vel(curX),iv=vel(idX); const V=Math.max(1,...sv.map(Math.abs),...cv.map(Math.abs),...iv.map(Math.abs));
+      const XX=x=>l+(x+maxAbs)/(2*maxAbs)*w, YY=v=>t+(V-v)/(2*V)*h;
+      const pp=(a,v,c,lw,dash=[],alpha=1)=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(dash);ctx.globalAlpha=alpha;ctx.beginPath();for(let i=0;i<Math.min(a.length,v.length);i++){i?ctx.lineTo(XX(a[i]),YY(v[i])):ctx.moveTo(XX(a[i]),YY(v[i]));}ctx.stroke();ctx.restore()};
+      pp(stX,sv,COLORS.muted2,1.2,[6,5],.45);pp(idX,iv,COLORS.green,1.8,[3,4],.8);pp(curX,cv,COLORS.blue,2.7,[],1);
+      drawAxesLabel(ctx,'x',l+w,height-14,'right');drawAxesLabel(ctx,'ẋ',l+4,t+10);
+    } else if(p.view==='decomposition'){
+      title('Error decomposition','separate physical deformation from numerical approximation error');
+      const phys=diff(idX,stX),err=diff(curX,idX), mx=Math.max(1e-8,...phys.map(Math.abs),...err.map(Math.abs));
+      const Ye=v=>t+h/2-v/(2*mx)*h*.88;
+      const pr=(a,c,lw)=>{ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.beginPath();a.forEach((v,i)=>{const xx=l+i/Math.max(1,a.length-1)*w;i?ctx.lineTo(xx,Ye(v)):ctx.moveTo(xx,Ye(v))});ctx.stroke()};
+      pr(phys,COLORS.gold,1.7);pr(err,COLORS.orange,2.5);
+      ctx.fillStyle=COLORS.gold;ctx.fillText('ideal − start = physics shift',l,t+h-18);ctx.fillStyle=COLORS.orange;ctx.fillText('current − ideal = approximation error',l+220,t+h-18);
+    } else if(p.view==='convergence'){
+      title('Convergence at the current q and ħ','where the selected M sits in the finite-order sequence');
+      const maxM=Math.max(12,M+2), vals=[];
+      for(let m=1;m<=maxM;m++){const mm=Model.generalMetrics({amplitude:A,q,M:m,hbar:hb,periods:3,samples:450});vals.push(Math.max(1e-12,mm.waveform||mm.error||1e-12));}
+      const logs=vals.map(Math.log10), ymin=Math.min(-6,...logs)-.2,ymax=Math.max(-1,...logs)+.2;
+      const XX=m=>l+(m-1)/(maxM-1)*w,YY=z=>t+(ymax-z)/(ymax-ymin)*h;
+      ctx.strokeStyle=COLORS.blue;ctx.lineWidth=2.4;ctx.beginPath();logs.forEach((z,i)=>{i?ctx.lineTo(XX(i+1),YY(z)):ctx.moveTo(XX(1),YY(z))});ctx.stroke();
+      logs.forEach((z,i)=>{ctx.fillStyle=i+1===M?COLORS.gold:COLORS.blue;ctx.beginPath();ctx.arc(XX(i+1),YY(z),i+1===M?5:2.5,0,2*Math.PI);ctx.fill()});
+      drawAxesLabel(ctx,'order M',l+w,height-14,'right');drawAxesLabel(ctx,'log10 waveform error',l+4,t+10);
+    } else if(p.view==='energy'){
+      title('Energy consistency','a physical diagnostic complementary to waveform error and residual');
+      const energy=(a,omega,qq)=>{
+        const dt=(periods*2*Math.PI)/Math.max(1,a.length-1),out=[];
+        for(let i=1;i<a.length-1;i++){const v=(a[i+1]-a[i-1])/(2*dt);const V=(1-qq)*.5*a[i]*a[i]+qq*(1-Math.cos(a[i]));out.push(.5*v*v+V);}
+        return out;
+      };
+      const es=energy(stX,startSol.omega,0),ec=energy(curX,current.omega,q),ei=energy(idX,idealOmega,q);
+      const all=[...es,...ec,...ei],emin=Math.min(...all),emax=Math.max(...all),span=Math.max(1e-8,emax-emin);
+      const YE=v=>t+(emax-v)/span*h;
+      const pe=(a,c,lw,dash=[],alpha=1)=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.setLineDash(dash);ctx.globalAlpha=alpha;ctx.beginPath();a.forEach((v,i)=>{const xx=l+i/Math.max(1,a.length-1)*w;i?ctx.lineTo(xx,YE(v)):ctx.moveTo(xx,YE(v))});ctx.stroke();ctx.restore()};
+      pe(es,COLORS.muted2,1.1,[6,5],.4);pe(ei,COLORS.green,1.7,[3,4],.8);pe(ec,COLORS.blue,2.6,[],1);
+      drawAxesLabel(ctx,'time',l+w,height-14,'right');drawAxesLabel(ctx,'energy',l+4,t+10);
+    }
+
+    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-monospace,monospace';ctx.textAlign='left';
+    ctx.fillText(`A=${A.toFixed(2)} · q=${q.toFixed(2)} · M=${M} · ħ=${fmtMinus(hb,2)}`,l,height-12);
   }
   function drawHeroLikePlayPendulum(){const canvas=$('playPendulumCanvas');if(!canvas)return;const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height,'rgba(115,217,135,.06)');if(!state.playground.result)return;const p=state.playground,ap=p.result.approx,cx=width*.5,cy=height*.2,L=Math.min(width,height)*.35,ang=Model._interpPeriodic(ap.shape,ap.omega*state.time),x=cx+L*Math.sin(ang),y=cy+L*Math.cos(ang);ctx.strokeStyle=COLORS.green;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();ctx.fillStyle=COLORS.green;ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.fill();}
 

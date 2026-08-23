@@ -177,3 +177,9 @@ Intuition → Formulation → Derivation → Computation.
 It introduces the operator formulation, zero-order deformation equation, q-series,
 frequency transport, higher-order deformation hierarchy, periodic solvability,
 finite-order hbar control, and the diagnostics used by the browser.
+
+## v18 — comparative Playground
+Playground now uses a stable Start / Current / Ideal comparison across primary views and adds:
+Phase portrait, Error decomposition, Convergence-at-current-point, and Energy consistency.
+A live scorecard separates physics shift from approximation error, residual, and frequency error.
+No new model controls were added.

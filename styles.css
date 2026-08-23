@@ -497,3 +497,23 @@ footer a { color:var(--gold); text-align:right; }
  .endpoint-grid,.math-role-grid,.metric-defs{grid-template-columns:1fr}
  .math-drawer-body{padding-left:20px;padding-right:20px}
 }
+
+/* v18 — Playground as comparative diagnostic lab */
+.playground-compare-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin:2px 0 18px;padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.015)}
+.playground-compare-head p{margin:0;color:var(--muted);font-size:10px;max-width:430px;text-align:right}
+.compare-legend{display:flex;flex-wrap:wrap;gap:13px;font-size:10px;font-weight:700;color:var(--muted)}
+.compare-legend span{display:flex;align-items:center;gap:6px}.compare-legend i{width:18px;height:3px;border-radius:2px}
+.compare-start i{background:var(--muted2)}.compare-current i{background:var(--blue)}.compare-ideal i{background:var(--green)}
+.play-view-groups{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-bottom:14px}
+.play-view-groups>div{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.012)}
+.play-view-groups small{display:block;margin-bottom:8px;color:var(--muted2);font:800 8px ui-sans-serif,system-ui;letter-spacing:.12em}
+.diagnostic-tabs{margin:0!important}
+.play-scoreboard{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 0 10px}
+.play-scoreboard>div{padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(3,14,24,.45)}
+.play-scoreboard small{display:block;color:var(--muted2);font:800 7px ui-sans-serif,system-ui;letter-spacing:.08em}
+.play-scoreboard strong{display:block;margin:4px 0 1px;color:var(--text);font:800 14px ui-monospace,monospace}
+.play-scoreboard span{color:var(--muted);font-size:8px}
+@media(max-width:780px){
+ .playground-compare-head{align-items:flex-start;flex-direction:column}.playground-compare-head p{text-align:left}
+ .play-view-groups{grid-template-columns:1fr}.play-scoreboard{grid-template-columns:1fr 1fr}
+}
