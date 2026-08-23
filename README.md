@@ -250,3 +250,7 @@ After Start Simple, visitors can now choose:
 - Enter the method: expand the full guided sequence.
 - Skip to Playground: jump directly to Explore while keeping the method hidden.
 A small "Method hidden / Show explanation" bar lets visitors reopen the method later.
+
+## v23
+Visible +/− method accordion, no header amplitude chip, compact Playground,
+and corrected first local MathJax comparison: nonlinear green vs linear small-angle gold.

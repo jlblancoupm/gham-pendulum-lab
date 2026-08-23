@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=22">
+  <link rel="stylesheet" href="styles.css?v=23">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -23,7 +23,7 @@
   </script>
   
   
-  <script defer src="app.js?v=22"></script>
+  <script defer src="app.js?v=23"></script>
   
   <script>
     window.MathJax = {
@@ -54,7 +54,6 @@
       <a href="#playground">Explore</a>
     </nav>
     <button class="header-math-button" id="openMathDrawer" type="button">Mathematics</button>
-    <span class="header-chip">A = 1.5 rad</span>
   </header>
 
   <main id="main">
@@ -131,22 +130,22 @@
 
       <div class="insight-callout reveal">
         <strong>Start simple. But don’t stop there.</strong>
-        <span>What if the easy solution were not the answer, but the starting point?</span>
+        <span>What if the linear, small-angle solution were not the answer, but the starting point?</span>
       
       <details class="math-card reveal">
         <summary>Show the mathematics</summary>
         <div class="math-card-body">
-          <p>The familiar small-angle approximation is</p>
+          <p>The familiar linear, small-angle approximation is</p>
           \[
           \sin x \approx x,
           \]
-          which turns the nonlinear pendulum
+          connecting the nonlinear pendulum
           \[
-          \ddot x+\sin x=0
+          \color{#73d987}{\ddot x+\sin x=0}
           \]
-          into
+          to the linear, small-angle model
           \[
-          \ddot x+x=0.
+          \color{#f4ca5c}{\ddot x+x=0}.
           \]
           <p>At \(A=1.5\,\mathrm{rad}\), the release-point restoring-law mismatch is already about \(33.5\%\).</p>
         </div>
@@ -156,24 +155,27 @@
 
 
     
+    
     <section class="method-threshold" id="methodThreshold" aria-label="Choose how deeply to explore the method">
-      <div class="threshold-line"></div>
       <div class="threshold-card reveal">
         <p class="eyebrow">THE APPROXIMATION WAS THE EASY PART</p>
         <h2>Start simple. <em>But don’t stop there.</em></h2>
-        <p>The linear model is already known. Choose how far you want to go.</p>
-        <div class="threshold-actions">
-          <button class="button primary" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
-            <span>Enter the method</span>
+        <p>The linear model is already known. Open the method only if you want the guided construction.</p>
+        <div class="method-accordion-head">
+          <button class="method-accordion-toggle" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
+            <span class="method-toggle-copy">
+              <strong>Enter the method</strong>
+              <small>Build a Path → Add Detail → Go Farther → Converge Better</small>
+            </span>
+            <span class="method-toggle-icon" aria-hidden="true">+</span>
           </button>
-          <a class="button secondary" id="skipToPlayground" href="#playground">
-            <span>Skip to Playground</span>
-          </a>
         </div>
-        <small class="threshold-hint">You can expand or hide the method again at any time.</small>
+        <div class="threshold-actions secondary-path">
+          <a class="button secondary" id="skipToPlayground" href="#playground"><span>Skip to Playground</span></a>
+        </div>
       </div>
-      <div class="threshold-line"></div>
     </section>
+
 
 
     <!-- =========================================================
@@ -181,6 +183,10 @@
          ========================================================= -->
     
     <div class="method-journey" id="methodJourney" hidden>
+      <div class="method-journey-openbar">
+        <span>Method expanded</span>
+        <button type="button" id="hideMethodInline">Hide method</button>
+      </div>
 <section class="section lab-section" id="transport" data-section="transport" data-math-context="formulation">
       <div class="section-heading split reveal">
         <div>

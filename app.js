@@ -1581,18 +1581,19 @@
 
     journey.hidden=!expanded;
     toggle.setAttribute('aria-expanded',expanded?'true':'false');
-    toggle.querySelector('span').textContent=expanded?'Hide the method':'Enter the method';
 
+    const strong=toggle.querySelector('strong');
+    const small=toggle.querySelector('small');
+    const icon=toggle.querySelector('.method-toggle-icon');
+    if(strong) strong.textContent=expanded?'Hide the method':'Enter the method';
+    if(small) small.textContent=expanded?'The guided construction is open below':'Build a Path → Add Detail → Go Farther → Converge Better';
+    if(icon) icon.textContent=expanded?'−':'+';
+    toggle.classList.toggle('expanded',expanded);
     if(returnBar) returnBar.hidden=expanded;
 
     if(expanded){
-      // Newly revealed sections must become visible even if IntersectionObserver
-      // never saw them while hidden.
       journey.querySelectorAll('.reveal').forEach(el=>el.classList.add('visible'));
-      if(scrollInto){
-        const first=journey.querySelector('section');
-        first?.scrollIntoView({behavior:'smooth',block:'start'});
-      }
+      if(scrollInto) journey.scrollIntoView({behavior:'smooth',block:'start'});
     }
   }
 
@@ -1607,6 +1608,7 @@
       const bar=$('methodReturnBar'); if(bar) bar.hidden=false;
     });
     $('reopenMethod')?.addEventListener('click',()=>setMethodExpanded(true,true));
+    $('hideMethodInline')?.addEventListener('click',()=>setMethodExpanded(false,false));
     window.addEventListener('scroll',updateFloatingHeader,{passive:true});
     updateFloatingHeader();
     $('openMathDrawer')?.addEventListener('click',openMathDrawer);

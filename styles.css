@@ -682,3 +682,34 @@ html.init-failed .reveal {
   font-weight:750;
   cursor:pointer;
 }
+
+/* v23 — visible accordion */
+.method-threshold{display:block!important;width:min(calc(100% - 28px),980px)!important;padding:28px 0!important}
+.threshold-card{text-align:left!important;padding:30px!important}
+.threshold-card .eyebrow{justify-content:flex-start!important}
+.threshold-card h2{font-size:clamp(2rem,4vw,4rem)!important}
+.threshold-card>p{margin-left:0!important;max-width:720px!important}
+.method-accordion-head{margin-top:22px;border:1px solid rgba(244,202,92,.32);border-radius:14px;overflow:hidden}
+.method-accordion-toggle{width:100%;min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;border:0;background:rgba(244,202,92,.055);color:var(--text);cursor:pointer;text-align:left}
+.method-toggle-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.method-toggle-copy strong{font-size:14px;color:var(--gold)}
+.method-toggle-copy small{font-size:9px;color:var(--muted);line-height:1.4}
+.method-toggle-icon{flex:0 0 32px;width:32px;height:32px;display:grid;place-items:center;border:1px solid rgba(244,202,92,.35);border-radius:50%;color:var(--gold);font-size:19px}
+.method-accordion-toggle.expanded{background:rgba(73,185,255,.045)}
+.method-accordion-toggle.expanded .method-toggle-icon{color:var(--blue);border-color:rgba(73,185,255,.35)}
+.secondary-path{justify-content:flex-start!important;margin-top:12px!important}
+.method-journey[hidden]{display:none!important}
+.method-journey-openbar{position:sticky;top:88px;z-index:1200;width:min(calc(100% - 28px),1180px);margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(5,18,31,.88);backdrop-filter:blur(12px)}
+.method-journey-openbar span{font-size:9px;color:var(--muted)}
+.method-journey-openbar button{border:1px solid rgba(244,202,92,.28);background:transparent;color:var(--gold);border-radius:7px;padding:6px 9px;font-size:9px;cursor:pointer}
+
+/* compact Playground */
+.playground-stack{min-height:180px!important;height:180px!important}
+.playground-stack canvas{height:180px!important;max-height:180px!important}
+.play-pendulum-card canvas,#playPendulumCanvas{height:180px!important;max-height:180px!important}
+.playground-split{align-items:start!important}
+.playground-section .lab-workspace{gap:10px!important}
+@media(max-width:760px){
+  .method-journey-openbar{top:76px}
+  .playground-stack,.playground-stack canvas,.play-pendulum-card canvas,#playPendulumCanvas{height:160px!important;max-height:160px!important;min-height:160px!important}
+}
