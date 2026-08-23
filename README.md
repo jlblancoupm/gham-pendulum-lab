@@ -140,3 +140,12 @@ No scientific definitions changed.
 - map computed progressively in requestAnimationFrame batches;
 - changing M reuses the cached map;
 - mobile uses a coarser display grid for responsiveness.
+
+## v12 — q–M reliable frontier
+The previous raw q–M error heatmap has been replaced by a resolution-oriented view.
+
+- background: smooth margin to the selected accuracy criterion;
+- red curve: reliable frontier q_max(M);
+- selectable accuracy target epsilon = 1e-2, 1e-3, or 1e-4;
+- live readout: M_min(q=1) and q_max for the current M;
+- q remains the continuous transport coordinate; the grid is only sampled for validation/visualization.
