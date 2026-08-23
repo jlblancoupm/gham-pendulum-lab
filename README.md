@@ -131,3 +131,12 @@ The q–M tab now computes a sampled validation view of the same continuous GOTH
 - color: log10 waveform NRMSE against an independently integrated reference for the sampled q checkpoint;
 - current refinement point at q=1 is marked explicitly.
 The q samples are visualization/validation checkpoints, not separate GOTHAM runs.
+
+## v11 — q–M performance
+No scientific definitions changed.
+
+- exact intermediate references cached once per q;
+- q–M metrics cached once per (q,M);
+- map computed progressively in requestAnimationFrame batches;
+- changing M reuses the cached map;
+- mobile uses a coarser display grid for responsiveness.

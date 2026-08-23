@@ -36,6 +36,8 @@
   const Model = {
     ready: true,
     cache: new Map(),
+    qReferenceCache: new Map(),
+    qmMetricCache: new Map(),
 
     _key(amplitude, maxOrder) {
       return `${Number(amplitude).toFixed(6)}|${maxOrder}`;
@@ -225,6 +227,9 @@
 
 
     exactIntermediate({ amplitude = 1.5, q = 0, periods = 4, samples = 1800 }) {
+      const cacheKey = `${Number(amplitude).toFixed(5)}|${Number(q).toFixed(6)}|${periods}|${samples}`;
+      if (this.qReferenceCache.has(cacheKey)) return this.qReferenceCache.get(cacheKey);
+
       // Numerical reference for the intermediate transported system:
       // x'' + (1-q)x + q sin(x) = 0.
       // Used only as validation ground truth for sampled q values.
@@ -278,11 +283,16 @@
         t[i]=tt; x[i]=xx; v[i]=vv;
       }
 
-      return { t, x, v, period, omega:2*Math.PI/period, duration };
+      const result = { t, x, v, period, omega:2*Math.PI/period, duration };
+      this.qReferenceCache.set(cacheKey, result);
+      return result;
     },
 
     qmMetrics({ amplitude = 1.5, q = 0, M = 0, periods = 4 }) {
-      const exact = this.exactIntermediate({ amplitude, q, periods, samples: 1600 });
+      const metricKey = `${Number(amplitude).toFixed(5)}|${Number(q).toFixed(6)}|${M}|${periods}`;
+      if (this.qmMetricCache.has(metricKey)) return this.qmMetricCache.get(metricKey);
+
+      const exact = this.exactIntermediate({ amplitude, q, periods, samples: 1200 });
       const approx = this.evaluateTransport({ amplitude, q, M, duration: exact.duration, samples:1600 });
 
       // Build residual from transported shape directly.
@@ -315,12 +325,14 @@
         }
       }
 
-      return {
+      const metric = {
         waveform: Math.sqrt(se/Math.max(sx,1e-30)),
         residual: Math.sqrt(sr/exact.x.length),
         frequency: Math.abs(approx.omega-exact.omega)/exact.omega,
         horizon
       };
+      this.qmMetricCache.set(metricKey, metric);
+      return metric;
     },
 
     exactPeriod(amplitude = 1.5) {
@@ -758,6 +770,155 @@
     info(ctx,Math.max(l+6,width-178),t+8);
   }
 
+
+  const qmMapState = {
+    key: null,
+    rows: [],
+    qSteps: 20,
+    maxM: 12,
+    computing: false,
+    token: 0,
+    zmin: Infinity,
+    zmax: -Infinity
+  };
+
+  function ensureQmMapComputation(amplitude) {
+    const qSteps = window.innerWidth < 700 ? 14 : 20;
+    const maxM = window.innerWidth < 700 ? 10 : 12;
+    const key = `${amplitude.toFixed(4)}|${qSteps}|${maxM}`;
+
+    if (qmMapState.key === key &&
+        (qmMapState.computing || qmMapState.rows.filter(Boolean).length === qSteps + 1)) return;
+
+    qmMapState.key = key;
+    qmMapState.rows = new Array(qSteps + 1);
+    qmMapState.qSteps = qSteps;
+    qmMapState.maxM = maxM;
+    qmMapState.computing = true;
+    qmMapState.zmin = Infinity;
+    qmMapState.zmax = -Infinity;
+    const token = ++qmMapState.token;
+    let iq = 0;
+
+    const batch = () => {
+      if (token !== qmMapState.token) return;
+      const rowsPerFrame = window.innerWidth < 700 ? 1 : 2;
+      let count = 0;
+
+      while (iq <= qSteps && count < rowsPerFrame) {
+        const qq = iq / qSteps;
+        const row = new Array(maxM + 1);
+
+        for (let m = 0; m <= maxM; m += 1) {
+          const mt = Model.qmMetrics({ amplitude, q: qq, M: m, periods: 3 });
+          const z = Math.log10(Math.max(mt.waveform, 1e-12));
+          row[m] = z;
+          qmMapState.zmin = Math.min(qmMapState.zmin, z);
+          qmMapState.zmax = Math.max(qmMapState.zmax, z);
+        }
+
+        qmMapState.rows[iq] = row;
+        iq += 1;
+        count += 1;
+      }
+
+      drawQmMapCanvas();
+
+      if (iq <= qSteps) {
+        requestAnimationFrame(batch);
+      } else {
+        qmMapState.computing = false;
+        drawQmMapCanvas();
+      }
+    };
+
+    requestAnimationFrame(batch);
+  }
+
+  function drawQmMapCanvas() {
+    const canvas = $('qmMapCanvas');
+    if (!canvas || canvas.offsetParent === null) return;
+
+    const { ctx, width, height } = prepareCanvas(canvas);
+    clearCanvas(ctx, width, height, 'rgba(244,202,92,.055)');
+
+    const l=74,r=30,t=58,b=58,w=width-l-r,h=height-t-b;
+    const qSteps=qmMapState.qSteps,maxM=qmMapState.maxM,rows=qmMapState.rows;
+
+    const cmap = (u) => {
+      u=Math.max(0,Math.min(1,u));
+      if(u<.5){
+        const a=u/.5;
+        return `rgb(${Math.round(9+(42-9)*a)},${Math.round(32+(126-32)*a)},${Math.round(53+(181-53)*a)})`;
+      }
+      const a=(u-.5)/.5;
+      return `rgb(${Math.round(42+(244-42)*a)},${Math.round(126+(202-126)*a)},${Math.round(181+(92-181)*a)})`;
+    };
+
+    const cellW=w/(maxM+1), cellH=h/(qSteps+1);
+    const zmin=qmMapState.zmin,zmax=qmMapState.zmax;
+
+    for(let iq=0;iq<=qSteps;iq+=1){
+      const row=rows[iq];
+      if(!row) continue;
+      for(let m=0;m<=maxM;m+=1){
+        const norm=(row[m]-zmin)/Math.max(zmax-zmin,1e-12);
+        ctx.fillStyle=cmap(1-norm);
+        ctx.fillRect(l+m*cellW,t+(qSteps-iq)*cellH,cellW+1,cellH+1);
+      }
+    }
+
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,.13)';
+    for(let m=0;m<=maxM+1;m+=1){
+      const x=l+m*cellW;ctx.beginPath();ctx.moveTo(x,t);ctx.lineTo(x,t+h);ctx.stroke();
+    }
+    for(let iq=0;iq<=qSteps+1;iq+=1){
+      const y=t+iq*cellH;ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(l+w,y);ctx.stroke();
+    }
+    ctx.restore();
+
+    const curM=Math.min(state.M,maxM);
+    const px=l+(curM+.5)*cellW, py=t+.5*cellH;
+    ctx.strokeStyle='white';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,7,0,2*Math.PI);ctx.stroke();
+    ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(px,py,3,0,2*Math.PI);ctx.fill();
+
+    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-monospace,monospace';
+    ctx.textAlign='center';
+    for(let m=0;m<=maxM;m+=2) ctx.fillText(String(m),l+(m+.5)*cellW,t+h+20);
+    ctx.textAlign='right';
+    [0,.25,.5,.75,1].forEach(qq=>{
+      const y=t+(1-qq)*(h-cellH)+cellH/2;
+      ctx.fillText(qq.toFixed(2),l-10,y+3);
+    });
+
+    drawAxesLabel(ctx,'truncation order M',l+w,t+h+42,'right');
+    drawAxesLabel(ctx,'continuous transport q',l-8,t+10,'right');
+
+    ctx.textAlign='left';ctx.fillStyle=COLORS.text;ctx.font='700 12px ui-sans-serif,system-ui';
+    ctx.fillText('Waveform error over the sampled continuous q–M deformation',l,t-28);
+
+    const complete=rows.filter(Boolean).length;
+    const progress=Math.round(100*complete/(qSteps+1));
+    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-sans-serif,system-ui';
+    ctx.fillText(qmMapState.computing
+      ? `computing progressively… ${progress}% · UI remains interactive`
+      : `complete · ${qSteps+1} q checkpoints · cached`,
+      l,t-10);
+
+    if(Number.isFinite(zmin)&&Number.isFinite(zmax)){
+      const legendW=150,legendH=8,lx=width-r-legendW,ly=t-34;
+      for(let i=0;i<legendW;i+=1){
+        ctx.fillStyle=cmap(i/(legendW-1));
+        ctx.fillRect(lx+i,ly,1,legendH);
+      }
+      ctx.fillStyle=COLORS.muted2;ctx.font='9px ui-monospace,monospace';
+      ctx.textAlign='left';ctx.fillText('higher error',lx,ly-4);
+      ctx.textAlign='right';ctx.fillText('lower error',lx+legendW,ly-4);
+    }
+    ctx.textAlign='left';
+  }
+
   function drawRefinementView() {
     const M = state.M;
     const panel = state.refinementView;
@@ -850,106 +1011,8 @@
       ctx.fillStyle=COLORS.purple;ctx.fillText('frequency',l+126,t+30);
       ctx.fillStyle=COLORS.gold;ctx.fillText(`current M=${M}`,l+196,t+30);
     } else {
-      const canvas=$('qmMapCanvas');
-      const {ctx,width,height}=prepareCanvas(canvas);
-      clearCanvas(ctx,width,height,'rgba(244,202,92,.055)');
-
-      const l=74,r=30,t=48,b=58,w=width-l-r,h=height-t-b;
-      const qSteps=24;
-      const maxM=12;
-
-      // Compute sampled view of one continuous deformation.
-      const Z=[];
-      let zmin=Infinity,zmax=-Infinity;
-      for(let iq=0;iq<=qSteps;iq+=1){
-        const qq=iq/qSteps;
-        const row=[];
-        for(let m=0;m<=maxM;m+=1){
-          const mt=Model.qmMetrics({ amplitude:A,q:qq,M:m,periods:3 });
-          const z=Math.log10(Math.max(mt.waveform,1e-12));
-          row.push(z);
-          zmin=Math.min(zmin,z); zmax=Math.max(zmax,z);
-        }
-        Z.push(row);
-      }
-
-      const cmap=(u)=>{
-        // dark blue -> cyan -> gold
-        u=Math.max(0,Math.min(1,u));
-        if(u<.5){
-          const a=u/.5;
-          const r0=9,g0=32,b0=53, r1=42,g1=126,b1=181;
-          return `rgb(${Math.round(r0+(r1-r0)*a)},${Math.round(g0+(g1-g0)*a)},${Math.round(b0+(b1-b0)*a)})`;
-        }
-        const a=(u-.5)/.5;
-        const r0=42,g0=126,b0=181, r1=244,g1=202,b1=92;
-        return `rgb(${Math.round(r0+(r1-r0)*a)},${Math.round(g0+(g1-g0)*a)},${Math.round(b0+(b1-b0)*a)})`;
-      };
-
-      const cellW=w/(maxM+1);
-      const cellH=h/(qSteps+1);
-
-      for(let iq=0;iq<=qSteps;iq+=1){
-        for(let m=0;m<=maxM;m+=1){
-          // low error should be visually "better": invert scale
-          const norm=(Z[iq][m]-zmin)/Math.max(zmax-zmin,1e-12);
-          ctx.fillStyle=cmap(1-norm);
-          ctx.fillRect(l+m*cellW,t+(qSteps-iq)*cellH,cellW+1,cellH+1);
-        }
-      }
-
-      // grid
-      ctx.save();
-      ctx.strokeStyle='rgba(255,255,255,.13)';
-      ctx.lineWidth=1;
-      for(let m=0;m<=maxM+1;m+=1){
-        const x=l+m*cellW;ctx.beginPath();ctx.moveTo(x,t);ctx.lineTo(x,t+h);ctx.stroke();
-      }
-      for(let iq=0;iq<=qSteps+1;iq+=1){
-        const y=t+iq*cellH;ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(l+w,y);ctx.stroke();
-      }
-      ctx.restore();
-
-      // Current point: q=1 and selected M in refinement section.
-      const curM=Math.min(M,maxM);
-      const px=l+(curM+.5)*cellW;
-      const py=t+.5*cellH;
-      ctx.strokeStyle='white';ctx.lineWidth=2;
-      ctx.beginPath();ctx.arc(px,py,7,0,2*Math.PI);ctx.stroke();
-      ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(px,py,3,0,2*Math.PI);ctx.fill();
-
-      // labels
-      ctx.fillStyle=COLORS.muted2;
-      ctx.font='10px ui-monospace,monospace';
-      ctx.textAlign='center';
-      for(let m=0;m<=maxM;m+=2) ctx.fillText(String(m),l+(m+.5)*cellW,t+h+20);
-      ctx.textAlign='right';
-      [0,.25,.5,.75,1].forEach(qq=>{
-        const y=t+(1-qq)*(h-cellH)+cellH/2;
-        ctx.fillText(qq.toFixed(2),l-10,y+3);
-      });
-
-      drawAxesLabel(ctx,'truncation order M',l+w,t+h+42,'right');
-      drawAxesLabel(ctx,'continuous transport q',l-8,t+10,'right');
-
-      ctx.textAlign='left';
-      ctx.fillStyle=COLORS.text;
-      ctx.font='700 12px ui-sans-serif,system-ui';
-      ctx.fillText('Waveform error over the sampled continuous q–M deformation',l,t-20);
-      ctx.fillStyle=COLORS.muted2;
-      ctx.font='10px ui-sans-serif,system-ui';
-      ctx.fillText(`color = log10 NRMSE · q sampled at ${qSteps+1} points · not independent runs`,l,t-5);
-
-      // compact color legend
-      const legendW=150,legendH=8,lx=width-r-legendW,ly=t-28;
-      for(let i=0;i<legendW;i+=1){
-        ctx.fillStyle=cmap(i/(legendW-1));
-        ctx.fillRect(lx+i,ly,1,legendH);
-      }
-      ctx.fillStyle=COLORS.muted2;ctx.font='9px ui-monospace,monospace';
-      ctx.textAlign='left';ctx.fillText('higher error',lx,ly-4);
-      ctx.textAlign='right';ctx.fillText('lower error',lx+legendW,ly-4);
-      ctx.textAlign='left';
+      ensureQmMapComputation(A);
+      drawQmMapCanvas();
     }
     updateMetricPlaceholders();
   }
