@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=12">
+  <link rel="stylesheet" href="styles.css?v=13">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -22,7 +22,7 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script defer src="app.js?v=12"></script>
+  <script defer src="app.js?v=13"></script>
 </head>
 
 <body>
@@ -246,12 +246,6 @@
             </div>
           </div>
 
-          <div class="control-group accent-gold">
-            <div class="control-label"><label for="qmTolerance">Accuracy target \(\varepsilon\)</label><output id="qmToleranceOut">ε = 1e−4</output></div>
-            <input id="qmTolerance" type="range" min="2" max="4" step="1" value="4">
-            <div class="range-ends"><span>1e−2</span><span>1e−4</span></div>
-          </div>
-
           <div class="metric-stack">
             <div><span>Waveform error</span><strong id="metricWave">—</strong></div>
             <div><span>Operator residual</span><strong id="metricResidual">—</strong></div>
@@ -264,7 +258,7 @@
           <div class="view-tabs" role="tablist" aria-label="Refinement views">
             <button class="active" type="button" data-refinement-view="trajectory">Trajectory + error</button>
             <button type="button" data-refinement-view="convergence">Convergence</button>
-            <button type="button" data-refinement-view="qmmap">q–M frontier</button>
+            <button type="button" data-refinement-view="qmmap">q–M map</button>
           </div>
 
           <div class="workspace-canvas-stack tall">
@@ -274,7 +268,7 @@
           </div>
 
           <div class="workspace-footer">
-            <span>The system is fixed at q=1. The q–M frontier summarizes how much refinement is needed along the full transport.</span>
+            <span>The system is fixed. Only approximation quality changes with \(M\).</span>
             <span id="refinementContext">q = 1 · ħ = −1 baseline</span>
           </div>
         </div>

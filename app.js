@@ -17,17 +17,32 @@
   const GUIDED_AMPLITUDE = 1.5;
 
   const state = {
-    amplitude: GUIDED_AMPLITUDE,
-    q: 0.0,
-    M: 0,
-    hbar: -1.0,
     time: 0,
     playing: true,
-    transportView: 'operator',
-    refinementView: 'trajectory',
-    qmToleranceExp: 4,
-    controlView: 'heatmap',
-    playView: 'motion'
+
+    transport: {
+      q: 0.0,
+      view: 'operator'
+    },
+
+    refinement: {
+      M: 0,
+      view: 'trajectory'
+    },
+
+    control: {
+      M: 8,
+      hbar: -1.0,
+      view: 'heatmap'
+    },
+
+    playground: {
+      amplitude: 2.0,
+      q: 1.0,
+      M: 8,
+      hbar: -1.0,
+      view: 'motion'
+    }
   };
 
   const $ = (id) => document.getElementById(id);
@@ -633,7 +648,7 @@
   }
 
   function drawTransportView() {
-    const view=state.transportView, q=state.q, A=GUIDED_AMPLITUDE, MT=10;
+    const view=state.transport.view, q=state.transport.q, A=GUIDED_AMPLITUDE, MT=10;
     const current=Model.evaluateTransport({amplitude:A,q,M:MT,duration:28,samples:1100});
     const initial=Model.evaluateTransport({amplitude:A,q:0,M:MT,duration:28,samples:1100});
     const target=Model.evaluateTransport({amplitude:A,q:1,M:MT,duration:28,samples:1100});
@@ -778,15 +793,13 @@
     qSteps: 20,
     maxM: 12,
     computing: false,
-    token: 0
+    token: 0,
+    zmin: Infinity,
+    zmax: -Infinity
   };
 
-  function toleranceValue() {
-    return Math.pow(10, -state.qmToleranceExp);
-  }
-
   function ensureQmMapComputation(amplitude) {
-    const qSteps = window.innerWidth < 700 ? 18 : 28;
+    const qSteps = window.innerWidth < 700 ? 14 : 20;
     const maxM = window.innerWidth < 700 ? 10 : 12;
     const key = `${amplitude.toFixed(4)}|${qSteps}|${maxM}`;
 
@@ -798,12 +811,13 @@
     qmMapState.qSteps = qSteps;
     qmMapState.maxM = maxM;
     qmMapState.computing = true;
+    qmMapState.zmin = Infinity;
+    qmMapState.zmax = -Infinity;
     const token = ++qmMapState.token;
     let iq = 0;
 
     const batch = () => {
       if (token !== qmMapState.token) return;
-
       const rowsPerFrame = window.innerWidth < 700 ? 1 : 2;
       let count = 0;
 
@@ -812,7 +826,11 @@
         const row = new Array(maxM + 1);
 
         for (let m = 0; m <= maxM; m += 1) {
-          row[m] = Model.qmMetrics({ amplitude, q: qq, M: m, periods: 3 });
+          const mt = Model.qmMetrics({ amplitude, q: qq, M: m, periods: 3 });
+          const z = Math.log10(Math.max(mt.waveform, 1e-12));
+          row[m] = z;
+          qmMapState.zmin = Math.min(qmMapState.zmin, z);
+          qmMapState.zmax = Math.max(qmMapState.zmax, z);
         }
 
         qmMapState.rows[iq] = row;
@@ -833,43 +851,6 @@
     requestAnimationFrame(batch);
   }
 
-  function resolvedMetric(mt, eps) {
-    if (!mt) return false;
-    return (
-      mt.waveform < eps &&
-      mt.residual < eps &&
-      mt.frequency < eps / 10 &&
-      mt.horizon >= 3 - 1e-9
-    );
-  }
-
-  function computeQmaxByM(eps) {
-    const qSteps = qmMapState.qSteps;
-    const maxM = qmMapState.maxM;
-    const qmax = new Array(maxM + 1).fill(0);
-
-    for (let m = 0; m <= maxM; m += 1) {
-      let last = 0;
-      for (let iq = 0; iq <= qSteps; iq += 1) {
-        const row = qmMapState.rows[iq];
-        if (!row) continue;
-        if (resolvedMetric(row[m], eps)) last = iq / qSteps;
-      }
-      qmax[m] = last;
-    }
-    return qmax;
-  }
-
-  function computeMminAtQ(eps, q) {
-    const iq = Math.max(0, Math.min(qmMapState.qSteps, Math.round(q * qmMapState.qSteps)));
-    const row = qmMapState.rows[iq];
-    if (!row) return null;
-    for (let m = 0; m <= qmMapState.maxM; m += 1) {
-      if (resolvedMetric(row[m], eps)) return m;
-    }
-    return null;
-  }
-
   function drawQmMapCanvas() {
     const canvas = $('qmMapCanvas');
     if (!canvas || canvas.offsetParent === null) return;
@@ -877,159 +858,86 @@
     const { ctx, width, height } = prepareCanvas(canvas);
     clearCanvas(ctx, width, height, 'rgba(244,202,92,.055)');
 
-    const l = 78, r = 32, t = 68, b = 72;
-    const w = width - l - r, h = height - t - b;
-    const qSteps = qmMapState.qSteps;
-    const maxM = qmMapState.maxM;
-    const eps = toleranceValue();
+    const l=74,r=30,t=58,b=58,w=width-l-r,h=height-t-b;
+    const qSteps=qmMapState.qSteps,maxM=qmMapState.maxM,rows=qmMapState.rows;
 
-    const cellW = w / (maxM + 1);
-    const cellH = h / (qSteps + 1);
-
-    // Smooth background: margin to criterion. Resolved = positive margin.
-    let marginMin = Infinity, marginMax = -Infinity;
-    const margins = new Array(qSteps + 1);
-
-    for (let iq = 0; iq <= qSteps; iq += 1) {
-      const row = qmMapState.rows[iq];
-      if (!row) continue;
-      const mr = new Array(maxM + 1);
-
-      for (let m = 0; m <= maxM; m += 1) {
-        const mt = row[m];
-        const score = Math.max(
-          mt.waveform / eps,
-          mt.residual / eps,
-          mt.frequency / (eps / 10),
-          mt.horizon >= 3 - 1e-9 ? 1 : 10
-        );
-        const margin = -Math.log10(Math.max(score, 1e-12));
-        mr[m] = margin;
-        marginMin = Math.min(marginMin, margin);
-        marginMax = Math.max(marginMax, margin);
+    const cmap = (u) => {
+      u=Math.max(0,Math.min(1,u));
+      if(u<.5){
+        const a=u/.5;
+        return `rgb(${Math.round(9+(42-9)*a)},${Math.round(32+(126-32)*a)},${Math.round(53+(181-53)*a)})`;
       }
-      margins[iq] = mr;
-    }
-
-    const bgColor = (margin) => {
-      if (!Number.isFinite(margin)) return 'rgba(20,34,49,.35)';
-      // unresolved -> dark blue; around threshold -> muted cyan; well resolved -> warm gold
-      const span = Math.max(1e-9, marginMax - marginMin);
-      let u = (margin - marginMin) / span;
-      u = Math.max(0, Math.min(1, u));
-      if (u < .55) {
-        const a = u / .55;
-        return `rgb(${Math.round(10 + 30*a)},${Math.round(29 + 88*a)},${Math.round(48 + 118*a)})`;
-      }
-      const a = (u - .55) / .45;
-      return `rgb(${Math.round(40 + 204*a)},${Math.round(117 + 85*a)},${Math.round(166 - 74*a)})`;
+      const a=(u-.5)/.5;
+      return `rgb(${Math.round(42+(244-42)*a)},${Math.round(126+(202-126)*a)},${Math.round(181+(92-181)*a)})`;
     };
 
-    for (let iq = 0; iq <= qSteps; iq += 1) {
-      const row = margins[iq];
-      if (!row) continue;
-      for (let m = 0; m <= maxM; m += 1) {
-        ctx.fillStyle = bgColor(row[m]);
-        ctx.fillRect(l + m*cellW, t + (qSteps-iq)*cellH, cellW+1, cellH+1);
+    const cellW=w/(maxM+1), cellH=h/(qSteps+1);
+    const zmin=qmMapState.zmin,zmax=qmMapState.zmax;
+
+    for(let iq=0;iq<=qSteps;iq+=1){
+      const row=rows[iq];
+      if(!row) continue;
+      for(let m=0;m<=maxM;m+=1){
+        const norm=(row[m]-zmin)/Math.max(zmax-zmin,1e-12);
+        ctx.fillStyle=cmap(1-norm);
+        ctx.fillRect(l+m*cellW,t+(qSteps-iq)*cellH,cellW+1,cellH+1);
       }
     }
 
-    // Grid
     ctx.save();
-    ctx.strokeStyle='rgba(255,255,255,.10)';
-    ctx.lineWidth=1;
-    for (let m=0;m<=maxM+1;m+=1){
+    ctx.strokeStyle='rgba(255,255,255,.13)';
+    for(let m=0;m<=maxM+1;m+=1){
       const x=l+m*cellW;ctx.beginPath();ctx.moveTo(x,t);ctx.lineTo(x,t+h);ctx.stroke();
     }
-    for (let iq=0;iq<=qSteps+1;iq+=1){
+    for(let iq=0;iq<=qSteps+1;iq+=1){
       const y=t+iq*cellH;ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(l+w,y);ctx.stroke();
     }
     ctx.restore();
 
-    // Reliable frontier q_max(M).
-    const qmax = computeQmaxByM(eps);
-    ctx.save();
-    ctx.strokeStyle = COLORS.red || '#ff7474';
-    ctx.lineWidth = 3;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    qmax.forEach((qq,m)=>{
-      const x=l+(m+.5)*cellW;
-      const y=t+(1-qq)*(h-cellH)+cellH/2;
-      m?ctx.lineTo(x,y):ctx.moveTo(x,y);
-    });
-    ctx.stroke();
-    ctx.restore();
-
-    // Frontier markers
-    qmax.forEach((qq,m)=>{
-      const x=l+(m+.5)*cellW;
-      const y=t+(1-qq)*(h-cellH)+cellH/2;
-      ctx.fillStyle=COLORS.red || '#ff7474';
-      ctx.beginPath();ctx.arc(x,y,3,0,2*Math.PI);ctx.fill();
-    });
-
-    // Current q=1, current M point.
-    const curM=Math.min(state.M,maxM);
-    const px=l+(curM+.5)*cellW;
-    const py=t+.5*cellH;
-    ctx.strokeStyle='white';ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(px,py,7,0,2*Math.PI);ctx.stroke();
+    const curM=Math.min(state.refinement.M,maxM);
+    const px=l+(curM+.5)*cellW, py=t+.5*cellH;
+    ctx.strokeStyle='white';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,7,0,2*Math.PI);ctx.stroke();
     ctx.fillStyle=COLORS.gold;ctx.beginPath();ctx.arc(px,py,3,0,2*Math.PI);ctx.fill();
 
-    // Axes
-    ctx.fillStyle=COLORS.muted2;
-    ctx.font='10px ui-monospace,monospace';
+    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-monospace,monospace';
     ctx.textAlign='center';
     for(let m=0;m<=maxM;m+=2) ctx.fillText(String(m),l+(m+.5)*cellW,t+h+20);
-
     ctx.textAlign='right';
     [0,.25,.5,.75,1].forEach(qq=>{
       const y=t+(1-qq)*(h-cellH)+cellH/2;
       ctx.fillText(qq.toFixed(2),l-10,y+3);
     });
 
-    drawAxesLabel(ctx,'truncation order M',l+w,t+h+44,'right');
-    drawAxesLabel(ctx,'continuous transport q',l-10,t+10,'right');
+    drawAxesLabel(ctx,'truncation order M',l+w,t+h+42,'right');
+    drawAxesLabel(ctx,'continuous transport q',l-8,t+10,'right');
 
-    // Header and live interpretation
-    ctx.textAlign='left';
-    ctx.fillStyle=COLORS.text;
-    ctx.font='700 12px ui-sans-serif,system-ui';
-    ctx.fillText('Reliable transport frontier in the q–M plane',l,t-34);
+    ctx.textAlign='left';ctx.fillStyle=COLORS.text;ctx.font='700 12px ui-sans-serif,system-ui';
+    ctx.fillText('Waveform error over the sampled continuous q–M deformation',l,t-28);
 
-    const complete=qmMapState.rows.filter(Boolean).length;
+    const complete=rows.filter(Boolean).length;
     const progress=Math.round(100*complete/(qSteps+1));
-    ctx.fillStyle=COLORS.muted2;
-    ctx.font='10px ui-sans-serif,system-ui';
-    ctx.fillText(
-      qmMapState.computing
-        ? `computing progressively… ${progress}%`
-        : `accuracy target ε=${eps.toExponential(0)} · frontier q_max(M) shown in red`,
-      l,t-16
-    );
+    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-sans-serif,system-ui';
+    ctx.fillText(qmMapState.computing
+      ? `computing progressively… ${progress}% · UI remains interactive`
+      : `complete · ${qSteps+1} q checkpoints · cached`,
+      l,t-10);
 
-    const mAtTarget = computeMminAtQ(eps,1);
-    const qAtCurrent = qmax[curM] ?? 0;
-
-    const boxW = Math.min(270, width-l-r);
-    const boxX = width-r-boxW;
-    const boxY = t+h+30;
-    ctx.fillStyle='rgba(5,16,28,.78)';
-    ctx.strokeStyle='rgba(174,202,229,.16)';
-    ctx.beginPath();ctx.roundRect(boxX,boxY,boxW,28,7);ctx.fill();ctx.stroke();
-
-    ctx.font='10px ui-monospace,monospace';
-    ctx.fillStyle=COLORS.gold;
-    const budgetText = mAtTarget == null ? 'q=1 not yet resolved in shown M range' : `M_min(q=1) = ${mAtTarget}`;
-    ctx.fillText(`${budgetText}   ·   q_max(M=${curM}) = ${qAtCurrent.toFixed(2)}`,boxX+10,boxY+18);
+    if(Number.isFinite(zmin)&&Number.isFinite(zmax)){
+      const legendW=150,legendH=8,lx=width-r-legendW,ly=t-34;
+      for(let i=0;i<legendW;i+=1){
+        ctx.fillStyle=cmap(i/(legendW-1));
+        ctx.fillRect(lx+i,ly,1,legendH);
+      }
+      ctx.fillStyle=COLORS.muted2;ctx.font='9px ui-monospace,monospace';
+      ctx.textAlign='left';ctx.fillText('higher error',lx,ly-4);
+      ctx.textAlign='right';ctx.fillText('lower error',lx+legendW,ly-4);
+    }
+    ctx.textAlign='left';
   }
 
-
   function drawRefinementView() {
-    const M = state.M;
-    const panel = state.refinementView;
+    const M = state.refinement.M;
+    const panel = state.refinement.view;
     const A = GUIDED_AMPLITUDE;
     const periods = 4;
     const exact = Model.exactPendulum({ amplitude:A, periods, samples:3200 });
@@ -1126,7 +1034,7 @@
   }
 
   function updateMetricPlaceholders(){
-    const metrics = Model.metrics({ amplitude:GUIDED_AMPLITUDE, q:1, M:state.M, hbar:-1, periods:4 });
+    const metrics = Model.metrics({ amplitude:GUIDED_AMPLITUDE, q:1, M:state.refinement.M, hbar:-1, periods:4 });
     const set=(id,val)=>$(id).textContent=val;
     if(metrics){
       set('metricWave',metrics.waveformText);
@@ -1140,17 +1048,17 @@
 
   function drawControlView(){
     const M=Number($('controlM').value), hb=Number($('controlHbar').value);
-    state.M=M;state.hbar=hb;
+    state.control.M=M;state.control.hbar=hb;
     const info = `M = ${M} · ħ = ${fmtMinus(hb,2)}`;
-    if(state.controlView==='heatmap'){
+    if(state.control.view==='heatmap'){
       drawPlaceholder($('mhbarMapCanvas'),'Convergence landscape in (M, ħ)',[
         info,'q = 1 and A = 1.5 rad remain fixed','baseline ħ = −1 will be marked explicitly'
       ],COLORS.purple);
-    } else if(state.controlView==='curves'){
+    } else if(state.control.view==='curves'){
       drawPlaceholder($('hbarCurvesCanvas'),'Error versus ħ for every M',[
         info,'all integer M = 0…20 will be drawn','the active M curve will be emphasized'
       ],COLORS.purple);
-    } else if(state.controlView==='temporal'){
+    } else if(state.control.view==='temporal'){
       drawPlaceholder($('hbarTemporalCanvas'),'Temporal error under convergence control',[
         info,'compare baseline ħ = −1 against current / optimal ħ','physical time on the horizontal axis'
       ],COLORS.purple);
@@ -1171,9 +1079,9 @@
       motion:'Playground motion',error:'Playground temporal error',operator:'Playground operator',
       frequency:'Playground frequency',spectrum:'Playground spectrum',residual:'Playground residual'
     };
-    drawPlaceholder($(canvasMap[state.playView]),labels[state.playView],[
-      `A = ${state.amplitude.toFixed(2)} rad · q = ${state.q.toFixed(3)}`,
-      `M = ${state.M} · ħ = ${fmtMinus(state.hbar,2)}`,
+    drawPlaceholder($(canvasMap[state.playground.view]),labels[state.playground.view],[
+      `A = ${state.playground.amplitude.toFixed(2)} rad · q = ${state.playground.q.toFixed(3)}`,
+      `M = ${state.playground.M} · ħ = ${fmtMinus(state.playground.hbar,2)}`,
       'all scientific curves will come from the new engine'
     ],COLORS.green);
   }
@@ -1182,7 +1090,7 @@
     const canvas=$('playPendulumCanvas'); if(!canvas)return;
     const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height,'rgba(115,217,135,.06)');
     const cx=width*.5,cy=height*.2,L=Math.min(width,height)*.35;
-    const angle=state.amplitude*Math.cos((1-.2475*state.q)*state.time);
+    const angle=state.playground.amplitude*Math.cos((1-.2475*state.playground.q)*state.time);
     const x=cx+L*Math.sin(angle),y=cy+L*Math.cos(angle);
     ctx.strokeStyle=COLORS.green;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
     ctx.fillStyle=COLORS.green;ctx.beginPath();ctx.arc(x,y,9,0,Math.PI*2);ctx.fill();
@@ -1196,65 +1104,62 @@
   }
 
   function updateTransport(){
-    state.q=Number($('transportQ').value);
-    $('transportQOut').textContent=`q = ${state.q.toFixed(3)}`;
-    const done=state.q>=.9995;
-    $('transportStatus').textContent=done?'Nonlinear target reached':state.q<=.0005?'Linear starting system':'Intermediate transported system';
-    $('transportStatusSmall').textContent=done?'The operator is now sin(x).':`The system is ${Math.round(state.q*100)}% along the continuous transport coordinate.`;
+    state.transport.q=Number($('transportQ').value);
+    $('transportQOut').textContent=`q = ${state.transport.q.toFixed(3)}`;
+    const done=state.transport.q>=.9995;
+    $('transportStatus').textContent=done?'Nonlinear target reached':state.transport.q<=.0005?'Linear starting system':'Intermediate transported system';
+    $('transportStatusSmall').textContent=done?'The operator is now sin(x).':`The system is ${Math.round(state.transport.q*100)}% along the continuous transport coordinate.`;
     drawTransportView();
   }
 
   function updateRefinement(){
-    state.M=Number($('refinementM').value);
-    $('refinementMOut').textContent=`M = ${state.M}`;
+    state.refinement.M=Number($('refinementM').value);
+    $('refinementMOut').textContent=`M = ${state.refinement.M}`;
     drawRefinementView();
   }
 
   function updateControl(){
-    state.M=Number($('controlM').value); state.hbar=Number($('controlHbar').value);
-    $('controlMOut').textContent=`M = ${state.M}`;
-    $('controlHbarOut').textContent=`ħ = ${fmtMinus(state.hbar,2)}`;
+    state.control.M=Number($('controlM').value); state.control.hbar=Number($('controlHbar').value);
+    $('controlMOut').textContent=`M = ${state.control.M}`;
+    $('controlHbarOut').textContent=`ħ = ${fmtMinus(state.control.hbar,2)}`;
     drawControlView();
   }
 
   function updatePlayInputs(){
-    state.amplitude=Number($('playAmplitude').value);
-    state.q=Number($('playQ').value);
-    state.M=Number($('playM').value);
-    state.hbar=Number($('playHbar').value);
-    $('playAmplitudeOut').textContent=`${state.amplitude.toFixed(2)} rad`;
-    $('playQOut').textContent=`q = ${state.q.toFixed(3)}`;
-    $('playMOut').textContent=`M = ${state.M}`;
-    $('playHbarOut').textContent=`ħ = ${fmtMinus(state.hbar,2)}`;
+    state.playground.amplitude=Number($('playAmplitude').value);
+    state.playground.q=Number($('playQ').value);
+    state.playground.M=Number($('playM').value);
+    state.playground.hbar=Number($('playHbar').value);
+    $('playAmplitudeOut').textContent=`${state.playground.amplitude.toFixed(2)} rad`;
+    $('playQOut').textContent=`q = ${state.playground.q.toFixed(3)}`;
+    $('playMOut').textContent=`M = ${state.playground.M}`;
+    $('playHbarOut').textContent=`ħ = ${fmtMinus(state.playground.hbar,2)}`;
     drawPlayground();
   }
 
-  function wireTabs(group, stateKey, drawFn){
+  function wireTabs(group, setter, drawFn){
     $$(`[data-${group}-view]`).forEach(button=>button.addEventListener('click',()=>{
       const view=button.dataset[`${group}View`];
-      state[stateKey]=view; switchPanels(group,view); drawFn();
+      setter(view);
+      switchPanels(group,view);
+      drawFn();
     }));
   }
 
   function wireInteractions(){
     $('transportQ').addEventListener('input',updateTransport);
     $('transportReset').addEventListener('click',()=>{$('transportQ').value=0;updateTransport();});
-    wireTabs('transport','transportView',drawTransportView);
+    wireTabs('transport',v=>state.transport.view=v,drawTransportView);
 
     $('refinementM').addEventListener('input',updateRefinement);
-    $('qmTolerance').addEventListener('input',()=>{
-      state.qmToleranceExp=Number($('qmTolerance').value);
-      $('qmToleranceOut').textContent=`ε = 1e−${state.qmToleranceExp}`;
-      if(state.refinementView==='qmmap') drawQmMapCanvas();
-    });
     $('refinementMMinus').addEventListener('click',()=>{$('refinementM').value=clamp(Number($('refinementM').value)-1,0,20);updateRefinement();});
     $('refinementMPlus').addEventListener('click',()=>{$('refinementM').value=clamp(Number($('refinementM').value)+1,0,20);updateRefinement();});
     $('refinementReset').addEventListener('click',()=>{$('refinementM').value=0;updateRefinement();});
-    wireTabs('refinement','refinementView',drawRefinementView);
+    wireTabs('refinement',v=>state.refinement.view=v,drawRefinementView);
 
     ['controlM','controlHbar'].forEach(id=>$(id).addEventListener('input',updateControl));
     $('controlReset').addEventListener('click',()=>{$('controlM').value=8;$('controlHbar').value=-1;updateControl();});
-    wireTabs('control','controlView',drawControlView);
+    wireTabs('control',v=>state.control.view=v,drawControlView);
     $('scanHbar').addEventListener('click',()=>{
       $('scanReadout').textContent='Waiting for the validated browser GOTHAM engine';
       $('applyBestHbar').disabled=true;
@@ -1268,7 +1173,7 @@
       state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';
     });
     $('playTimeReset').addEventListener('click',()=>{state.time=0;drawPlayground();});
-    wireTabs('play','playView',drawPlayground);
+    wireTabs('play',v=>state.playground.view=v,drawPlayground);
   }
 
   function setupScrollEffects(){
@@ -1306,8 +1211,6 @@
 
   function init(){
     wireInteractions();setupScrollEffects();setupReveal();
-    $('qmTolerance').value=state.qmToleranceExp;
-    $('qmToleranceOut').textContent=`ε = 1e−${state.qmToleranceExp}`;
     updateTransport();updateRefinement();updateControl();updatePlayInputs();
     drawOperatorComparison();drawBaselineMotion();drawHeroPendulum(0);
     let resizeTimer;
