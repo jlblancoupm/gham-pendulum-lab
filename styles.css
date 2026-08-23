@@ -1348,3 +1348,11 @@ body{
 .playground-section .play-view-toolbar{
   margin-bottom:3px !important;
 }
+
+/* v25.4 — slightly wider Playground pendulum area */
+.playground-section .playground-split{
+  grid-template-columns:minmax(180px,.66fr) minmax(0,2.34fr) !important;
+}
+.playground-section .play-pendulum-card{
+  max-width:225px !important;
+}
