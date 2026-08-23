@@ -1586,6 +1586,14 @@
   }
 
 
+
+  function redrawMethodVisuals(){
+    try{ updateTransport(); }catch(e){}
+    try{ updateRefinement(); }catch(e){}
+    try{ updateGeometry(); }catch(e){}
+    try{ updateControl(); }catch(e){}
+  }
+
   function setMethodExpanded(expanded,scrollInto=false){
     const journey=$('methodJourney');
     const toggle=$('toggleMethod');
@@ -1603,14 +1611,26 @@
     if(icon) icon.textContent=expanded?'−':'+';
     toggle.classList.toggle('expanded',expanded);
     if(returnBar) returnBar.hidden=expanded;
+    const headerToggle=$('headerMethodToggle');
+    if(headerToggle){
+      headerToggle.setAttribute('aria-expanded',expanded?'true':'false');
+      headerToggle.textContent=expanded?'Hide method':'Show method';
+    }
 
     if(expanded){
+      requestAnimationFrame(()=>requestAnimationFrame(redrawMethodVisuals));
       journey.querySelectorAll('.reveal').forEach(el=>el.classList.add('visible'));
       if(scrollInto) journey.scrollIntoView({behavior:'smooth',block:'start'});
     }
   }
 
   function wireInteractions(){
+    $('headerMethodToggle')?.addEventListener('click',()=>{
+      const journey=$('methodJourney');
+      const expanded=journey && !journey.hidden;
+      setMethodExpanded(!expanded,false);
+    });
+
 
     $('toggleMethod')?.addEventListener('click',()=>{
       const journey=$('methodJourney');
@@ -1670,10 +1690,9 @@
       const header=$('siteHeader');
       if(!section)return;
       const headerH=header?.getBoundingClientRect().height||0;
-      const workspace=section.querySelector('.lab-shell') || section.querySelector('.lab-workspace') || section;
-      const rect=workspace.getBoundingClientRect();
-      const targetTop=headerH+8;
-      const y=window.scrollY+rect.top-targetTop;
+      const target=section.querySelector('.playground-split') || section.querySelector('.lab-workspace') || section;
+      const rect=target.getBoundingClientRect();
+      const y=window.scrollY+rect.top-headerH-6;
       window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
     });
     wireTabs('play',v=>{state.playground.view=v;if(!state.playground.result)updatePlaygroundResult();},drawPlayground);

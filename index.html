@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=23.7">
+  <link rel="stylesheet" href="styles.css?v=24">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -23,7 +23,7 @@
   </script>
   
   
-  <script defer src="app.js?v=23.7"></script>
+  <script defer src="app.js?v=24"></script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
@@ -45,6 +45,7 @@
       <a href="#summary">Put It Together</a>
       <a href="#playground">Explore</a>
     </nav>
+    <button class="header-method-button" id="headerMethodToggle" type="button" aria-expanded="false" aria-controls="methodJourney">Show method</button>
     <button class="header-math-button" id="openMathDrawer" type="button">Mathematics</button>
   </header>
 
@@ -573,7 +574,7 @@
           <div class="play-row">
             <button class="button tiny" id="playPause" type="button">Pause</button>
             <button class="button tiny secondary" id="playTimeReset" type="button">t = 0</button>
-            <button id="fitPlayground" type="button">Fit</button>
+            <button class="button tiny secondary" id="fitPlayground" type="button">Fit</button>
           </div>
         </aside>
 
@@ -604,28 +605,20 @@
             </div>
 
             <div>
-              <div class="play-view-groups">
-                <div>
-                  <small>PRIMARY</small>
-                  <div class="view-tabs wrap">
-                    <button class="active" type="button" data-play-view="motion">Motion</button>
-                    <button type="button" data-play-view="operator">Operator</button>
-                    <button type="button" data-play-view="frequency">Frequency</button>
-                    <button type="button" data-play-view="spectrum">Spectrum</button>
-                    <button type="button" data-play-view="residual">Residual</button>
-                  </div>
-                </div>
-                <div>
-                  <small>DIAGNOSTICS</small>
-                  <div class="view-tabs wrap diagnostic-tabs">
-                    <button type="button" data-play-view="phase">Phase portrait</button>
-                    <button type="button" data-play-view="decomposition">Error decomposition</button>
-                    <button type="button" data-play-view="convergence">Convergence</button>
-                    <button type="button" data-play-view="energy">Energy</button>
-                  </div>
-                </div>
+              <div class="play-view-toolbar">
+                <span class="play-view-label">Primary</span>
+                <button class="active" type="button" data-play-view="motion">Motion</button>
+                <button type="button" data-play-view="operator">Operator</button>
+                <button type="button" data-play-view="frequency">Frequency</button>
+                <button type="button" data-play-view="spectrum">Spectrum</button>
+                <button type="button" data-play-view="residual">Residual</button>
+                <span class="play-view-sep" aria-hidden="true"></span>
+                <span class="play-view-label">Diagnostics</span>
+                <button type="button" data-play-view="phase">Phase</button>
+                <button type="button" data-play-view="decomposition">Error</button>
+                <button type="button" data-play-view="convergence">Convergence</button>
+                <button type="button" data-play-view="energy">Energy</button>
               </div>
-
               <div class="workspace-canvas-stack playground-stack">
                 <canvas class="active" id="playMotionCanvas" data-play-panel="motion"></canvas>
                 <canvas id="playOperatorCanvas" data-play-panel="operator" hidden></canvas>

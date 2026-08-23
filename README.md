@@ -288,3 +288,11 @@ expression is green, matching the two pendulums exactly.
 - removed Playground minimum-height constraints;
 - moved Fit beside Pause and t=0;
 - Fit aligns the actual Playground workspace immediately below the floating header at 100% zoom.
+
+## v24
+- Show/Hide method added to header, immediately left of Mathematics;
+- header forced to a single line;
+- method charts redraw after hidden sections are expanded;
+- Primary and Diagnostics Playground controls share one compact row;
+- Playground visual height limited to 145 px;
+- Fit uses the same style as t=0.

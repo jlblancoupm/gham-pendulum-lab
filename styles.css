@@ -901,3 +901,102 @@ body{
 
 /* Fit lives with Pause and t=0 */
 #fitPlayground{min-width:auto!important}
+
+/* v24 — header in a single line */
+#siteHeader,
+#siteHeader .header-inner,
+#siteHeader .header-actions,
+#siteHeader nav{
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  white-space:nowrap !important;
+}
+#siteHeader{gap:8px !important}
+#siteHeader nav{
+  min-width:0 !important;
+  gap:8px !important;
+  overflow:hidden !important;
+}
+#siteHeader nav a{
+  flex:0 1 auto !important;
+  font-size:8.5px !important;
+}
+#siteHeader .header-actions{
+  margin-left:auto !important;
+  gap:5px !important;
+}
+.header-method-button,
+.header-math-button{
+  flex:0 0 auto !important;
+  min-height:32px !important;
+  padding:0 8px !important;
+  font-size:9px !important;
+}
+.header-method-button{
+  border:1px solid var(--line-strong);
+  background:rgba(255,255,255,.025);
+  color:var(--muted);
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* Playground view buttons: one row */
+.play-view-toolbar{
+  display:flex;
+  align-items:center;
+  flex-wrap:nowrap;
+  gap:4px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  margin-bottom:5px;
+  min-width:0;
+}
+.play-view-toolbar::-webkit-scrollbar{display:none}
+.play-view-toolbar button{
+  flex:0 0 auto;
+  min-height:27px;
+  padding:3px 6px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:rgba(255,255,255,.018);
+  color:var(--muted);
+  font-size:8px;
+  font-weight:700;
+  cursor:pointer;
+}
+.play-view-toolbar button.active{
+  color:var(--text);
+  border-color:rgba(73,185,255,.38);
+  background:rgba(73,185,255,.07);
+}
+.play-view-label{
+  flex:0 0 auto;
+  color:var(--muted2);
+  font:800 7px ui-sans-serif,system-ui;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.play-view-sep{
+  flex:0 0 1px;
+  height:18px;
+  background:var(--line);
+  margin:0 2px;
+}
+
+/* Compact enough to fit in one screen */
+.playground-section .playground-stack,
+.playground-section .playground-stack canvas,
+.playground-section #playPendulumCanvas{
+  height:145px !important;
+  max-height:145px !important;
+  min-height:0 !important;
+}
+.playground-section .play-scoreboard{margin-bottom:5px !important}
+.playground-section .playground-compare-head{
+  margin-bottom:5px !important;
+  padding:7px 9px !important;
+}
+.playground-section .lab-workspace{gap:5px !important}
+.playground-section .workspace-footer{margin-top:3px !important}
