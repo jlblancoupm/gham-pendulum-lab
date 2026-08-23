@@ -1199,7 +1199,7 @@
     const Xtime=tt=>l+tt/duration*w;
 
     if(v==='motion'){
-      title('Linear → current → target','fixed endpoints q=0 and q=1; current moves between them');
+      title('Linear → current → target','synchronized with the pendulum above · fixed endpoints q=0 and q=1');
       drawGrid(ctx,l,t,w,h,8,5);
       let ymax=Math.max(.2,p.amplitude*1.08);
       const Y=x=>t+(ymax-x)/(2*ymax)*h;
@@ -1213,7 +1213,7 @@
       plot(current.x,COLORS.blue,2.7,[],1);
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'x(t) [rad]',l+4,t+10);
     } else if(v==='operator'){
-      title('The problem moves with q','linear law → current problem → final target');
+      title('The problem moves with q','the markers follow the instantaneous pendulum state on each restoring law');
       drawGrid(ctx,l,t,w,h,7,5);
       const A=Math.max(1.65,p.amplitude*1.08),XX=x=>l+(x+A)/(2*A)*w,YY=y=>t+(A-y)/(2*A)*h;
       const plot=(fn,c,lw,dash=[],alpha=1)=>{
@@ -1224,6 +1224,27 @@
       plot(x=>x,COLORS.muted2,1.2,[6,5],.45);
       plot(x=>(1-p.q)*x+p.q*Math.sin(x),COLORS.blue,2.8,[],1);
       plot(x=>Math.sin(x),COLORS.green,1.7,[3,4],.8);
+
+      // Instantaneous state markers synchronized with the pendulum.
+      const displayTime=((state.time%duration)+duration)%duration;
+      const xLinear=playInterp(start.t,start.x,displayTime);
+      const xCurrent=playInterp(current.t,current.x,displayTime);
+      const xTarget=playInterp(target.t,target.x,displayTime);
+      const points=[
+        [xLinear,xLinear,COLORS.muted2,4],
+        [xCurrent,(1-p.q)*xCurrent+p.q*Math.sin(xCurrent),COLORS.blue,6],
+        [xTarget,Math.sin(xTarget),COLORS.green,5]
+      ];
+      points.forEach(([xv,yv,c,rad])=>{
+        ctx.save();
+        ctx.strokeStyle=c;ctx.globalAlpha=.25;ctx.lineWidth=1;ctx.setLineDash([3,4]);
+        ctx.beginPath();ctx.moveTo(XX(xv),YY(0));ctx.lineTo(XX(xv),YY(yv));ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle=c;ctx.beginPath();ctx.arc(XX(xv),YY(yv),rad,0,2*Math.PI);ctx.fill();
+      });
+      ctx.fillStyle=COLORS.text;ctx.font='9px ui-monospace,monospace';
+      ctx.fillText(`t=${displayTime.toFixed(2)} s`,l+8,t+h-12);
+
       drawAxesLabel(ctx,'state x',l+w,height-14,'right');drawAxesLabel(ctx,'restoring law',l+4,t+10);
     } else if(v==='frequency'){
       title('Frequency','physical change and remaining approximation error are different quantities');
@@ -1257,7 +1278,7 @@
       stems(ss,COLORS.muted2,1,.28,[5,4]);stems(si,COLORS.green,1.4,.68,[3,4]);stems(sc,COLORS.blue,2.3,1,[]);
       drawAxesLabel(ctx,'angular frequency ω',l+w,height-14,'right');drawAxesLabel(ctx,'dB re H1',l+4,t+10);
     } else if(v==='residual'){
-      title('Residual','current construction versus what would happen if we stopped at the simple model');
+      title('Residual','the cursor follows the same instantaneous state as the pendulum');
       drawGrid(ctx,l,t,w,h,8,5);
       const startR=new Float64Array(n);
       const dt=time[1]-time[0];
@@ -1274,6 +1295,24 @@
       };
       plot(startR,COLORS.muted2,1.1,[6,5],.45);plot(current.residual,COLORS.blue,2.4,[],1);
       ctx.strokeStyle=COLORS.green;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(l,Y(0));ctx.lineTo(l+w,Y(0));ctx.stroke();ctx.setLineDash([]);
+
+      // Same clock as the pendulum and Motion view.
+      const displayTime=((state.time%duration)+duration)%duration;
+      const px=Xtime(displayTime);
+      const sampleAt=(arr,tarr,tt)=>playInterp(tarr,arr,tt);
+      const rLinear=sampleAt(startR,time,displayTime);
+      const rCurrent=sampleAt(current.residual,current.t,displayTime);
+
+      ctx.save();ctx.strokeStyle='rgba(255,255,255,.46)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+      ctx.beginPath();ctx.moveTo(px,t);ctx.lineTo(px,t+h);ctx.stroke();ctx.restore();
+
+      ctx.fillStyle=COLORS.muted2;ctx.beginPath();ctx.arc(px,Y(rLinear),4,0,2*Math.PI);ctx.fill();
+      ctx.fillStyle=COLORS.blue;ctx.beginPath();ctx.arc(px,Y(rCurrent),5,0,2*Math.PI);ctx.fill();
+      ctx.fillStyle=COLORS.green;ctx.beginPath();ctx.arc(px,Y(0),4,0,2*Math.PI);ctx.fill();
+
+      ctx.fillStyle=COLORS.text;ctx.font='9px ui-monospace,monospace';
+      ctx.fillText(`t=${displayTime.toFixed(2)} · Rcurrent=${rCurrent.toExponential(2)}`,px+6,t+12);
+
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'R(t)',l+4,t+10);
     } else if(v==='phase'){
       title('Phase portrait','dynamic geometry: linear / current / ideal');
@@ -1482,7 +1521,7 @@
       $('playAmplitude').value=1.5;$('playQ').value=1;$('playM').value=8;$('playHbar').value=-1;updatePlayInputs();
     });
     $('playPause').addEventListener('click',()=>{
-      state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';
+      state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';drawHeroLikePlayPendulum();if(['motion','operator','residual'].includes(state.playground.view))drawPlayground();
     });
     $('playTimeReset').addEventListener('click',()=>{state.time=0;drawPlayground();});
     wireTabs('play',v=>state.playground.view=v,drawPlayground);
@@ -1516,8 +1555,21 @@
   function animationLoop(now){
     const dt=Math.min(.04,(now-last)/1000);last=now;
     state.time += state.playing ? dt : 0;
+
+    // Global hero animation.
     drawHeroPendulum(state.time);
-    if(state.playing) drawHeroLikePlayPendulum();
+
+    // Playground uses the very same clock. The pendulum and Motion view are
+    // redrawn from the already-computed trajectories; no model recomputation
+    // is performed here.
+    const playSection=$('playground');
+    const playVisible=playSection && playSection.getBoundingClientRect().bottom>0 &&
+      playSection.getBoundingClientRect().top<window.innerHeight;
+    if(playVisible){
+      drawHeroLikePlayPendulum();
+      if(['motion','operator','residual'].includes(state.playground.view)) drawPlayground();
+    }
+
     requestAnimationFrame(animationLoop);
   }
 

@@ -210,3 +210,14 @@ Built from v19.2 and verified before packaging:
 - MathJax is asynchronous and optional for initial page rendering;
 - fixed invalid scrollIntoView option;
 - added a fail-safe so a JS exception cannot leave all reveal content invisible.
+
+## v21.2 — synchronized Playground clock
+The Playground pendulum and Motion chart now share the same animation clock.
+While Motion is active and the Playground is visible, the chart redraws every animation frame
+using the cached Linear / Current / Target trajectories. No GOTHAM solution is recomputed per frame.
+
+## v21.3 — synchronized dynamic diagnostics
+Motion, Operator and Residual now share the same Playground animation clock.
+Operator shows instantaneous Linear / Current / Target positions on their restoring-law curves.
+Residual shows a synchronized time cursor plus Linear / Current / zero-reference residual markers.
+Cached trajectories are reused; no GOTHAM recomputation is performed per animation frame.
