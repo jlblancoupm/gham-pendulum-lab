@@ -1367,7 +1367,7 @@
 
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'R(t)',l+4,t+10);
     } else if(v==='phase'){
-      title('Phase portrait','dynamic geometry: linear / current / ideal');
+      title('Phase portrait','moving points show the instantaneous state of the three pendulums');
       drawGrid(ctx,l,t,w,h,6,6);
       const vs=playVelocity(start.x,start.t),vc=playVelocity(current.x,current.t),vi=target.v||playVelocity(target.x,target.t);
       const xmax=Math.max(.2,p.amplitude*1.08),vmax=Math.max(.2,...Array.from(vs,Math.abs),...Array.from(vc,Math.abs),...Array.from(vi,Math.abs));
@@ -1378,9 +1378,21 @@
         ctx.stroke();ctx.restore();
       };
       plot(start.x,vs,COLORS.muted2,1.1,[6,5],.4);plot(target.x,vi,COLORS.green,1.7,[3,4],.75);plot(current.x,vc,COLORS.blue,2.6,[],1);
+
+      // Instantaneous phase-space points, same clock as pendulum.
+      const displayTime=((state.time%duration)+duration)%duration;
+      const pLinear=[playInterp(start.t,start.x,displayTime),playInterp(start.t,vs,displayTime)];
+      const pCurrent=[playInterp(current.t,current.x,displayTime),playInterp(current.t,vc,displayTime)];
+      const pTarget=[playInterp(target.t,target.x,displayTime),playInterp(target.t,vi,displayTime)];
+      [[pLinear,COLORS.muted2,5],[pTarget,COLORS.green,6],[pCurrent,COLORS.blue,7]].forEach(([pt,c,rad])=>{
+        ctx.fillStyle=c;ctx.beginPath();ctx.arc(XX(pt[0]),YY(pt[1]),rad,0,2*Math.PI);ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.58)';ctx.lineWidth=1;ctx.stroke();
+      });
+      ctx.fillStyle=COLORS.text;ctx.font='9px ui-monospace,monospace';ctx.fillText(`t=${displayTime.toFixed(2)} s`,l+8,t+h-12);
+
       drawAxesLabel(ctx,'x',l+w,height-14,'right');drawAxesLabel(ctx,'ẋ',l+4,t+10);
     } else if(v==='decomposition'){
-      title('Error decomposition','gold = physical deformation; orange = numerical error still remaining');
+      title('Error decomposition','the cursor follows the same physical instant as the pendulum');
       drawGrid(ctx,l,t,w,h,8,5);
       const phys=playDiff(target.x,start.x),err=playDiff(current.x,target.x),local=playDiff(current.x,exactAtQ.x);
       const maxE=Math.max(1e-8,...Array.from(phys,Math.abs),...Array.from(err,Math.abs),...Array.from(local,Math.abs));
@@ -1391,6 +1403,19 @@
         ctx.stroke();
       };
       plot(phys,COLORS.gold,1.5);plot(err,COLORS.orange,2.3);plot(local,COLORS.purple,1.4);
+
+      // Synchronized cursor for error decomposition.
+      const displayTime=((state.time%duration)+duration)%duration;
+      const px=Xtime(displayTime);
+      const ePhys=playInterp(time,phys,displayTime);
+      const eTarget=playInterp(time,err,displayTime);
+      const eLocal=playInterp(time,local,displayTime);
+      ctx.save();ctx.strokeStyle='rgba(255,255,255,.48)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+      ctx.beginPath();ctx.moveTo(px,t);ctx.lineTo(px,t+h);ctx.stroke();ctx.restore();
+      [[ePhys,COLORS.gold,5],[eTarget,COLORS.orange,6],[eLocal,COLORS.purple,5]].forEach(([ev,c,rad])=>{
+        ctx.fillStyle=c;ctx.beginPath();ctx.arc(px,Y(ev),rad,0,2*Math.PI);ctx.fill();
+      });
+
       ctx.fillStyle=COLORS.gold;ctx.font='10px ui-sans-serif,system-ui';ctx.fillText('target − linear = full nonlinear departure',l,t+h-20);
       ctx.fillStyle=COLORS.orange;ctx.fillText('current − target = distance still to final target',l+205,t+h-20);
       ctx.fillStyle=COLORS.purple;ctx.fillText('current − exact(q) = local approximation error',l,t+h-6);
@@ -1410,7 +1435,7 @@
       [1e-2,1e-3,1e-4].forEach(vv=>{const z=Math.log10(vv);if(z<mn||z>mx)return;ctx.strokeStyle='rgba(255,255,255,.15)';ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(l,YY(z));ctx.lineTo(l+w,YY(z));ctx.stroke();ctx.setLineDash([]);});
       drawAxesLabel(ctx,'order M',l+w,height-14,'right');drawAxesLabel(ctx,'log10 waveform error',l+4,t+10);
     } else if(v==='energy'){
-      title('Energy consistency','a physical diagnostic complementary to waveform error and residual');
+      title('Energy consistency','instantaneous energy markers move with the same clock as the pendulum');
       drawGrid(ctx,l,t,w,h,8,5);
       const energy=(x,t,q)=>{
         const vel=playVelocity(x,t),out=new Float64Array(x.length);
@@ -1426,6 +1451,18 @@
         ctx.stroke();ctx.restore();
       };
       plot(es,COLORS.muted2,1.1,[6,5],.4);plot(ei,COLORS.green,1.7,[3,4],.75);plot(ec,COLORS.blue,2.5,[],1);
+
+      // Instantaneous energy markers synchronized with pendulum.
+      const displayTime=((state.time%duration)+duration)%duration;
+      const px=Xtime(displayTime);
+      const eS=playInterp(time,es,displayTime),eC=playInterp(time,ec,displayTime),eT=playInterp(time,ei,displayTime);
+      ctx.save();ctx.strokeStyle='rgba(255,255,255,.46)';ctx.setLineDash([3,4]);ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(px,t);ctx.lineTo(px,t+h);ctx.stroke();ctx.restore();
+      [[eS,COLORS.muted2,4],[eT,COLORS.green,5],[eC,COLORS.blue,6]].forEach(([ev,c,rad])=>{
+        ctx.fillStyle=c;ctx.beginPath();ctx.arc(px,Y(ev),rad,0,2*Math.PI);ctx.fill();
+      });
+      ctx.fillStyle=COLORS.text;ctx.font='9px ui-monospace,monospace';ctx.fillText(`t=${displayTime.toFixed(2)} s`,px+6,t+12);
+
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'energy',l+4,t+10);
     }
 
@@ -1573,7 +1610,7 @@
       $('playAmplitude').value=1.5;$('playQ').value=1;$('playM').value=8;$('playHbar').value=-1;updatePlayInputs();
     });
     $('playPause').addEventListener('click',()=>{
-      state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';drawHeroLikePlayPendulum();if(['motion','operator','residual'].includes(state.playground.view))drawPlayground();
+      state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';drawHeroLikePlayPendulum();if(['motion','operator','residual','phase','decomposition','energy'].includes(state.playground.view))drawPlayground();
     });
     $('playTimeReset').addEventListener('click',()=>{state.time=0;drawPlayground();});
     wireTabs('play',v=>state.playground.view=v,drawPlayground);
@@ -1619,7 +1656,7 @@
       playSection.getBoundingClientRect().top<window.innerHeight;
     if(playVisible){
       drawHeroLikePlayPendulum();
-      if(['motion','operator','residual'].includes(state.playground.view)) drawPlayground();
+      if(['motion','operator','residual','phase','decomposition','energy'].includes(state.playground.view)) drawPlayground();
     }
 
     requestAnimationFrame(animationLoop);

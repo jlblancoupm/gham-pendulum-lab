@@ -615,3 +615,8 @@ html.init-failed .reveal {
     width:calc(100% - 12px) !important;
   }
 }
+
+/* v21.5 exact semantic colors matching Playground pendulums */
+.key-linear, .eq-linear { color: #89A0B5 !important; }
+.key-current, .eq-current { color: #49B9FF !important; }
+.key-target, .eq-target { color: #73D989 !important; }

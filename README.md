@@ -229,3 +229,8 @@ Motion now has a visible playhead synchronized with the Playground pendulum:
 - elapsed-time shading;
 - live x(t) readout for all three trajectories.
 The complete waveforms remain static by design; the instantaneous readout moves along them.
+
+## v21.5 — Math color + diagnostic synchronization
+- first Mathematics tab now colors equations inside MathJax itself, using the same Linear / Current / Target palette as the pendulums;
+- Phase portrait, Error decomposition, and Energy are now time-synchronized with the Playground pendulum;
+- Convergence remains intentionally static because its independent variable is M, not physical time.
