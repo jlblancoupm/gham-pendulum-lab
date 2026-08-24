@@ -682,37 +682,3 @@ html.init-failed .reveal {
   font-weight:750;
   cursor:pointer;
 }
-
-/* v23 — full narrative */
-.hero-context{
-  max-width:720px;margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.65
-}
-.hero-context strong{color:var(--text);font-weight:750}
-.concept-answer{
-  width:min(100%,900px);margin:0 auto 18px;padding:12px 16px;
-  border-left:2px solid var(--gold);background:rgba(244,202,92,.035);
-  color:var(--muted);font-size:11px
-}
-.concept-answer strong{color:var(--text)}
-.concept-answer span{display:block;margin-top:5px;font-family:ui-monospace,monospace;color:var(--muted2)}
-.question-pair{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px
-}
-.question-pair>div{
-  padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.018)
-}
-.question-pair strong{display:block;color:var(--text);font-size:12px}
-.question-pair span{display:block;margin-top:4px;color:var(--muted);font-size:10px}
-.playground-primer{
-  width:min(calc(100% - 28px),1180px);margin:30px auto 6px;padding:22px;
-  border:1px solid var(--line);border-radius:18px;background:rgba(8,25,42,.62)
-}
-.primer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.primer-grid>div{padding:14px;border:1px solid var(--line);border-radius:12px}
-.primer-grid span{display:block;font:800 20px ui-monospace,monospace}
-.primer-grid strong{display:block;margin-top:4px;color:var(--text);font-size:11px}
-.primer-grid small{display:block;margin-top:3px;color:var(--muted);font-size:9px}
-.primer-note{text-align:center;margin:14px 0 0;color:var(--muted2);font-size:10px;font-weight:700}
-@media(max-width:760px){
-  .question-pair,.primer-grid{grid-template-columns:1fr}
-}

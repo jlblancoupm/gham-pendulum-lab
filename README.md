@@ -250,8 +250,3 @@ After Start Simple, visitors can now choose:
 - Enter the method: expand the full guided sequence.
 - Skip to Playground: jump directly to Explore while keeping the method hidden.
 A small "Method hidden / Show explanation" bar lets visitors reopen the method later.
-
-## v23 — complete visitor narrative
-The page now explicitly answers what GOTHAM is, why the pendulum is used, and what the method is for.
-The collapsible method supports both a guided path and a result-first path. An always-visible three-control
-primer gives q/M/hbar context before the Playground even when the guided method is skipped.
