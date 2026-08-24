@@ -67,19 +67,19 @@
       <div class="hero-glow glow-two" aria-hidden="true"></div>
 
       <div class="hero-copy reveal">
-        <div class="hero-kicker"><span></span> AN INTERACTIVE GOTHAM DEMONSTRATOR</div>
-        <h1>Start simple. <em>Then recover the problem you actually want to solve.</em></h1>
+        <div class="hero-kicker"><span></span> START SIMPLE</div>
+        <h1>Start from what you can solve. <em>But don’t stop there.</em></h1>
         <p class="hero-lead">
-          Many nonlinear models are difficult to solve directly even when a useful simplified model is already known. GOTHAM asks a different question: instead of discarding that simple solution, can we use it as the starting point of a controlled route to the nonlinear target? The pendulum makes that construction easy to see.
+          The approximation \(\sin x\approx x\) is elementary and familiar. Here it simply provides a solved starting point that GOTHAM can deform toward the nonlinear pendulum.
         </p>
         <div class="hero-actions">
           <a class="button primary" href="#idea"><span>See why simple is not enough</span><i aria-hidden="true">↘</i></a>
-          <a class="button secondary" href="#playground">See the result first</a>
+          <a class="button secondary" href="#playground">Open playground</a>
         </div>
         <div class="hero-principles" aria-label="Key concepts">
-          <div><span class="dot gold"></span><strong>q — problem</strong><small>Which problem are we solving?</small></div>
-          <div><span class="dot blue"></span><strong>M — resolution</strong><small>How much of the construction do we retain?</small></div>
-          <div><span class="dot purple"></span><strong>ħ — convergence</strong><small>How effectively does the finite construction converge?</small></div>
+          <div><span class="dot gold"></span><strong>q — transport</strong><small>Which system are we solving?</small></div>
+          <div><span class="dot blue"></span><strong>M — refinement</strong><small>How accurately are we resolving it?</small></div>
+          <div><span class="dot purple"></span><strong>ħ — control</strong><small>How efficiently does refinement converge?</small></div>
         </div>
       </div>
 
@@ -111,10 +111,10 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">01 · START SIMPLE</p>
-          <h2>Begin with a model you <em>already know how to solve.</em></h2>
+          <h2>The approximation is old. <em>The path back is the point.</em></h2>
         </div>
         <p>
-          For small angles, \(\sin x\approx x\) gives the textbook harmonic oscillator and a closed-form solution. There is nothing new about this approximation. Its value here is that it gives us a clean, solved reference problem. At \(A=1.5\,\mathrm{rad}\approx86^\circ\), however, stopping there is no longer accurate enough.
+          For small angles, \(\sin x\approx x\) gives the textbook oscillator. At \(A=1.5\,\mathrm{rad}\approx86^\circ\), it is no longer accurate enough, but it remains a clean, solvable reference.
         </p>
       </div>
 
@@ -130,8 +130,8 @@
       </div>
 
       <div class="insight-callout reveal">
-        <strong>The linear model is useful — but stopping there is not.</strong>
-        <span>What if its known solution were the starting point of a controlled construction rather than the final approximation?</span>
+        <strong>Start simple. But don’t stop there.</strong>
+        <span>What if the easy solution were the starting point, not the answer?</span>
       
       <details class="math-card reveal">
         <summary>Show the mathematics</summary>
@@ -161,16 +161,16 @@
       <div class="threshold-card reveal">
         <p class="eyebrow">THE APPROXIMATION WAS THE EASY PART</p>
         <h2>Start simple. <em>But don’t stop there.</em></h2>
-        <p>GOTHAM turns the simple solution into a starting point rather than a final approximation. It constructs a controlled deformation from the problem we can solve to the problem we actually want to solve. Choose how deeply you want to inspect that construction.</p>
+        <p>The linear model is known. GOTHAM uses it to reach the target.</p>
         <div class="threshold-actions">
           <button class="button primary" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
             <span>Enter the method</span>
           </button>
           <a class="button secondary" id="skipToPlayground" href="#playground">
-            <span>See the result first</span>
+            <span>Skip to Playground</span>
           </a>
         </div>
-        <small class="threshold-hint">Enter the guided construction, or jump to the result and reopen the method whenever you want.</small>
+        <small class="threshold-hint">You can expand or hide the method again at any time.</small>
       </div>
       <div class="threshold-line"></div>
     </section>
@@ -185,10 +185,10 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">02 · BUILD A PATH</p>
-          <h2>Do not jump to the nonlinear problem. <em>Build a path to it.</em></h2>
+          <h2>Move continuously from the easy problem to <em>the real one</em>.</h2>
         </div>
         <p>
-          GOTHAM introduces a continuous embedding coordinate \(q\). At \(q=0\) we recover the solved linear problem; at \(q=1\) we reach the nonlinear target. Intermediate values define intermediate problems, so the solution can evolve with the physics instead of being guessed directly at the endpoint.
+          The coordinate \(q\) tells us which problem we solve: \(q=0\) is the linear reference and \(q=1\) the nonlinear target.
         </p>
       </div>
 
@@ -257,9 +257,9 @@
     <section class="section target-section" id="target" data-section="target">
       <div class="target-card reveal">
         <p class="eyebrow">03 · ADD DETAIL</p>
-        <h2>The target is fixed. <em>Now decide how accurately to represent it.</em></h2>
+        <h2>The problem is fixed. <em>Now add detail.</em></h2>
         <p>
-          At \(q=1\), the nonlinear target is fixed. The next question is no longer which problem we solve, but how accurately a finite construction can represent its solution.
+          At \(q=1\), the nonlinear problem is fixed. The next question is how accurately a finite construction represents its solution.
         </p>
         <div class="target-lock"><span>q</span><strong>1.000</strong><small>locked in refinement views</small></div>
       </div>
@@ -275,7 +275,7 @@
           <h2>Keep the problem fixed. <em>Increase the resolution.</em></h2>
         </div>
         <p>
-          The integer order \(M\) tells us how many terms of the solution construction we retain. Increasing \(M\) does not change the target problem — \(q\) already determines that. It increases the resolution of the finite approximation.
+          The order \(M\) tells us how many terms we retain. It does not change the target problem; it changes finite-order resolution.
         </p>
       </div>
 
@@ -345,10 +345,10 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">04 · GO FARTHER</p>
-          <h2>A finite order cannot necessarily <em>follow the whole path.</em></h2>
+          <h2>More detail lets us <em>go farther</em>.</h2>
         </div>
         <p>
-          Near \(q=0\), the problem remains close to the linear reference and low order may be enough. Toward \(q=1\), the deformation becomes harder to resolve. The key question is therefore how far a given order can travel reliably — or how much order a given point on the path requires.
+          Once \(q\) and \(M\) are separated, the key question is how far along the path each finite order can reliably reach.
         </p>
       </div>
       <div class="lab-shell reveal delay-1">
@@ -415,10 +415,10 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">05 · CONVERGE BETTER</p>
-          <h2>Can the same finite order <em>work better?</em></h2>
+          <h2>Same problem. Same \(M\). <em>Can we converge better?</em></h2>
         </div>
         <p>
-          Increasing \(M\) adds more terms. \(\hbar\) does something different: it does not change the physical problem and it does not add new terms. It changes how the available finite-order information is combined, so the same order can converge better or worse.
+          \(\hbar\) is not another physical parameter. It changes how the retained terms are combined, so the same finite order can converge better or worse.
         </p>
       </div>
 
@@ -496,13 +496,13 @@
       </div>
 
       <div class="takeaway-grid three reveal delay-1">
-        <article class="take-q"><span>q</span><strong>Move through problems</strong><small>Which problem are we solving?</small></article>
-        <article class="take-m"><span>M</span><strong>Resolve the path</strong><small>How much of the finite construction do we retain?</small></article>
-        <article class="take-h"><span>ħ</span><strong>Control convergence</strong><small>Can the retained order be used more effectively?</small></article>
+        <article class="take-q"><span>q</span><strong>Build the path</strong><small>Which problem are we solving?</small></article>
+        <article class="take-m"><span>M</span><strong>Add detail</strong><small>How much resolution do we keep?</small></article>
+        <article class="take-h"><span>ħ</span><strong>Converge better</strong><small>Can the same finite order be used more effectively?</small></article>
       </div>
 
       <div class="summary-line reveal">
-        Use a problem you can solve to construct — rather than guess — your way toward one that is harder to solve.
+        Start simple. Use \(q\) for the path, \(M\) for resolution, and \(\hbar\) for convergence control.
       </div>
     </section>
 
@@ -510,8 +510,8 @@
     <section class="section final-cta reveal" id="final-cta">
       <div class="final-cta-card">
         <p class="eyebrow">START SIMPLE. GO ALL THE WAY.</p>
-        <h2>You have seen how GOTHAM changes the problem, builds a finite solution, and controls its convergence.</h2>
-        <p>The guided story is over. Now manipulate all three mechanisms together.</p>
+        <h2>You have seen the path, the resolution, and the convergence control.</h2>
+        <p>Now use the Playground to combine all three controls.</p>
         <a class="button primary" href="#playground"><span>Explore GOTHAM</span><i aria-hidden="true">→</i></a>
       </div>
     </section>
@@ -524,8 +524,8 @@
 
     <section class="method-return-bar" id="methodReturnBar" hidden aria-label="Method explanation is hidden">
       <div>
-        <span>Guided method hidden</span>
-        <button type="button" id="reopenMethod">Show guided method</button>
+        <span>Method hidden</span>
+        <button type="button" id="reopenMethod">Show explanation</button>
       </div>
     </section>
 
@@ -533,10 +533,10 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">07 · EXPLORE</p>
-          <h2>The guided story is over. <em>Now test the construction yourself.</em></h2>
+          <h2>Now <em>take control</em>.</h2>
         </div>
         <p>
-          The three reference states remain visible throughout: Linear is the solved \(q=0\) reference, Current is the GOTHAM construction for the selected \(q,M,\hbar\), and Target is the nonlinear \(q=1\) reference. Move \(q\) to change the problem, \(M\) to change finite-order resolution, and \(\hbar\) to change convergence.
+          This section keeps \(A=1.5\,\mathrm{rad}\) as its starting point. Linear, Current, and Target stay visible for comparison.
         </p>
       </div>
 
