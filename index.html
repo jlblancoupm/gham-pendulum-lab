@@ -50,6 +50,23 @@
   </header>
 
   <main id="main">
+
+    <section class="section summary-section" id="intro-narrative" aria-label="What this demonstrator is about">
+      <div class="section-heading reveal">
+        <p class="eyebrow">AN INTERACTIVE GOTHAM DEMONSTRATOR</p>
+        <h2>Start from what you can solve. <em>Then recover the problem you actually want to solve.</em></h2>
+      </div>
+
+      <div class="summary-line reveal">
+        Many nonlinear problems are difficult to solve directly even when a useful simpler model is already known. GOTHAM asks a different question: instead of discarding that simple solution, can we use it to construct a controlled route toward the nonlinear target?
+      </div>
+
+      <div class="insight-callout reveal">
+        <strong>Why a pendulum?</strong>
+        <span>Because its linear approximation is familiar and its nonlinear departure is easy to see. The pendulum is the example; the homotopy-driven construction is the point.</span>
+      </div>
+    </section>
+
     <!-- =========================================================
          01 — HERO
          ========================================================= -->
@@ -62,7 +79,7 @@
         <div class="hero-kicker"><span></span> START SIMPLE</div>
         <h1>Start simple. <em>But don’t stop there.</em></h1>
         <p class="hero-lead">
-          The approximation \(\sin x\approx x\) is elementary and familiar. Here it provides a solved reference that GOTHAM can use as the starting point of a controlled path toward the nonlinear problem.
+          The approximation \(\sin x\approx x\) is elementary — the familiar school-level route to the harmonic pendulum. The point here is not to rediscover it, but to use that known, solvable model as the starting point of a controlled path back to the nonlinear problem.
         </p>
         <div class="hero-actions">
           <a class="button primary" href="#idea"><span>See why simple is not enough</span><i aria-hidden="true">↘</i></a>
@@ -113,7 +130,7 @@
           <h2>The approximation is known. <em>The path back matters.</em></h2>
         </div>
         <p>
-          For small angles, \(\sin x\approx x\) gives the textbook oscillator. At \(A=1.5\,\mathrm{rad}\approx86^\circ\), it is no longer accurate enough—but remains a clean solved reference.
+          For small angles, \(\sin x\approx x\) gives the textbook oscillator. At \(A=1.5\,\mathrm{rad}\approx86^\circ\), it is no longer accurate enough—but it remains a clean starting point.
         </p>
       </div>
 
@@ -130,7 +147,7 @@
 
       <div class="insight-callout reveal">
         <strong>Start simple. But don’t stop there.</strong>
-        <span>What if the linear solution were not the answer, but the starting point?</span>
+        <span>What if the linear, small-angle solution were not the answer, but the starting point?</span>
       
       <details class="math-card reveal">
         <summary>Show the mathematics</summary>
@@ -164,7 +181,7 @@
       <div class="threshold-card reveal">
         <p class="eyebrow">THE APPROXIMATION WAS THE EASY PART</p>
         <h2>Start simple. <em>But don’t stop there.</em></h2>
-        <p>The linear model is known. GOTHAM uses it as the route to the target.</p>
+        <p>The linear model is already known. Open the method only if you want the guided construction.</p>
         <div class="method-accordion-head">
           <button class="method-accordion-toggle" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
             <span class="method-toggle-copy">
@@ -194,7 +211,7 @@
           <h2>Move continuously from the easy problem to <em>the real one</em>.</h2>
         </div>
         <p>
-          The coordinate \(q\) tells us which problem we solve: \(q=0\) is the linear reference and \(q=1\) the nonlinear target.
+          Now introduce one variable only: \(q\). It tells us which problem we are solving along one continuous deformation. \(q=0\) is the easy model; \(q=1\) is the nonlinear target.
         </p>
       </div>
 
@@ -281,7 +298,7 @@
           <h2>Keep the problem fixed. <em>Increase the resolution.</em></h2>
         </div>
         <p>
-          The order \(M\) tells us how many terms we retain. It does not change the target problem; it changes finite-order resolution.
+          The integer order \(M\) tells us how many terms of the solution construction we keep. \(M\) does not change the target problem; it changes how much detail we retain.
         </p>
       </div>
 
@@ -354,7 +371,7 @@
           <h2>More detail lets us <em>go farther</em>.</h2>
         </div>
         <p>
-          Once \(q\) and \(M\) are separated, the key question is how far along the path each finite order can reliably reach.
+          Once \(q\) and \(M\) are understood separately, their relationship becomes the key question: how far along the path can each order reliably reach?
         </p>
       </div>
       <div class="lab-shell reveal delay-1">
@@ -508,7 +525,7 @@
       </div>
 
       <div class="summary-line reveal">
-        Start simple. Use \(q\) for the path, \(M\) for resolution, and \(\hbar\) for convergence control.
+        Start simple. Build the path. Add only the detail you need. Then control how efficiently that finite approximation converges.
       </div>
     </section>
 
@@ -517,7 +534,7 @@
       <div class="final-cta-card">
         <p class="eyebrow">START SIMPLE. GO ALL THE WAY.</p>
         <h2>You have seen the path, the resolution, and the convergence control.</h2>
-        <p>Now use the Playground to combine all three controls.</p>
+        <p>Now unlock everything and change the problem yourself.</p>
         <a class="button primary" href="#playground"><span>Explore GOTHAM</span><i aria-hidden="true">→</i></a>
       </div>
     </section>
@@ -542,7 +559,7 @@
           <h2>Now <em>take control</em>.</h2>
         </div>
         <p>
-          This section keeps \(A=1.5\,\mathrm{rad}\) as its starting point. Linear, Current, and Target remain visible for comparison.
+          This section keeps the guided case \(A=1.5\,\mathrm{rad}\) as its starting point. You can move away from it deliberately once the comparison is clear.
         </p>
       </div>
 
