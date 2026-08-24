@@ -58,12 +58,12 @@
       </div>
 
       <div class="summary-line reveal">
-        Many nonlinear problems are difficult to solve directly even when a useful simpler model is already known. GOTHAM asks a different question: instead of discarding that simple solution, can we use it to construct a controlled route toward the nonlinear target?
+        Many nonlinear problems are difficult to solve directly even when a useful simpler model is already known. GOTHAM asks whether that solved model can become a controlled route toward the nonlinear target.
       </div>
 
       <div class="insight-callout reveal">
         <strong>Why a pendulum?</strong>
-        <span>Because its linear approximation is familiar and its nonlinear departure is easy to see. The pendulum is the example; the homotopy-driven construction is the point.</span>
+        <span>Because the starting model is familiar and the nonlinear departure is easy to see. The pendulum is the example; the construction is the point.</span>
       </div>
     </section>
 
@@ -147,7 +147,7 @@
 
       <div class="insight-callout reveal">
         <strong>Start simple. But don’t stop there.</strong>
-        <span>What if the linear, small-angle solution were not the answer, but the starting point?</span>
+        <span>The linear solution is useful. But it is not the target.</span>
       
       <details class="math-card reveal">
         <summary>Show the mathematics</summary>
@@ -181,7 +181,7 @@
       <div class="threshold-card reveal">
         <p class="eyebrow">THE APPROXIMATION WAS THE EASY PART</p>
         <h2>Start simple. <em>But don’t stop there.</em></h2>
-        <p>GOTHAM turns that known solution into the starting point of a controlled deformation toward the nonlinear problem.</p>
+        <p>GOTHAM turns the known linear solution into the starting point of a controlled deformation toward the nonlinear target.</p>
         <div class="method-accordion-head">
           <button class="method-accordion-toggle" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
             <span class="method-toggle-copy">
@@ -282,7 +282,7 @@
         <p class="eyebrow">03 · ADD DETAIL</p>
         <h2>The problem is fixed. <em>Now add detail.</em></h2>
         <p>
-          At \(q=1\), the nonlinear problem is fixed. The next question is no longer which problem we solve, but how accurately we represent its solution.
+          Target reached. The problem is now fixed; what remains is to control the accuracy of its finite representation.
         </p>
         <div class="target-lock"><span>q</span><strong>1.000</strong><small>locked in refinement views</small></div>
       </div>
@@ -371,12 +371,12 @@
           <h2>More detail lets us <em>go farther</em>.</h2>
         </div>
         <p>
-          Now combine both ideas: how far can a finite order reliably follow the deformation? Equivalently, for a given \(q\), how much \(M\) is required?
+          Now combine both ideas: given \(M\), how far can we move in \(q\)? And given \(q\), how much \(M\) do we need?
         </p>
       </div>
       <div class="lab-shell reveal delay-1">
         <aside class="control-deck">
-          <div class="deck-title"><span>q–M GEOMETRY</span><button id="geometryReset" type="button">Reset</button></div>
+          <div class="deck-title"><span>RELIABLE q–M REGION</span><button id="geometryReset" type="button">Reset</button></div>
           <div class="control-group accent-gold">
             <div class="control-label"><label for="geometryTolerance">Accuracy target \(\varepsilon\)</label><output id="geometryToleranceOut">ε = 1e−4</output></div>
             <input id="geometryTolerance" type="range" min="2" max="4" step="1" value="4">
@@ -525,7 +525,7 @@
       </div>
 
       <div class="summary-line reveal">
-        Three variables, three jobs: \(q\) changes the problem, \(M\) changes resolution, and \(\hbar\) controls convergence.
+        Three variables, three jobs: \(q\) changes the problem, \(M\) controls finite-order resolution, and \(\hbar\) controls convergence.
       </div>
     </section>
 
@@ -559,7 +559,7 @@
           <h2>Now <em>take control</em>.</h2>
         </div>
         <p>
-          Linear is the \(q=0\) reference, Current is the present GOTHAM approximation, and Target is the nonlinear \(q=1\) reference.
+          Linear is the \(q=0\) reference, Current is the present GOTHAM approximation, and Target is the nonlinear \(q=1\) reference. Remember: \(q\) changes the problem, \(M\) changes resolution, and \(\hbar\) controls convergence.
         </p>
       </div>
 
