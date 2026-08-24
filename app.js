@@ -22,7 +22,7 @@
     geometry: { q: 1.0, M: 6, toleranceExp: 4, view: 'frontier' },
     refinement: { M: 0, view: 'trajectory' },
     control: { M: 8, hbar: -1.0, view: 'heatmap', bestHbar: null, bestError: null },
-    playground: { amplitude: 1.5, q: 0.5, M: 7, hbar: -1, view: 'motion', result: null }
+    playground: { amplitude: 1.5, q: 1.0, M: 8, hbar: -1.0, view: 'motion', result: null }
   };
 
   const $ = (id) => document.getElementById(id);
@@ -1142,7 +1142,7 @@
     const {ctx,width,height}=prepareCanvas(canvas);
     clearCanvas(ctx,width,height,'rgba(115,217,135,.045)');
     const {start,current,target,exactAtQ}=state.playground.result;
-    const cx=width*.68,cy=height*.18,L=Math.min(width,height)*.34;
+    const cx=width*.5,cy=height*.18,L=Math.min(width,height)*.34;
     const aS=playInterp(start.t,start.x,state.time);
     const aC=playInterp(current.t,current.x,state.time);
     const aT=playInterp(target.t,target.x,state.time);
@@ -1189,7 +1189,7 @@
     };
     const canvas=$(canvasMap[v]);if(!canvas)return;
     const {ctx,width,height}=prepareCanvas(canvas);clearCanvas(ctx,width,height,'rgba(115,217,135,.025)');
-    const l=42,r=8,t=32,b=22,w=width-l-r,h=height-t-b;
+    const l=62,r=28,t=52,b=52,w=width-l-r,h=height-t-b;
     const n=Math.min(start.x.length,current.x.length,target.x.length,exactAtQ.x.length);
     const time=exactAtQ.t, duration=exactAtQ.duration;
     const title=(a,b='')=>{
@@ -1467,18 +1467,19 @@
 
       drawAxesLabel(ctx,'physical time',l+w,height-14,'right');drawAxesLabel(ctx,'energy',l+4,t+10);
     }
+
+    ctx.fillStyle=COLORS.muted2;ctx.font='10px ui-monospace,monospace';ctx.textAlign='left';
+    ctx.fillText(`A=${p.amplitude.toFixed(2)} · q=${p.q.toFixed(2)} · M=${p.M} · ħ=${fmtMinus(p.hbar,2)}`,l,height-12);
+    if(p.q<1e-9){
+      ctx.fillStyle=COLORS.gold;ctx.textAlign='right';ctx.fillText('q=0 invariant: CURRENT = LINEAR',l+w,height-12);
+    } else if(p.q>1-1e-9){
+      ctx.fillStyle=COLORS.green;ctx.textAlign='right';ctx.fillText('q=1: CURRENT should converge to TARGET as M improves',l+w,height-12);
+    }
   }
 
   function switchPanels(group, view){
-    $$(`[data-${group}-view]`).forEach(btn=>{
-      btn.classList.toggle('active',btn.dataset[`${group}View`]===view);
-    });
-    $$(`[data-${group}-panel]`).forEach(panel=>{
-      const active=panel.dataset[`${group}Panel`]===view;
-      panel.classList.toggle('active',active);
-      panel.hidden=!active;
-      panel.style.display=active?'block':'none';
-    });
+    $$(`[data-${group}-view]`).forEach(btn=>btn.classList.toggle('active',btn.dataset[`${group}View`]===view));
+    $$(`[data-${group}-panel]`).forEach(panel=>panel.classList.toggle('active',panel.dataset[`${group}Panel`]===view));
   }
 
   function updateTransport(){
@@ -1508,16 +1509,10 @@
     state.playground.q=Number($('playQ').value);
     state.playground.M=Number($('playM').value);
     state.playground.hbar=Number($('playHbar').value);
-
     $('playAmplitudeOut').textContent=`${state.playground.amplitude.toFixed(2)} rad`;
     $('playQOut').textContent=`q = ${state.playground.q.toFixed(3)}`;
     $('playMOut').textContent=`M = ${state.playground.M}`;
     $('playHbarOut').textContent=`ħ = ${fmtMinus(state.playground.hbar,2)}`;
-
-    // Any parameter change defines a new experiment: discard cached trajectories,
-    // rebuild all references, and restart the shared animation clock at t=0.
-    state.playground.result=null;
-    state.time=0;
     updatePlaygroundResult();
     drawPlayground();
   }
@@ -1578,14 +1573,6 @@
   }
 
 
-
-  function redrawMethodVisuals(){
-    try{ updateTransport(); }catch(e){}
-    try{ updateRefinement(); }catch(e){}
-    try{ updateGeometry(); }catch(e){}
-    try{ updateControl(); }catch(e){}
-  }
-
   function setMethodExpanded(expanded,scrollInto=false){
     const journey=$('methodJourney');
     const toggle=$('toggleMethod');
@@ -1594,39 +1581,22 @@
 
     journey.hidden=!expanded;
     toggle.setAttribute('aria-expanded',expanded?'true':'false');
+    toggle.querySelector('span').textContent=expanded?'Hide the method':'Enter the method';
 
-    const strong=toggle.querySelector('strong');
-    const small=toggle.querySelector('small');
-    const icon=toggle.querySelector('.method-toggle-icon');
-    if(strong) strong.textContent=expanded?'Hide the method':'Enter the method';
-    if(small) small.textContent=expanded?'The guided construction is open below':'Build a Path → Add Detail → Go Farther → Converge Better';
-    if(icon) icon.textContent=expanded?'−':'+';
-    toggle.classList.toggle('expanded',expanded);
     if(returnBar) returnBar.hidden=expanded;
-    const header=$('siteHeader');
-    if(header) header.classList.toggle('method-hidden',!expanded);
-
-    const headerToggle=$('headerMethodToggle');
-    if(headerToggle){
-      headerToggle.setAttribute('aria-expanded',expanded?'true':'false');
-      headerToggle.textContent=expanded?'Hide method':'Show method';
-    }
 
     if(expanded){
-      requestAnimationFrame(()=>requestAnimationFrame(redrawMethodVisuals));
+      // Newly revealed sections must become visible even if IntersectionObserver
+      // never saw them while hidden.
       journey.querySelectorAll('.reveal').forEach(el=>el.classList.add('visible'));
-      if(scrollInto) journey.scrollIntoView({behavior:'smooth',block:'start'});
+      if(scrollInto){
+        const first=journey.querySelector('section');
+        first?.scrollIntoView({behavior:'smooth',block:'start'});
+      }
     }
   }
 
   function wireInteractions(){
-    $('headerMethodToggle')?.addEventListener('click',()=>{
-      const journey=$('methodJourney');
-      const expanded=journey && !journey.hidden;
-      setMethodExpanded(!expanded,false);
-    });
-
-
     $('toggleMethod')?.addEventListener('click',()=>{
       const journey=$('methodJourney');
       const expanded=journey && !journey.hidden;
@@ -1673,23 +1643,13 @@
 
     ['playAmplitude','playQ','playM','playHbar'].forEach(id=>$(id).addEventListener('input',updatePlayInputs));
     $('playgroundReset').addEventListener('click',()=>{
-      $('playAmplitude').value=1.5;$('playQ').value=0.5;$('playM').value=7;$('playHbar').value=-1;state.playground.result=null;state.time=0;updatePlayInputs();
+      $('playAmplitude').value=1.5;$('playQ').value=1;$('playM').value=8;$('playHbar').value=-1;updatePlayInputs();
     });
     $('playPause').addEventListener('click',()=>{
       state.playing=!state.playing;$('playPause').textContent=state.playing?'Pause':'Play';drawHeroLikePlayPendulum();if(['motion','operator','residual','phase','decomposition','energy'].includes(state.playground.view))drawPlayground();
     });
     $('playTimeReset').addEventListener('click',()=>{state.time=0;drawPlayground();});
-    $('fitPlayground')?.addEventListener('click',()=>{
-      const section=$('playground');
-      const header=$('siteHeader');
-      if(!section)return;
-      const headerH=header?.getBoundingClientRect().height||0;
-      const target=section.querySelector('.playground-split') || section.querySelector('.lab-workspace') || section;
-      const rect=target.getBoundingClientRect();
-      const y=window.scrollY+rect.top-headerH-6;
-      window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
-    });
-    wireTabs('play',v=>{state.playground.view=v;if(!state.playground.result)updatePlaygroundResult();},drawPlayground);
+    wireTabs('play',v=>state.playground.view=v,drawPlayground);
   }
 
   function setupScrollEffects(){

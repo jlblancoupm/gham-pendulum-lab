@@ -8,7 +8,7 @@
   <meta property="og:title" content="Start Simple — GOTHAM Pendulum">
   <meta property="og:description" content="Start from the linear pendulum, transport the system continuously, refine the nonlinear target, and control convergence.">
   <title>Start Simple — GOTHAM Pendulum</title>
-  <link rel="stylesheet" href="styles.css?v=25.4">
+  <link rel="stylesheet" href="styles.css?v=23">
   <script>
     window.MathJax = {
       loader: { load: ['[tex]/ams'] },
@@ -23,7 +23,15 @@
   </script>
   
   
-  <script defer src="app.js?v=25.4"></script>
+  <script defer src="app.js?v=23"></script>
+  
+  <script>
+    window.MathJax = {
+      tex: {
+        packages: {'[+]': ['color']}
+      }
+    };
+  </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
@@ -38,15 +46,15 @@
     </a>
     <nav aria-label="Primary navigation">
       <a href="#idea">Start Simple</a>
-      <a href="#transport" data-method-nav>Build a Path</a>
-      <a href="#refinement" data-method-nav>Add Detail</a>
-      <a href="#geometry" data-method-nav>Go Farther</a>
-      <a href="#control" data-method-nav>Converge Better</a>
-      <a href="#summary" data-method-nav>Put It Together</a>
+      <a href="#transport">Build a Path</a>
+      <a href="#refinement">Add Detail</a>
+      <a href="#geometry">Go Farther</a>
+      <a href="#control">Converge Better</a>
+      <a href="#summary">Put It Together</a>
       <a href="#playground">Explore</a>
     </nav>
-    <button class="header-method-button" id="headerMethodToggle" type="button" aria-expanded="false" aria-controls="methodJourney">Show method</button>
     <button class="header-math-button" id="openMathDrawer" type="button">Mathematics</button>
+    <span class="header-chip">A = 1.5 rad</span>
   </header>
 
   <main id="main">
@@ -59,19 +67,22 @@
       <div class="hero-glow glow-two" aria-hidden="true"></div>
 
       <div class="hero-copy reveal">
-        <div class="hero-kicker"><span></span> START SIMPLE</div>
-        <h1>Start simple. <em>But don’t stop there.</em></h1>
+        <div class="hero-kicker"><span></span> AN INTERACTIVE GOTHAM DEMONSTRATOR</div>
+        <h1>Start simple. <em>Then recover the problem you actually want to solve.</em></h1>
         <p class="hero-lead">
-          The approximation \(\sin x\approx x\) is elementary — the familiar school-level route to the harmonic pendulum. The point here is not to rediscover it, but to use that known, solvable model as the starting point of a controlled path back to the nonlinear problem.
+          Many nonlinear models are difficult to solve directly even when a useful simplified model is already known. GOTHAM asks a different question: instead of discarding that simple solution, can we use it to construct a controlled route to the nonlinear target?
+        </p>
+        <p class="hero-context">
+          We use the pendulum because its linear approximation is familiar and its nonlinear departure is easy to see. <strong>The pendulum is the example; the homotopy-driven construction is the point.</strong>
         </p>
         <div class="hero-actions">
           <a class="button primary" href="#idea"><span>See why simple is not enough</span><i aria-hidden="true">↘</i></a>
-          <a class="button secondary" href="#playground">Open playground</a>
+          <a class="button secondary" href="#playground">See the result first</a>
         </div>
         <div class="hero-principles" aria-label="Key concepts">
-          <div><span class="dot gold"></span><strong>q — transport</strong><small>Which system are we solving?</small></div>
-          <div><span class="dot blue"></span><strong>M — refinement</strong><small>How accurately are we resolving it?</small></div>
-          <div><span class="dot purple"></span><strong>ħ — control</strong><small>How efficiently does refinement converge?</small></div>
+          <div><span class="dot gold"></span><strong>q — problem</strong><small>Which problem are we solving?</small></div>
+          <div><span class="dot blue"></span><strong>M — resolution</strong><small>How much of the construction do we retain?</small></div>
+          <div><span class="dot purple"></span><strong>ħ — convergence</strong><small>How effectively does the finite construction converge?</small></div>
         </div>
       </div>
 
@@ -82,25 +93,18 @@
         </div>
         <canvas id="heroCanvas" aria-label="Pendulum comparison between linear and nonlinear motion"></canvas>
         <div class="hero-equation">
-          <div class="hero-equation-semantic">
-          <span class="hero-eq-linear">
-            \[
-            \underbrace{\ddot x+x=0}_{\text{linear}}
-            \]
-          </span>
-          <span class="hero-eq-arrow" aria-hidden="true">→</span>
-          <span class="hero-eq-target">
-            \[
-            \underbrace{\ddot x+\sin x=0}_{\text{target}}
-            \]
-          </span>
-        </div>
+          \[
+          \underbrace{\ddot x+x=0}_{\text{easy}}
+          \qquad\Longrightarrow\qquad
+          \underbrace{\ddot x+\sin x=0}_{\text{target}}
+          \]
         </div>
         <div class="stage-footer">
           <span>release angle \(x(0)=1.5\,\mathrm{rad}\approx86^\circ\)</span>
           <span>live browser computation · A = 1.5 rad</span>
         </div>
       </div>
+      <div class="hero-scroll" aria-hidden="true"><span></span>Explore</div>
     </section>
 
     <!-- =========================================================
@@ -110,10 +114,10 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">01 · START SIMPLE</p>
-          <h2>The approximation is known. <em>The path back matters.</em></h2>
+          <h2>Begin with a model you <em>already know how to solve.</em></h2>
         </div>
         <p>
-          For small angles, \(\sin x\approx x\) gives the textbook oscillator. At \(A=1.5\,\mathrm{rad}\approx86^\circ\), it is no longer accurate enough—but it remains a clean starting point.
+          For small angles, \(\sin x\approx x\) gives the textbook harmonic oscillator and a closed-form solution. There is nothing new about this approximation. Its value here is precisely that it gives us a simple, solved reference problem. At \(A=1.5\,\mathrm{rad}\approx86^\circ\), the nonlinear motion has already departed enough to make stopping at that approximation inadequate.
         </p>
       </div>
 
@@ -129,28 +133,24 @@
       </div>
 
       <div class="insight-callout reveal">
-        <strong>Start simple. But don’t stop there.</strong>
-        <span>What if the linear, small-angle solution were not the answer, but the starting point?</span>
+        <strong>The linear model is useful — but stopping there is not.</strong>
+        <span>What if its known solution were the starting point of a controlled construction rather than the final approximation?</span>
       
       <details class="math-card reveal">
         <summary>Show the mathematics</summary>
         <div class="math-card-body">
-          <p>The familiar linear, small-angle approximation is</p>
+          <p>The familiar small-angle approximation is</p>
           \[
           \sin x \approx x,
           \]
-          connecting the nonlinear pendulum
-          <div class="math-eq-target">
+          which turns the nonlinear pendulum
           \[
           \ddot x+\sin x=0
           \]
-        </div>
-          to the linear, small-angle model
-          <div class="math-eq-linear">
+          into
           \[
           \ddot x+x=0.
           \]
-        </div>
           <p>At \(A=1.5\,\mathrm{rad}\), the release-point restoring-law mismatch is already about \(33.5\%\).</p>
         </div>
       </details>
@@ -159,27 +159,24 @@
 
 
     
-    
     <section class="method-threshold" id="methodThreshold" aria-label="Choose how deeply to explore the method">
+      <div class="threshold-line"></div>
       <div class="threshold-card reveal">
         <p class="eyebrow">THE APPROXIMATION WAS THE EASY PART</p>
         <h2>Start simple. <em>But don’t stop there.</em></h2>
-        <p>The linear model is already known. Open the method only if you want the guided construction.</p>
-        <div class="method-accordion-head">
-          <button class="method-accordion-toggle" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
-            <span class="method-toggle-copy">
-              <strong>Enter the method</strong>
-              <small>Build a Path → Add Detail → Go Farther → Converge Better</small>
-            </span>
-            <span class="method-toggle-icon" aria-hidden="true">+</span>
+        <p>GOTHAM turns the simple solution into a starting point rather than a final approximation. It constructs a controlled deformation from the problem we can solve to the problem we actually want to solve. Choose how deeply you want to inspect that construction.</p>
+        <div class="threshold-actions">
+          <button class="button primary" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
+            <span>Enter the method</span>
           </button>
+          <a class="button secondary" id="skipToPlayground" href="#playground">
+            <span>See the result first</span>
+          </a>
         </div>
-        <div class="threshold-actions secondary-path">
-          <a class="button secondary" id="skipToPlayground" href="#playground"><span>Skip to Playground</span></a>
-        </div>
+        <small class="threshold-hint">Enter the guided construction, or jump to the result and reopen the method whenever you want.</small>
       </div>
+      <div class="threshold-line"></div>
     </section>
-
 
 
     <!-- =========================================================
@@ -191,10 +188,10 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">02 · BUILD A PATH</p>
-          <h2>Move continuously from the easy problem to <em>the real one</em>.</h2>
+          <h2>Do not jump to the nonlinear problem. <em>Build a path to it.</em></h2>
         </div>
         <p>
-          Now introduce one variable only: \(q\). It tells us which problem we are solving along one continuous deformation. \(q=0\) is the easy model; \(q=1\) is the nonlinear target.
+          GOTHAM introduces a continuous embedding coordinate \(q\). At \(q=0\) we recover the solved linear problem; at \(q=1\) we reach the nonlinear target. Intermediate values define intermediate problems, so the solution, frequency, and harmonic structure can evolve with the physics instead of being guessed directly at the endpoint.
         </p>
       </div>
 
@@ -208,6 +205,8 @@
           <span><i class="endpoint-end"></i><strong>q = 1</strong> nonlinear target system</span>
         </div>
       </div>
+
+      <div class="concept-answer reveal"><strong>q answers one question:</strong> Which problem are we solving?</div>
 
       <div class="lab-shell reveal delay-1">
         <aside class="control-deck" aria-label="Transport controls">
@@ -263,9 +262,9 @@
     <section class="section target-section" id="target" data-section="target">
       <div class="target-card reveal">
         <p class="eyebrow">03 · ADD DETAIL</p>
-        <h2>The problem is fixed. <em>Now add detail.</em></h2>
+        <h2>The target is fixed. <em>Now decide how accurately to represent it.</em></h2>
         <p>
-          At \(q=1\), the nonlinear problem is fixed. The next question is no longer which problem we solve, but how accurately we represent its solution.
+          At \(q=1\), the nonlinear target is fixed. Describing the path is not yet the same as computing it accurately: we now need a finite representation of the solution construction.
         </p>
         <div class="target-lock"><span>q</span><strong>1.000</strong><small>locked in refinement views</small></div>
       </div>
@@ -281,9 +280,11 @@
           <h2>Keep the problem fixed. <em>Increase the resolution.</em></h2>
         </div>
         <p>
-          The integer order \(M\) tells us how many terms of the solution construction we keep. \(M\) does not change the target problem; it changes how much detail we retain.
+          The integer order \(M\) tells us how many terms of the solution construction we retain. Increasing \(M\) does not make the problem more nonlinear — \(q\) already determines that. It increases the resolution of the finite approximation.
         </p>
       </div>
+
+      <div class="concept-answer reveal"><strong>M answers a different question:</strong> How much of the construction do we retain? <span>q = problem · M = resolution</span></div>
 
       <div class="lab-shell reveal delay-1">
         <aside class="control-deck">
@@ -351,15 +352,20 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">04 · GO FARTHER</p>
-          <h2>More detail lets us <em>go farther</em>.</h2>
+          <h2>A finite order cannot necessarily <em>follow the whole path.</em></h2>
         </div>
         <p>
-          Once \(q\) and \(M\) are understood separately, their relationship becomes the key question: how far along the path can each order reliably reach?
+          Near \(q=0\), the problem remains close to the linear reference and a low-order approximation may be sufficient. Toward \(q=1\), the deformation becomes harder to resolve. The characteristic question is therefore how far a given order can travel reliably — or, conversely, how much order a given point on the path requires.
         </p>
       </div>
+      <div class="question-pair reveal">
+        <div><strong>Given M, how far can I go?</strong><span>Read the reliable transport limit.</span></div>
+        <div><strong>Given q, how much M do I need?</strong><span>Read the minimum required order.</span></div>
+      </div>
+
       <div class="lab-shell reveal delay-1">
         <aside class="control-deck">
-          <div class="deck-title"><span>q–M GEOMETRY</span><button id="geometryReset" type="button">Reset</button></div>
+          <div class="deck-title"><span>RELIABLE q–M REGION</span><button id="geometryReset" type="button">Reset</button></div>
           <div class="control-group accent-gold">
             <div class="control-label"><label for="geometryTolerance">Accuracy target \(\varepsilon\)</label><output id="geometryToleranceOut">ε = 1e−4</output></div>
             <input id="geometryTolerance" type="range" min="2" max="4" step="1" value="4">
@@ -421,12 +427,14 @@
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">05 · CONVERGE BETTER</p>
-          <h2>Same problem. Same \(M\). <em>Can we converge better?</em></h2>
+          <h2>Can the same finite order <em>work better?</em></h2>
         </div>
         <p>
-          \(\hbar\) is not another physical parameter. It changes how the retained terms are combined, so the same finite order can converge better or worse.
+          Increasing \(M\) adds more terms. GOTHAM provides another degree of freedom: \(\hbar\). It does not change the physical problem and it does not add new terms; it changes how the available finite-order information is combined, so the same order can converge better or worse.
         </p>
       </div>
+
+      <div class="concept-answer reveal"><strong>ħ answers the convergence question:</strong> How effectively do we use the finite-order information? <span>M = how much we keep · ħ = how effectively we use it</span></div>
 
       <div class="lab-shell reveal delay-1">
         <aside class="control-deck">
@@ -502,13 +510,13 @@
       </div>
 
       <div class="takeaway-grid three reveal delay-1">
-        <article class="take-q"><span>q</span><strong>Build the path</strong><small>Which problem are we solving?</small></article>
-        <article class="take-m"><span>M</span><strong>Add detail</strong><small>How much resolution do we keep?</small></article>
-        <article class="take-h"><span>ħ</span><strong>Converge better</strong><small>Can the same finite order be used more effectively?</small></article>
+        <article class="take-q"><span>q</span><strong>Move through problems</strong><small>Linear reference → nonlinear target</small></article>
+        <article class="take-m"><span>M</span><strong>Resolve the path</strong><small>Retain enough terms for an accurate finite solution</small></article>
+        <article class="take-h"><span>ħ</span><strong>Control convergence</strong><small>Use the retained information more effectively</small></article>
       </div>
 
       <div class="summary-line reveal">
-        Start simple. Build the path. Add only the detail you need. Then control how efficiently that finite approximation converges.
+        Use a problem you can solve to construct — rather than guess — your way toward one that is harder to solve.
       </div>
     </section>
 
@@ -516,8 +524,8 @@
     <section class="section final-cta reveal" id="final-cta">
       <div class="final-cta-card">
         <p class="eyebrow">START SIMPLE. GO ALL THE WAY.</p>
-        <h2>You have seen the path, the resolution, and the convergence control.</h2>
-        <p>Now unlock everything and change the problem yourself.</p>
+        <h2>You have seen how GOTHAM changes the problem, builds a finite solution, and controls its convergence.</h2>
+        <p>The guided story is over. Now manipulate all three mechanisms together.</p>
         <a class="button primary" href="#playground"><span>Explore GOTHAM</span><i aria-hidden="true">→</i></a>
       </div>
     </section>
@@ -530,19 +538,29 @@
 
     <section class="method-return-bar" id="methodReturnBar" hidden aria-label="Method explanation is hidden">
       <div>
-        <span>Method hidden</span>
-        <button type="button" id="reopenMethod">Show explanation</button>
+        <span>Guided method hidden</span>
+        <button type="button" id="reopenMethod">Show guided method</button>
       </div>
+    </section>
+
+<section class="playground-primer reveal" id="playgroundPrimer">
+      <p class="eyebrow">THREE CONTROLS · THREE JOBS</p>
+      <div class="primer-grid">
+        <div class="take-q"><span>q</span><strong>Move through problems</strong><small>linear q = 0 → target q = 1</small></div>
+        <div class="take-m"><span>M</span><strong>Resolve the path</strong><small>control finite-order resolution</small></div>
+        <div class="take-h"><span>ħ</span><strong>Control convergence</strong><small>make the retained order work effectively</small></div>
+      </div>
+      <p class="primer-note">The pendulum is the example. The construction is the point.</p>
     </section>
 
 <section class="section lab-section playground-section" id="playground" data-section="playground" data-math-context="computation">
       <div class="section-heading split reveal">
         <div>
           <p class="eyebrow">07 · EXPLORE</p>
-          <h2>Now <em>take control</em>.</h2>
+          <h2>The guided story is over. <em>Now test the construction yourself.</em></h2>
         </div>
         <p>
-          This section keeps the guided case \(A=1.5\,\mathrm{rad}\) as its starting point. You can move away from it deliberately once the comparison is clear.
+          Linear is the solved \(q=0\) reference, Current is the GOTHAM construction for your present \(q,M,\hbar\), and Target is the nonlinear \(q=1\) reference. Move \(q\) to change the problem, \(M\) to change finite-order resolution, and \(\hbar\) to change convergence. The diagnostics show what changes physically and what approximation error still remains.
         </p>
       </div>
 
@@ -555,12 +573,12 @@
             <input id="playAmplitude" type="range" min="0.2" max="2.2" step="0.05" value="1.5">
           </div>
           <div class="control-group accent-gold">
-            <div class="control-label"><label for="playQ">q</label><output id="playQOut">q = 0.500</output></div>
-            <input id="playQ" type="range" min="0" max="1" step="0.001" value="0.5">
+            <div class="control-label"><label for="playQ">q</label><output id="playQOut">q = 1.000</output></div>
+            <input id="playQ" type="range" min="0" max="1" step="0.001" value="1">
           </div>
           <div class="control-group accent-blue">
-            <div class="control-label"><label for="playM">M</label><output id="playMOut">M = 7</output></div>
-            <input id="playM" type="range" min="0" max="20" step="1" value="7">
+            <div class="control-label"><label for="playM">M</label><output id="playMOut">M = 8</output></div>
+            <input id="playM" type="range" min="0" max="20" step="1" value="8">
           </div>
           <div class="control-group accent-purple">
             <div class="control-label"><label for="playHbar">ħ</label><output id="playHbarOut">ħ = −1.00</output></div>
@@ -570,7 +588,6 @@
           <div class="play-row">
             <button class="button tiny" id="playPause" type="button">Pause</button>
             <button class="button tiny secondary" id="playTimeReset" type="button">t = 0</button>
-            <button class="button tiny secondary" id="fitPlayground" type="button">Fit</button>
           </div>
         </aside>
 
@@ -601,27 +618,38 @@
             </div>
 
             <div>
-              <div class="play-view-toolbar">
-                <button class="active" type="button" data-play-view="motion">Motion</button>
-                <button type="button" data-play-view="operator">Operator</button>
-                <button type="button" data-play-view="frequency">Frequency</button>
-                <button type="button" data-play-view="spectrum">Spectrum</button>
-                <button type="button" data-play-view="residual">Residual</button>
-                <button type="button" data-play-view="phase">Phase</button>
-                <button type="button" data-play-view="decomposition">Error</button>
-                <button type="button" data-play-view="convergence">Convergence</button>
-                <button type="button" data-play-view="energy">Energy</button>
+              <div class="play-view-groups">
+                <div>
+                  <small>PRIMARY</small>
+                  <div class="view-tabs wrap">
+                    <button class="active" type="button" data-play-view="motion">Motion</button>
+                    <button type="button" data-play-view="operator">Operator</button>
+                    <button type="button" data-play-view="frequency">Frequency</button>
+                    <button type="button" data-play-view="spectrum">Spectrum</button>
+                    <button type="button" data-play-view="residual">Residual</button>
+                  </div>
+                </div>
+                <div>
+                  <small>DIAGNOSTICS</small>
+                  <div class="view-tabs wrap diagnostic-tabs">
+                    <button type="button" data-play-view="phase">Phase portrait</button>
+                    <button type="button" data-play-view="decomposition">Error decomposition</button>
+                    <button type="button" data-play-view="convergence">Convergence</button>
+                    <button type="button" data-play-view="energy">Energy</button>
+                  </div>
+                </div>
               </div>
+
               <div class="workspace-canvas-stack playground-stack">
                 <canvas class="active" id="playMotionCanvas" data-play-panel="motion"></canvas>
-                <canvas id="playOperatorCanvas" data-play-panel="operator" hidden></canvas>
-                <canvas id="playFrequencyCanvas" data-play-panel="frequency" hidden></canvas>
-                <canvas id="playSpectrumCanvas" data-play-panel="spectrum" hidden></canvas>
-                <canvas id="playResidualCanvas" data-play-panel="residual" hidden></canvas>
-                <canvas id="playPhaseCanvas" data-play-panel="phase" hidden></canvas>
-                <canvas id="playDecompositionCanvas" data-play-panel="decomposition" hidden></canvas>
-                <canvas id="playConvergenceCanvas" data-play-panel="convergence" hidden></canvas>
-                <canvas id="playEnergyCanvas" data-play-panel="energy" hidden></canvas>
+                <canvas id="playOperatorCanvas" data-play-panel="operator"></canvas>
+                <canvas id="playFrequencyCanvas" data-play-panel="frequency"></canvas>
+                <canvas id="playSpectrumCanvas" data-play-panel="spectrum"></canvas>
+                <canvas id="playResidualCanvas" data-play-panel="residual"></canvas>
+                <canvas id="playPhaseCanvas" data-play-panel="phase"></canvas>
+                <canvas id="playDecompositionCanvas" data-play-panel="decomposition"></canvas>
+                <canvas id="playConvergenceCanvas" data-play-panel="convergence"></canvas>
+                <canvas id="playEnergyCanvas" data-play-panel="energy"></canvas>
               </div>
             </div>
           </div>
@@ -666,24 +694,24 @@
             <h3>Start from a solved problem</h3>
             <p>The nonlinear pendulum is the target:</p>
             \[
-      \ddot x+\sin x=0
-      ,\qquad x(0)=A,\qquad \dot x(0)=0
+      \color{#73d987}{\ddot x+\sin x=0}
+      \color{#DCE8F2}{,\qquad x(0)=A,\qquad \dot x(0)=0}
     \]
             <p>The familiar small-angle model provides an analytically solved starting point:</p>
             \[
-      \ddot x_0+x_0=0
-      ,\qquad x_0(t)=A\cos t
+      \color{#f4ca5c}{\ddot x_0+x_0=0}
+      \color{#DCE8F2}{,\qquad x_0(t)=A\cos t}
     \]
           </section>
           <section>
             <h3>Build a continuous deformation</h3>
             <p>Introduce an embedding coordinate \(q\in[0,1]\) and a deformation \(\Phi(t;q)\) satisfying</p>
             \[
-      \Phi(t;0)=x_0(t)
+      \color{#f4ca5c}{\Phi(t;0)=x_0(t)}
       \;\longrightarrow\;
-      \Phi(t;q)
+      \color{#49b9ff}{\Phi(t;q)}
       \;\longrightarrow\;
-      \Phi(t;1)=x(t)
+      \color{#73d987}{\Phi(t;1)=x(t)}
     \]
             <div class="math-semantic-key three-role-key">
               <span class="key-linear">Linear · q = 0</span>
