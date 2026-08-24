@@ -320,6 +320,5 @@ Build a Path, Go Farther and Converge Better now use the exact same chart sizing
 as Refinement: 400 px desktop, 340 px medium laptop, 240 px mobile.
 The Playground graph column is wider, the pendulum column narrower, and plot margins/chrome are reduced.
 
-
 ## v25.4 — wider Playground pendulum
 Increased the pendulum column by roughly 25% while keeping graph height and behavior unchanged.
