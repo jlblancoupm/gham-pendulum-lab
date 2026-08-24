@@ -23,7 +23,7 @@
   </script>
   
   
-  <script defer src="app.js?v=25.4"></script>
+  <script defer src="app.js?v=25.7"></script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
@@ -37,7 +37,7 @@
       <span class="brand-copy"><strong>GOTHAM</strong><small>Pendulum Lab</small></span>
     </a>
     <nav aria-label="Primary navigation">
-      <a href="#idea">Start Simple</a>
+      <a href="#intro-narrative">Overview</a>
       <a href="#transport" data-method-nav>Build a Path</a>
       <a href="#refinement" data-method-nav>Add Detail</a>
       <a href="#geometry" data-method-nav>Go Farther</a>
@@ -51,7 +51,7 @@
 
   <main id="main">
 
-    <section class="section summary-section" id="intro-narrative" aria-label="What this demonstrator is about">
+    <section class="section summary-section" id="intro-narrative" data-section="overview" data-math-context="intuition" aria-label="What this demonstrator is about">
       <div class="section-heading reveal">
         <p class="eyebrow">AN INTERACTIVE GOTHAM DEMONSTRATOR</p>
         <h2>Start from what you can solve. <em>Then recover the problem you actually want to solve.</em></h2>
@@ -181,18 +181,18 @@
       <div class="threshold-card reveal">
         <p class="eyebrow">THE APPROXIMATION WAS THE EASY PART</p>
         <h2>Start simple. <em>But don’t stop there.</em></h2>
-        <p>The linear model is already known. Open the method only if you want the guided construction.</p>
+        <p>GOTHAM turns that known solution into the starting point of a controlled deformation toward the nonlinear problem.</p>
         <div class="method-accordion-head">
           <button class="method-accordion-toggle" id="toggleMethod" type="button" aria-expanded="false" aria-controls="methodJourney">
             <span class="method-toggle-copy">
               <strong>Enter the method</strong>
-              <small>Build a Path → Add Detail → Go Farther → Converge Better</small>
+              <small>q → M → q–M → ħ</small>
             </span>
             <span class="method-toggle-icon" aria-hidden="true">+</span>
           </button>
         </div>
         <div class="threshold-actions secondary-path">
-          <a class="button secondary" id="skipToPlayground" href="#playground"><span>Skip to Playground</span></a>
+          <a class="button secondary" id="skipToPlayground" href="#playground"><span>See everything working together</span></a>
         </div>
       </div>
     </section>
@@ -211,7 +211,7 @@
           <h2>Move continuously from the easy problem to <em>the real one</em>.</h2>
         </div>
         <p>
-          Now introduce one variable only: \(q\). It tells us which problem we are solving along one continuous deformation. \(q=0\) is the easy model; \(q=1\) is the nonlinear target.
+          The first question is: which problem are we solving? The coordinate \(q\) answers it continuously: \(q=0\) is the linear reference and \(q=1\) the nonlinear target.
         </p>
       </div>
 
@@ -298,7 +298,7 @@
           <h2>Keep the problem fixed. <em>Increase the resolution.</em></h2>
         </div>
         <p>
-          The integer order \(M\) tells us how many terms of the solution construction we keep. \(M\) does not change the target problem; it changes how much detail we retain.
+          The next question is accuracy. The order \(M\) controls how many terms of the finite construction we retain. It does not change the problem; it changes resolution.
         </p>
       </div>
 
@@ -371,7 +371,7 @@
           <h2>More detail lets us <em>go farther</em>.</h2>
         </div>
         <p>
-          Once \(q\) and \(M\) are understood separately, their relationship becomes the key question: how far along the path can each order reliably reach?
+          Now combine both ideas: how far can a finite order reliably follow the deformation? Equivalently, for a given \(q\), how much \(M\) is required?
         </p>
       </div>
       <div class="lab-shell reveal delay-1">
@@ -441,7 +441,7 @@
           <h2>Same problem. Same \(M\). <em>Can we converge better?</em></h2>
         </div>
         <p>
-          \(\hbar\) is not another physical parameter. It changes how the retained terms are combined, so the same finite order can converge better or worse.
+          The final question is convergence. \(\hbar\) is not physical and adds no terms; it changes how the retained finite-order information is combined.
         </p>
       </div>
 
@@ -525,7 +525,7 @@
       </div>
 
       <div class="summary-line reveal">
-        Start simple. Build the path. Add only the detail you need. Then control how efficiently that finite approximation converges.
+        Three variables, three jobs: \(q\) changes the problem, \(M\) changes resolution, and \(\hbar\) controls convergence.
       </div>
     </section>
 
@@ -559,7 +559,7 @@
           <h2>Now <em>take control</em>.</h2>
         </div>
         <p>
-          This section keeps the guided case \(A=1.5\,\mathrm{rad}\) as its starting point. You can move away from it deliberately once the comparison is clear.
+          Linear is the \(q=0\) reference, Current is the present GOTHAM approximation, and Target is the nonlinear \(q=1\) reference.
         </p>
       </div>
 

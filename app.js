@@ -1603,6 +1603,7 @@
     if(icon) icon.textContent=expanded?'−':'+';
     toggle.classList.toggle('expanded',expanded);
     if(returnBar) returnBar.hidden=expanded;
+    syncMethodHeaderState();
     const header=$('siteHeader');
     if(header) header.classList.toggle('method-hidden',!expanded);
 
@@ -1619,7 +1620,35 @@
     }
   }
 
+
+  function revealMethodForNavigation(targetId){
+    const journey=$('methodJourney');
+    if(journey?.hidden){
+      setMethodExpanded(true,false);
+    }
+    requestAnimationFrame(()=>{
+      const target=$(targetId);
+      target?.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  }
+
+  function syncMethodHeaderState(){
+    const journey=$('methodJourney');
+    const hidden=!!journey?.hidden;
+    $('siteHeader')?.classList.toggle('method-hidden',hidden);
+  }
+
   function wireInteractions(){
+    $$('a[href="#intro-narrative"]').forEach(link=>link.addEventListener('click',e=>{
+      e.preventDefault();
+      $('intro-narrative')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }));
+    $$('[data-method-nav]').forEach(link=>link.addEventListener('click',e=>{
+      const href=link.getAttribute('href')||'';
+      if(!href.startsWith('#'))return;
+      e.preventDefault();
+      revealMethodForNavigation(href.slice(1));
+    }));
     $('headerMethodToggle')?.addEventListener('click',()=>{
       const journey=$('methodJourney');
       const expanded=journey && !journey.hidden;
@@ -1739,7 +1768,7 @@
   }
 
   function init(){
-    wireInteractions();setMethodExpanded(false,false);setupScrollEffects();setupReveal();
+    wireInteractions();setMethodExpanded(false,false);syncMethodHeaderState();setupScrollEffects();setupReveal();
     updateTransport();updateGeometry();updateRefinement();updateControl();updatePlayInputs();
     drawOperatorComparison();drawBaselineMotion();drawHeroPendulum(0);
     let resizeTimer;
